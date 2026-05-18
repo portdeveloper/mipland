@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { MessageCircle, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Conversation,
@@ -20,23 +20,57 @@ import {
 import {
   PromptInput,
   PromptInputBody,
+  PromptInputProvider,
   PromptInputSubmit,
   PromptInputTextarea,
+  usePromptInputController,
 } from "@/components/ai-elements/prompt-input";
 
 export default function MipChat() {
+  return (
+    <PromptInputProvider>
+      <MipChatInner />
+    </PromptInputProvider>
+  );
+}
+
+function MipChatInner() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const controller = usePromptInputController();
 
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
   });
+
+  // Listen for "Ask AI" tooltip clicks elsewhere on the page.
+  useEffect(() => {
+    function handler(e: Event) {
+      const detail = (e as CustomEvent<{ text?: string }>).detail;
+      if (!detail?.text) return;
+      controller.textInput.setInput(detail.text);
+      setOpen(true);
+      // Focus textarea after the panel transition starts.
+      requestAnimationFrame(() => {
+        const ta = document.querySelector<HTMLTextAreaElement>(
+          '[data-mip-chat="true"] textarea[name="message"]',
+        );
+        if (ta) {
+          ta.focus();
+          ta.selectionStart = ta.selectionEnd = ta.value.length;
+        }
+      });
+    }
+    window.addEventListener("mip-chat:prefill", handler);
+    return () => window.removeEventListener("mip-chat:prefill", handler);
+  }, [controller]);
 
   return (
     <>
       {/* Floating panel — anchored to the same corner as the pill, no backdrop,
           page underneath stays scrollable and interactive. */}
       <div
+        data-mip-chat="true"
         aria-hidden={!open}
         className={`fixed bottom-24 right-6 z-50 flex w-[calc(100vw-3rem)] max-w-[380px] origin-bottom-right flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] shadow-2xl shadow-black/10 transition-all duration-200 ease-out sm:max-w-[400px] ${
           open
