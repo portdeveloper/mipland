@@ -3,6 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { MessageCircle, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import {
@@ -25,6 +26,7 @@ import {
 
 export default function MipChat() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
@@ -99,7 +101,20 @@ export default function MipChat() {
             onSubmit={async (msg) => {
               const text = msg.text.trim();
               if (!text) return;
-              await sendMessage({ text });
+              await sendMessage(
+                { text },
+                {
+                  body: {
+                    pageContext: {
+                      path: pathname,
+                      title:
+                        typeof document !== "undefined"
+                          ? document.title
+                          : undefined,
+                    },
+                  },
+                },
+              );
             }}
           >
             <PromptInputBody>
