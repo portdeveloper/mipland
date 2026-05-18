@@ -62,15 +62,9 @@ export async function POST(req: Request) {
 
   const modelMessages = await convertToModelMessages(parsed.messages);
 
-  // Combine instructions + knowledge into one system message and attach
-  // ephemeral cacheControl to the whole thing. The system prompt is also
-  // stable between admin edits, so caching it together is harmless.
   const systemMessage: ModelMessage = {
     role: "system",
     content: `${instructions}\n\nKnowledge bundle:\n\n${knowledge}`,
-    providerOptions: {
-      anthropic: { cacheControl: { type: "ephemeral" } },
-    },
   };
 
   const result = streamText({
@@ -78,6 +72,10 @@ export async function POST(req: Request) {
     messages: [systemMessage, ...modelMessages],
     temperature: config.temperature,
     maxOutputTokens: config.maxTokens,
+    providerOptions: {
+      gateway: { caching: "auto" },
+      deepseek: { thinking: { type: "disabled" } },
+    },
   });
 
   return result.toUIMessageStreamResponse();

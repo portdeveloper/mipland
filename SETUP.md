@@ -13,8 +13,7 @@ limiter). This document walks each piece from minimum-to-talk to fully wired.
 | `EDGE_CONFIG_ID`             | local + prod  | admin writes (auto-parsed from above)   |
 | `VERCEL_API_TOKEN`           | local + prod  | admin saves config from `/admin/chat`   |
 | `VERCEL_TEAM_ID`             | local + prod  | only if project lives in a team         |
-| `UPSTASH_REDIS_REST_URL`     | local + prod  | per-IP rate limit (else: no-op)         |
-| `UPSTASH_REDIS_REST_TOKEN`   | local + prod  | same                                    |
+| `ADMIN_PASSWORD`             | prod only     | HTTP Basic Auth on `/admin/*`           |
 
 Pull whatever you've already set on Vercel down into `.env.local`:
 
@@ -106,44 +105,59 @@ with a clear "writes not wired up" message.
 
 ---
 
-## 4. Upstash Redis — rate limiter
+## 4. Rate limiter (no infra)
 
-Used by `src/lib/ai/ratelimit.ts` for a 10 req/min/IP token bucket. If env vars
-are missing, the limiter is a no-op (every request passes). Fine for dev; not
-fine for a public endpoint.
+`src/lib/ai/ratelimit.ts` is an in-memory token bucket (10 req/min/IP, burst
+10). State lives in a `Map` on the module — Fluid Compute reuses function
+instances, so the counter persists across requests on the same instance. No
+env vars, no external service.
 
-### Install via Marketplace
+Trade-off: each instance has its own counter, so if Vercel scales out to N
+instances under burst, the effective limit is `10/min × N`. At this traffic
+level (low, bursty around announcements) that's fine. If abuse becomes real,
+swap in a shared store — sign up for Upstash directly at upstash.com (free
+tier: 500k commands/month), paste `UPSTASH_REDIS_REST_URL` and
+`UPSTASH_REDIS_REST_TOKEN` into the project env vars, and revert
+`ratelimit.ts` to use `Ratelimit.tokenBucket` from `@upstash/ratelimit`.
 
-```
-Vercel dashboard → Storage → Marketplace → Upstash Redis → Add Integration.
-Pick this project. Auto-injects UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN.
-```
-
-Then `vercel env pull .env.local` again to pick them up locally.
-
-The free tier (10k commands/day) is generous for this traffic shape.
+The right next defense for a public endpoint is **Vercel BotID** (free, GA
+since 2025-06) — it blocks scrapers/headless bots at the edge before they
+hit `/api/chat`. Add it before the chat goes public.
 
 ---
 
-## 5. Deployment Protection — gate `/admin/*`
+## 5. Admin auth — HTTP Basic Auth in middleware
 
-The admin page has **no auth in code**. It relies on Vercel Deployment
-Protection to gate the URL.
+`src/middleware.ts` gates `/admin/:path*` with HTTP Basic Auth. It reads
+`ADMIN_PASSWORD` from env and prompts the browser with the built-in basic
+auth dialog. Username is ignored; password is compared in constant time.
 
+Why not Vercel Deployment Protection? On Hobby/Pro plans, Deployment
+Protection only gates the *entire* deployment — there's no per-path scoping.
+Gating the whole site would auth-wall the public chat widget itself, so we
+do the gate in code instead.
+
+Set the password as a sensitive env var in Vercel:
+
+```sh
+vercel env add ADMIN_PASSWORD production --value '<your-password>' --yes
+vercel env add ADMIN_PASSWORD preview '' --value '<your-password>' --yes
 ```
-Vercel dashboard → Project → Settings → Deployment Protection →
-  Vercel Authentication: enabled for Production
-  OR
-  Password Protection: set a password (simplest for a single editor)
-```
 
-If you want to restrict only `/admin/*` and leave the rest of the site public,
-use **Protection Bypass for Automation** + a path-scoped rule. The simplest
-single-editor setup is "Password Protection: production only" — visitors get
-prompted once at the project's edge before the admin route resolves.
+Behavior:
 
-> Verify the gate works *before* setting `VERCEL_API_TOKEN` in production. The
-> page would otherwise be live and writable by anyone who guessed the URL.
+- **Production with `ADMIN_PASSWORD` set** → browser prompts for credentials.
+- **Production with `ADMIN_PASSWORD` unset** → middleware fails closed; every
+  `/admin/*` request gets a 401. A forgotten env var won't accidentally
+  expose the admin.
+- **Local dev** → middleware fails open if the env is missing, so
+  `localhost:3000/admin/chat` works without setting a password.
+
+Verify in an incognito window:
+
+- `https://<your-prod>/` → loads (public site unaffected)
+- `https://<your-prod>/admin/chat` → browser auth prompt → correct password
+  lets you in, wrong password loops the prompt
 
 ---
 

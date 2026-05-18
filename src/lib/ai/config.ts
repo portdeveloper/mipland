@@ -17,7 +17,7 @@ export const DEFAULT_CONFIG: ChatConfig = {
     "provided below. If a question is outside the allowed topics or cannot be " +
     "answered from the bundle, reply with the refusal text verbatim. Be concise " +
     "and cite the MIP number when relevant.",
-  model: "anthropic/claude-sonnet-4-6",
+  model: "deepseek/deepseek-v4-pro",
   allowedTopics: [
     "Monad Improvement Proposals (MIPs)",
     "the MIP process",

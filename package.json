@@ -17,8 +17,6 @@
     "@streamdown/code": "^1.1.1",
     "@streamdown/math": "^1.0.2",
     "@streamdown/mermaid": "^1.0.2",
-    "@upstash/ratelimit": "^2.0.8",
-    "@upstash/redis": "^1.38.0",
     "@vercel/edge-config": "^1.4.3",
     "ai": "^6.0.184",
     "class-variance-authority": "^0.7.1",

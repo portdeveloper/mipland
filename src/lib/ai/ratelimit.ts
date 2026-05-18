@@ -1,45 +1,60 @@
 import "server-only";
 
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
-
 export type RateLimitResult = {
   success: boolean;
   remaining: number;
   reset: number;
 };
 
-const ALLOW_ALL: RateLimitResult = {
-  success: true,
-  remaining: Number.POSITIVE_INFINITY,
-  reset: 0,
-};
+// 10 tokens per 60s = 1 token every 6 seconds, burst cap of 10.
+const CAPACITY = 10;
+const REFILL_PER_MS = CAPACITY / 60_000;
+const GC_AFTER_MS = 10 * 60_000;
 
-function hasUpstashEnv(): boolean {
-  return Boolean(
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN,
-  );
+type Bucket = { tokens: number; updatedAt: number };
+
+// Module-level Map persists across requests on the same Fluid Compute
+// instance. Each instance gets its own counter, so the effective limit is
+// 10/min × N_instances. Acceptable at this traffic level — swap to a shared
+// store (Upstash, Redis) if abuse becomes real.
+const buckets = new Map<string, Bucket>();
+let lastGc = 0;
+
+function refill(b: Bucket, now: number): void {
+  const elapsed = now - b.updatedAt;
+  if (elapsed <= 0) return;
+  b.tokens = Math.min(CAPACITY, b.tokens + elapsed * REFILL_PER_MS);
+  b.updatedAt = now;
 }
 
-let limiter: Ratelimit | null = null;
-
-function getLimiter(): Ratelimit | null {
-  if (!hasUpstashEnv()) return null;
-  limiter ??= new Ratelimit({
-    redis: Redis.fromEnv(),
-    limiter: Ratelimit.tokenBucket(10, "60 s", 10),
-    analytics: true,
-    prefix: "mipland:chat",
-  });
-  return limiter;
+function gc(now: number): void {
+  if (now - lastGc < GC_AFTER_MS) return;
+  lastGc = now;
+  for (const [ip, b] of buckets) {
+    if (now - b.updatedAt > GC_AFTER_MS) buckets.delete(ip);
+  }
 }
 
 export async function checkRateLimit(ip: string): Promise<RateLimitResult> {
-  const rl = getLimiter();
-  if (!rl) return ALLOW_ALL;
+  const now = Date.now();
+  gc(now);
 
-  const { success, remaining, reset } = await rl.limit(ip);
-  return { success, remaining, reset };
+  let b = buckets.get(ip);
+  if (!b) {
+    b = { tokens: CAPACITY, updatedAt: now };
+    buckets.set(ip, b);
+  } else {
+    refill(b, now);
+  }
+
+  if (b.tokens >= 1) {
+    b.tokens -= 1;
+    const msUntilFull = Math.ceil((CAPACITY - b.tokens) / REFILL_PER_MS);
+    return { success: true, remaining: Math.floor(b.tokens), reset: now + msUntilFull };
+  }
+
+  const msUntilNext = Math.ceil((1 - b.tokens) / REFILL_PER_MS);
+  return { success: false, remaining: 0, reset: now + msUntilNext };
 }
 
 export function getClientIp(headers: Headers): string {
