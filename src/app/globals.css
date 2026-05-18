@@ -1,10 +1,35 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-plex-sans);
   --font-mono: var(--font-plex-mono);
+
+  /* shadcn semantic tokens — mapped onto existing palette where possible.
+     Added alongside MIP design tokens, do not edit MIP tokens. */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 
   /* Problem palette - warm */
   --color-problem-bg: #fdf6ef;
@@ -44,6 +69,27 @@
 :root {
   --background: #f8f6f3;
   --foreground: #1a1714;
+
+  /* shadcn variables — chat widget uses these.
+     Tuned to harmonize with surface/solution palette. */
+  --card: #ffffff;
+  --card-foreground: #1a1714;
+  --popover: #ffffff;
+  --popover-foreground: #1a1714;
+  --primary: #2a7d6a;
+  --primary-foreground: #ffffff;
+  --secondary: #f0f7f5;
+  --secondary-foreground: #1a1714;
+  --muted: #ede8e1;
+  --muted-foreground: #6b6259;
+  --accent: #f0f7f5;
+  --accent-foreground: #2a7d6a;
+  --destructive: #b05226;
+  --destructive-foreground: #ffffff;
+  --border: #e2ddd7;
+  --input: #e2ddd7;
+  --ring: #2a7d6a;
+  --radius: 0.625rem;
 }
 
 body {

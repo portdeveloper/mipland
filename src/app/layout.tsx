@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import MipNav from "@/components/MipNav";
+import MipChat from "@/components/MipChat";
 import LanguageBanner from "@/components/LanguageBanner";
 import GlobalFooter from "@/components/GlobalFooter";
 import { LanguageProvider } from "@/i18n/LanguageContext";
@@ -52,6 +53,7 @@ export default function RootLayout({
           <MipNav />
           {children}
           <GlobalFooter />
+          <MipChat />
         </LanguageProvider>
       </body>
     </html>
