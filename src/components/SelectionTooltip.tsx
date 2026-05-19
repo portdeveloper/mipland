@@ -83,7 +83,7 @@ export default function SelectionTooltip() {
         if (!text) return;
         const prompt = `Explain: "${text}"`;
         window.dispatchEvent(
-          new CustomEvent("mip-chat:prefill", { detail: { text: prompt } }),
+          new CustomEvent("mip-chat:ask", { detail: { text: prompt } }),
         );
         window.getSelection()?.removeAllRanges();
         setPos(null);

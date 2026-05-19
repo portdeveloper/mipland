@@ -20,50 +20,43 @@ import {
 import {
   PromptInput,
   PromptInputBody,
-  PromptInputProvider,
   PromptInputSubmit,
   PromptInputTextarea,
-  usePromptInputController,
 } from "@/components/ai-elements/prompt-input";
 
 export default function MipChat() {
-  return (
-    <PromptInputProvider>
-      <MipChatInner />
-    </PromptInputProvider>
-  );
-}
-
-function MipChatInner() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const controller = usePromptInputController();
 
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
   });
 
-  // Listen for "Ask AI" tooltip clicks elsewhere on the page.
+  // Listen for "Ask AI" tooltip — open panel and send the question immediately.
   useEffect(() => {
     function handler(e: Event) {
       const detail = (e as CustomEvent<{ text?: string }>).detail;
-      if (!detail?.text) return;
-      controller.textInput.setInput(detail.text);
+      const text = detail?.text?.trim();
+      if (!text) return;
       setOpen(true);
-      // Focus textarea after the panel transition starts.
-      requestAnimationFrame(() => {
-        const ta = document.querySelector<HTMLTextAreaElement>(
-          '[data-mip-chat="true"] textarea[name="message"]',
-        );
-        if (ta) {
-          ta.focus();
-          ta.selectionStart = ta.selectionEnd = ta.value.length;
-        }
-      });
+      void sendMessage(
+        { text },
+        {
+          body: {
+            pageContext: {
+              path: pathname,
+              title:
+                typeof document !== "undefined"
+                  ? document.title
+                  : undefined,
+            },
+          },
+        },
+      );
     }
-    window.addEventListener("mip-chat:prefill", handler);
-    return () => window.removeEventListener("mip-chat:prefill", handler);
-  }, [controller]);
+    window.addEventListener("mip-chat:ask", handler);
+    return () => window.removeEventListener("mip-chat:ask", handler);
+  }, [pathname, sendMessage]);
 
   return (
     <>
@@ -135,7 +128,6 @@ function MipChatInner() {
             onSubmit={async (msg) => {
               const text = msg.text.trim();
               if (!text) return;
-              controller.textInput.clear();
               await sendMessage(
                 { text },
                 {
