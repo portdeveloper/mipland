@@ -359,7 +359,7 @@ export default function Monad101Page() {
       <VisualSection
         tone="surface"
         eyebrow="02 / Mechanics"
-        title="Inside the engine: order, run parallel, commit serial, repeat"
+        title="Order, run parallel, commit serial, repeat"
         copy={
           <>
             <p>
@@ -563,28 +563,41 @@ function HelpOverlay({ open, onClose }: { open: boolean; onClose: () => void }) 
 function EdgeDiagram() {
   const shouldReduceMotion = !!useReducedMotion();
   const { ref, enterCount } = useEnterCount(0.3);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   return (
-    <div
-      ref={ref}
-      className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6"
+    <DiagramHoverContext.Provider
+      value={{ activeId, setActive: setActiveId, hints: EDGE_HINTS }}
     >
-      <TailForkPanel
-        enterCount={enterCount}
-        shouldReduceMotion={shouldReduceMotion}
-      />
-      <div className="my-5 h-px bg-border" />
-      <SpeculativeExecPanel
-        enterCount={enterCount}
-        shouldReduceMotion={shouldReduceMotion}
-      />
-      <div className="mt-5 flex justify-end">
-        <DocsQRBadge
-          src="/qr-monad-bft.svg"
-          href="https://docs.monad.xyz/monad-arch/consensus/monad-bft"
-        />
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_220px] gap-3 lg:gap-5 items-start">
+        <div
+          ref={ref}
+          className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6"
+          onMouseLeave={() => setActiveId(null)}
+        >
+          <HoverExplain id="tail-fork">
+            <TailForkPanel
+              enterCount={enterCount}
+              shouldReduceMotion={shouldReduceMotion}
+            />
+          </HoverExplain>
+          <div className="my-5 h-px bg-border" />
+          <HoverExplain id="speculative-exec">
+            <SpeculativeExecPanel
+              enterCount={enterCount}
+              shouldReduceMotion={shouldReduceMotion}
+            />
+          </HoverExplain>
+          <div className="mt-5 flex justify-end">
+            <DocsQRBadge
+              src="/qr-monad-bft.svg"
+              href="https://docs.monad.xyz/monad-arch/consensus/monad-bft"
+            />
+          </div>
+        </div>
+        <DiagramExplainer defaultText="Hover either panel to see the developer edge." />
       </div>
-    </div>
+    </DiagramHoverContext.Provider>
   );
 }
 
@@ -784,131 +797,154 @@ function SpeculativeExecPanel({
 function RealtimeDataDiagram() {
   const shouldReduceMotion = !!useReducedMotion();
   const { ref, enterCount } = useEnterCount(0.3);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const frozen = shouldReduceMotion || activeId !== null;
 
-  const consumers = ["indexer", "dashboard", "MEV bot", "WS subscriber"];
+  const consumers: { id: string; label: string }[] = [
+    { id: "indexer", label: "indexer" },
+    { id: "dashboard", label: "dashboard" },
+    { id: "mev-bot", label: "MEV bot" },
+    { id: "ws-subscriber", label: "WS subscriber" },
+  ];
 
   return (
-    <div
-      ref={ref}
-      className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6"
+    <DiagramHoverContext.Provider
+      value={{ activeId, setActive: setActiveId, hints: REALTIME_HINTS }}
     >
-      <div className="grid grid-cols-[110px_minmax(0,1fr)_120px] items-center gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_220px] gap-3 lg:gap-5 items-start">
         <div
-          className="rounded-xl border-2 p-3 text-center"
-          style={{
-            borderColor: colors.solutionAccent,
-            backgroundColor: colors.solutionBg,
-          }}
+          ref={ref}
+          className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6"
+          onMouseLeave={() => setActiveId(null)}
         >
-          <p
-            className="font-mono text-[10px] mb-1"
-            style={{ color: colors.solutionAccent }}
-          >
-            executing
-          </p>
-          <p
-            className="font-mono text-sm"
-            style={{ color: colors.solutionAccent }}
-          >
-            block N
-          </p>
-        </div>
+          <div className="grid grid-cols-[110px_minmax(0,1fr)_120px] items-center gap-4">
+            <HoverExplain id="executing-block">
+              <div
+                className="rounded-xl border-2 p-3 text-center"
+                style={{
+                  borderColor: colors.solutionAccent,
+                  backgroundColor: colors.solutionBg,
+                }}
+              >
+                <p
+                  className="font-mono text-[10px] mb-1"
+                  style={{ color: colors.solutionAccent }}
+                >
+                  executing
+                </p>
+                <p
+                  className="font-mono text-sm"
+                  style={{ color: colors.solutionAccent }}
+                >
+                  block N
+                </p>
+              </div>
+            </HoverExplain>
 
-        <div className="relative h-32 overflow-hidden">
-          {!shouldReduceMotion &&
-            Array.from({ length: 14 }).map((_, i) => {
-              const lane = i % 4;
-              const yPct = 12 + lane * 22;
-              return (
-                <motion.div
-                  key={`evt-${i}-${enterCount}`}
-                  initial={{ left: "-5%", opacity: 0 }}
-                  animate={{
-                    left: ["-5%", "100%"],
-                    opacity: [0, 1, 1, 0],
-                  }}
-                  transition={{
-                    duration: 2.2,
-                    delay: i * 0.28,
-                    times: [0, 0.1, 0.85, 1],
-                    repeat: Infinity,
-                    repeatDelay: 0,
-                    ease: "linear",
-                  }}
-                  className="absolute h-1.5 w-3 rounded-full"
-                  style={{
-                    top: `${yPct}%`,
-                    backgroundColor: colors.solutionAccent,
-                  }}
-                />
-              );
-            })}
-        </div>
+            <div className="relative h-32 overflow-hidden">
+              {!frozen &&
+                Array.from({ length: 14 }).map((_, i) => {
+                  const lane = i % 4;
+                  const yPct = 12 + lane * 22;
+                  return (
+                    <motion.div
+                      key={`evt-${i}-${enterCount}`}
+                      initial={{ left: "-5%", opacity: 0 }}
+                      animate={{
+                        left: ["-5%", "100%"],
+                        opacity: [0, 1, 1, 0],
+                      }}
+                      transition={{
+                        duration: 2.2,
+                        delay: i * 0.28,
+                        times: [0, 0.1, 0.85, 1],
+                        repeat: Infinity,
+                        repeatDelay: 0,
+                        ease: "linear",
+                      }}
+                      className="absolute h-1.5 w-3 rounded-full"
+                      style={{
+                        top: `${yPct}%`,
+                        backgroundColor: colors.solutionAccent,
+                      }}
+                    />
+                  );
+                })}
+            </div>
 
-        <div className="space-y-1.5">
-          {consumers.map((c, i) => (
-            <motion.div
-              key={c}
-              className="rounded-md border border-border bg-surface px-2.5 py-1.5"
-              animate={
-                shouldReduceMotion
-                  ? undefined
-                  : { borderColor: [colors.border, colors.solutionAccent, colors.border] }
-              }
-              transition={
-                shouldReduceMotion
-                  ? undefined
-                  : {
-                      duration: 0.6,
-                      delay: 1 + i * 0.18,
-                      repeat: Infinity,
-                      repeatDelay: 2.5,
-                      ease: "easeInOut",
+            <div className="space-y-1.5">
+              {consumers.map((c, i) => (
+                <HoverExplain key={c.id} id={c.id}>
+                  <motion.div
+                    className="rounded-md border border-border bg-surface px-2.5 py-1.5"
+                    animate={
+                      frozen
+                        ? undefined
+                        : { borderColor: [colors.border, colors.solutionAccent, colors.border] }
                     }
-              }
-            >
-              <p className="font-mono text-[10px] text-text-primary text-center">
-                {c}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+                    transition={
+                      frozen
+                        ? undefined
+                        : {
+                            duration: 0.6,
+                            delay: 1 + i * 0.18,
+                            repeat: Infinity,
+                            repeatDelay: 2.5,
+                            ease: "easeInOut",
+                          }
+                    }
+                  >
+                    <p className="font-mono text-[10px] text-text-primary text-center">
+                      {c.label}
+                    </p>
+                  </motion.div>
+                </HoverExplain>
+              ))}
+            </div>
+          </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <div className="rounded-lg bg-surface border border-border p-3">
-          <p className="font-mono text-[10px] text-text-tertiary mb-1">
-            shared-memory IPC
-          </p>
-          <p className="text-xs text-text-secondary leading-relaxed">
-            <span className="font-mono">libmonad_event</span> /{" "}
-            <span className="font-mono">monad-exec-events</span> for high-throughput consumers
-          </p>
-        </div>
-        <div className="rounded-lg bg-surface border border-border p-3">
-          <p className="font-mono text-[10px] text-text-tertiary mb-1">
-            WebSocket extension
-          </p>
-          <p className="text-xs text-text-secondary leading-relaxed">
-            <span className="font-mono">monadNewHeads</span> /{" "}
-            <span className="font-mono">monadLogs</span> tracks block-state progression
-          </p>
-        </div>
-      </div>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <HoverExplain id="ipc-card">
+              <div className="rounded-lg bg-surface border border-border p-3">
+                <p className="font-mono text-[10px] text-text-tertiary mb-1">
+                  shared-memory IPC
+                </p>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  <span className="font-mono">libmonad_event</span> /{" "}
+                  <span className="font-mono">monad-exec-events</span> for high-throughput consumers
+                </p>
+              </div>
+            </HoverExplain>
+            <HoverExplain id="ws-card">
+              <div className="rounded-lg bg-surface border border-border p-3">
+                <p className="font-mono text-[10px] text-text-tertiary mb-1">
+                  WebSocket extension
+                </p>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  <span className="font-mono">monadNewHeads</span> /{" "}
+                  <span className="font-mono">monadLogs</span> tracks block-state progression
+                </p>
+              </div>
+            </HoverExplain>
+          </div>
 
-      <div className="mt-4 flex justify-end">
-        <DocsQRBadge
-          src="/qr-realtime.svg"
-          href="https://docs.monad.xyz/monad-arch/realtime-data"
-        />
+          <div className="mt-4 flex justify-end">
+            <DocsQRBadge
+              src="/qr-realtime.svg"
+              href="https://docs.monad.xyz/monad-arch/realtime-data"
+            />
+          </div>
+        </div>
+        <DiagramExplainer defaultText="Hover any consumer or transport for how it plugs in." />
       </div>
-    </div>
+    </DiagramHoverContext.Provider>
   );
 }
 
 function BuildTodayDiagram() {
   const shouldReduceMotion = !!useReducedMotion();
   const { ref, enterCount } = useEnterCount(0.3);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const facts: { label: string; value: string }[] = [
     { label: "Chain ID", value: "143" },
@@ -920,86 +956,100 @@ function BuildTodayDiagram() {
   ];
 
   return (
-    <div
-      ref={ref}
-      className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6"
+    <DiagramHoverContext.Provider
+      value={{ activeId, setActive: setActiveId, hints: BUILD_HINTS }}
     >
-      <div className="rounded-xl bg-surface border border-border p-4 mb-4 font-mono text-xs leading-relaxed">
-        <span className="text-text-tertiary">$ </span>
-        <motion.span
-          key={`cmd-${enterCount}`}
-          initial={shouldReduceMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={
-            shouldReduceMotion ? { duration: 0 } : { duration: 0.6, delay: 0.3 }
-          }
-          className="text-text-primary"
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_220px] gap-3 lg:gap-5 items-start">
+        <div
+          ref={ref}
+          className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6"
+          onMouseLeave={() => setActiveId(null)}
         >
-          forge create --rpc-url{" "}
-          <span style={{ color: colors.solutionAccent }}>
-            https://rpc.monad.xyz
-          </span>{" "}
-          src/Counter.sol:Counter
-        </motion.span>
-        <motion.span
-          key={`reply-${enterCount}`}
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={
-            shouldReduceMotion
-              ? { duration: 0 }
-              : { duration: 0.6, delay: 1.4, ease: [0.16, 1, 0.3, 1] }
-          }
-          className="block mt-2"
-          style={{ color: colors.solutionAccent }}
-        >
-          ✓ Deployer · 0x… · txHash · block 8421317
-        </motion.span>
-      </div>
+          <HoverExplain id="deploy-cmd">
+            <div className="rounded-xl bg-surface border border-border p-4 font-mono text-xs leading-relaxed">
+              <span className="text-text-tertiary">$ </span>
+              <motion.span
+                key={`cmd-${enterCount}`}
+                initial={shouldReduceMotion ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={
+                  shouldReduceMotion ? { duration: 0 } : { duration: 0.6, delay: 0.3 }
+                }
+                className="text-text-primary"
+              >
+                forge create --rpc-url{" "}
+                <span style={{ color: colors.solutionAccent }}>
+                  https://rpc.monad.xyz
+                </span>{" "}
+                src/Counter.sol:Counter
+              </motion.span>
+              <motion.span
+                key={`reply-${enterCount}`}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={
+                  shouldReduceMotion
+                    ? { duration: 0 }
+                    : { duration: 0.6, delay: 1.4, ease: [0.16, 1, 0.3, 1] }
+                }
+                className="block mt-2"
+                style={{ color: colors.solutionAccent }}
+              >
+                ✓ Deployer · 0x… · txHash · block 8421317
+              </motion.span>
+            </div>
+          </HoverExplain>
 
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        {facts.map((fact, i) => (
-          <motion.div
-            key={`${fact.label}-${enterCount}`}
-            initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              shouldReduceMotion
-                ? { duration: 0 }
-                : { duration: 0.5, delay: 0.6 + i * 0.08, ease: [0.16, 1, 0.3, 1] }
-            }
-            className="rounded-lg bg-surface border border-border px-3 py-2"
-          >
-            <p className="font-mono text-[10px] text-text-tertiary">
-              {fact.label}
-            </p>
-            <p
-              className="font-mono text-xs"
-              style={{ color: colors.solutionAccent }}
-            >
-              {fact.value}
-            </p>
-          </motion.div>
-        ))}
-      </div>
+          <HoverExplain id="chain-info" className="mt-4">
+            <div className="grid grid-cols-2 gap-2">
+              {facts.map((fact, i) => (
+                <motion.div
+                  key={`${fact.label}-${enterCount}`}
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={
+                    shouldReduceMotion
+                      ? { duration: 0 }
+                      : { duration: 0.5, delay: 0.6 + i * 0.08, ease: [0.16, 1, 0.3, 1] }
+                  }
+                  className="rounded-lg bg-surface border border-border px-3 py-2"
+                >
+                  <p className="font-mono text-[10px] text-text-tertiary">
+                    {fact.label}
+                  </p>
+                  <p
+                    className="font-mono text-xs"
+                    style={{ color: colors.solutionAccent }}
+                  >
+                    {fact.value}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </HoverExplain>
 
-      <div className="rounded-lg bg-solution-bg border border-solution-accent-light px-3 py-2 mb-4 text-center">
-        <p
-          className="font-mono text-xs"
-          style={{ color: colors.solutionAccent }}
-        >
-          mainnet · live · same Solidity, new RPC
-        </p>
-      </div>
+          <HoverExplain id="status" className="mt-4">
+            <div className="rounded-lg bg-solution-bg border border-solution-accent-light px-3 py-2 text-center">
+              <p
+                className="font-mono text-xs"
+                style={{ color: colors.solutionAccent }}
+              >
+                mainnet · live · same Solidity, new RPC
+              </p>
+            </div>
+          </HoverExplain>
 
-      <div className="flex justify-end">
-        <DocsQRBadge
-          src="/qr-network.svg"
-          href="https://docs.monad.xyz/developer-essentials/network-information"
-          label="scan · network info"
-        />
+          <div className="mt-4 flex justify-end">
+            <DocsQRBadge
+              src="/qr-network.svg"
+              href="https://docs.monad.xyz/developer-essentials/network-information"
+              label="scan · network info"
+            />
+          </div>
+        </div>
+        <DiagramExplainer defaultText="Hover any block for what it means for porting." />
       </div>
-    </div>
+    </DiagramHoverContext.Provider>
   );
 }
 
@@ -1050,7 +1100,7 @@ function ReferencesList() {
       id="references"
       className="bg-surface border-t border-border px-6 py-14 scroll-mt-24"
     >
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <p className="font-mono text-[11px] text-text-tertiary tracking-wide mb-5 uppercase">
           References
         </p>
@@ -1091,7 +1141,7 @@ function Hero() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        className="text-center max-w-3xl relative z-10 mt-30"
+        className="text-center max-w-4xl relative z-10 mt-30"
       >
         <h1
           className={`${
@@ -1115,7 +1165,7 @@ function Hero() {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="mt-12 mb-16 relative z-10 w-full max-w-2xl"
+        className="mt-12 mb-16 relative z-10 w-full max-w-4xl"
       >
         <PipelineHeroVisual />
       </motion.div>
@@ -1163,7 +1213,7 @@ function VisualSection({
     >
       <div
         ref={ref}
-        className={`w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,0.62fr)_minmax(0,1.38fr)] gap-9 lg:gap-14 items-center section-reveal ${
+        className={`w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,0.62fr)_minmax(0,1.38fr)] gap-9 lg:gap-14 items-center section-reveal ${
           isVisible ? "visible" : ""
         }`}
       >
@@ -1175,7 +1225,7 @@ function VisualSection({
             className={`${
               presenterMode
                 ? "text-4xl sm:text-5xl md:text-6xl mb-6"
-                : "text-3xl sm:text-4xl mb-4"
+                : "text-2xl sm:text-3xl mb-4 text-balance"
             } font-semibold leading-tight`}
           >
             {title}
@@ -1214,7 +1264,7 @@ function WideSection({
     >
       <div
         ref={ref}
-        className={`w-full max-w-6xl mx-auto section-reveal ${
+        className={`w-full max-w-7xl mx-auto section-reveal ${
           isVisible ? "visible" : ""
         }`}
       >
@@ -1249,7 +1299,10 @@ const BLOCK_STATES_PULSE_SEC = 0.7;
 function BlockStatesDiagram() {
   const shouldReduceMotion = !!useReducedMotion();
   const { ref, enterCount } = useEnterCount(0.4);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const frozen = shouldReduceMotion || activeId !== null;
   const states: {
+    id: string;
     label: string;
     rpcTag: string | null;
     timing: string;
@@ -1258,6 +1311,7 @@ function BlockStatesDiagram() {
     color: string;
   }[] = [
     {
+      id: "proposed",
       label: "Proposed",
       rpcTag: "latest",
       timing: "< 400 ms",
@@ -1266,6 +1320,7 @@ function BlockStatesDiagram() {
       color: colors.userAccent,
     },
     {
+      id: "voted",
       label: "Voted",
       rpcTag: "safe",
       timing: "~400 ms",
@@ -1274,6 +1329,7 @@ function BlockStatesDiagram() {
       color: colors.problemAccentStrong,
     },
     {
+      id: "finalized",
       label: "Finalized",
       rpcTag: "finalized",
       timing: "~800 ms",
@@ -1282,6 +1338,7 @@ function BlockStatesDiagram() {
       color: colors.solutionAccent,
     },
     {
+      id: "verified",
       label: "Verified",
       rpcTag: null,
       timing: "~2 s",
@@ -1294,93 +1351,99 @@ function BlockStatesDiagram() {
   const repeatDelay = BLOCK_STATES_CYCLE_SEC - BLOCK_STATES_PULSE_SEC;
 
   return (
-    <div ref={ref} className="relative">
-      <div className="hidden sm:block absolute left-[12.5%] right-[12.5%] top-[28px] h-px bg-border" />
-      {!shouldReduceMotion && (
-        <motion.div
-          key={`line-${enterCount}`}
-          className="hidden sm:block absolute left-[12.5%] right-[12.5%] top-[28px] h-px origin-left"
-          style={{ backgroundColor: colors.solutionAccent }}
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: [0, 1, 1, 0] }}
-          transition={{
-            duration: BLOCK_STATES_CYCLE_SEC,
-            times: [0, 0.6, 0.85, 1],
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
-      )}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 relative">
-        {states.map((state, index) => (
-          <div key={state.label} className="flex flex-col">
-            <div className="flex justify-center mb-4">
-              <motion.div
-                key={`marker-${index}-${enterCount}`}
-                className="relative z-10 h-14 w-14 rounded-full border-4 border-surface-alt flex items-center justify-center shadow-sm"
-                style={{ backgroundColor: state.color }}
-                animate={
-                  shouldReduceMotion
-                    ? undefined
-                    : { scale: [1, 1.18, 1] }
-                }
-                transition={
-                  shouldReduceMotion
-                    ? undefined
-                    : {
-                        duration: BLOCK_STATES_PULSE_SEC,
-                        delay: index * 1.6,
-                        repeat: Infinity,
-                        repeatDelay,
-                        ease: "easeInOut",
-                      }
-                }
-              >
-                <span className="font-mono text-sm font-semibold text-surface">
-                  {index + 1}
-                </span>
-              </motion.div>
-            </div>
-            <div className="rounded-xl border border-border bg-surface-elevated p-5 flex-1">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                {state.rpcTag ? (
-                  <span
-                    className="font-mono text-[10px] px-2 py-0.5 rounded border"
-                    style={{
-                      color: colors.solutionAccent,
-                      backgroundColor: colors.solutionBg,
-                      borderColor: colors.solutionAccentLight,
-                    }}
-                  >
-                    {state.rpcTag}
+    <DiagramHoverContext.Provider
+      value={{ activeId, setActive: setActiveId, hints: BLOCK_STATES_HINTS }}
+    >
+      <div ref={ref} className="relative" onMouseLeave={() => setActiveId(null)}>
+        <div className="hidden sm:block absolute left-[12.5%] right-[12.5%] top-[28px] h-px bg-border" />
+        {!frozen && (
+          <motion.div
+            key={`line-${enterCount}`}
+            className="hidden sm:block absolute left-[12.5%] right-[12.5%] top-[28px] h-px origin-left"
+            style={{ backgroundColor: colors.solutionAccent }}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: [0, 1, 1, 0] }}
+            transition={{
+              duration: BLOCK_STATES_CYCLE_SEC,
+              times: [0, 0.6, 0.85, 1],
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 relative">
+          {states.map((state, index) => (
+            <HoverExplain key={state.id} id={state.id} className="flex flex-col">
+              <div className="flex justify-center mb-4">
+                <motion.div
+                  key={`marker-${index}-${enterCount}`}
+                  className="relative z-10 h-14 w-14 rounded-full border-4 border-surface-alt flex items-center justify-center shadow-sm"
+                  style={{ backgroundColor: state.color }}
+                  animate={frozen ? undefined : { scale: [1, 1.18, 1] }}
+                  transition={
+                    frozen
+                      ? undefined
+                      : {
+                          duration: BLOCK_STATES_PULSE_SEC,
+                          delay: index * 1.6,
+                          repeat: Infinity,
+                          repeatDelay,
+                          ease: "easeInOut",
+                        }
+                  }
+                >
+                  <span className="font-mono text-sm font-semibold text-surface">
+                    {index + 1}
                   </span>
-                ) : (
-                  <span className="font-mono text-[10px] text-text-tertiary">
-                    no RPC tag
-                  </span>
-                )}
-                <span className="font-mono text-[10px] text-text-tertiary tabular-nums">
-                  {state.timing}
-                </span>
+                </motion.div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">{state.label}</h3>
-              <p className="text-sm text-text-primary font-medium mb-3">
-                {state.body}
-              </p>
-              <p className="text-sm text-text-secondary font-light leading-relaxed">
-                {state.example}
-              </p>
-            </div>
-          </div>
-        ))}
+              <div className="rounded-xl border border-border bg-surface-elevated p-5 flex-1">
+                <div className="flex items-center justify-between mb-3 gap-2">
+                  {state.rpcTag ? (
+                    <span
+                      className="font-mono text-[10px] px-2 py-0.5 rounded border"
+                      style={{
+                        color: colors.solutionAccent,
+                        backgroundColor: colors.solutionBg,
+                        borderColor: colors.solutionAccentLight,
+                      }}
+                    >
+                      {state.rpcTag}
+                    </span>
+                  ) : (
+                    <span className="font-mono text-[10px] text-text-tertiary">
+                      no RPC tag
+                    </span>
+                  )}
+                  <span className="font-mono text-[10px] text-text-tertiary tabular-nums">
+                    {state.timing}
+                  </span>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{state.label}</h3>
+                <p className="text-sm text-text-primary font-medium mb-3">
+                  {state.body}
+                </p>
+                <p className="text-sm text-text-secondary font-light leading-relaxed">
+                  {state.example}
+                </p>
+              </div>
+            </HoverExplain>
+          ))}
+        </div>
+        <div className="mt-5">
+          <DiagramExplainer
+            defaultText="Hover any state for when to use it."
+            variant="compact"
+          />
+        </div>
+        <div className="mt-4 flex justify-end">
+          <DocsQRBadge
+            src="/qr-block-states.svg"
+            href="https://docs.monad.xyz/monad-arch/consensus/block-states"
+          />
+        </div>
       </div>
-      <div className="mt-6 flex justify-end">
-        <DocsQRBadge
-          src="/qr-block-states.svg"
-          href="https://docs.monad.xyz/monad-arch/consensus/block-states"
-        />
-      </div>
-    </div>
+    </DiagramHoverContext.Provider>
   );
 }
 
@@ -2055,14 +2118,133 @@ const LAYER_MAP_HINTS: Record<string, LayerMapHint> = {
   },
 };
 
-const LayerMapHoverContext = createContext<{
+const DiagramHoverContext = createContext<{
   activeId: string | null;
   setActive: (id: string | null) => void;
-}>({ activeId: null, setActive: () => {} });
+  hints: Record<string, LayerMapHint>;
+}>({ activeId: null, setActive: () => {}, hints: {} });
 
-function useLayerMapHover() {
-  return useContext(LayerMapHoverContext);
+function useDiagramHover() {
+  return useContext(DiagramHoverContext);
 }
+
+const BLOCK_STATES_HINTS: Record<string, LayerMapHint> = {
+  proposed: {
+    title: "Proposed",
+    body: "The block is on the wire but not yet voted. Use for instant UI echoes — tap confirmations, optimistic UI. Reorgs are rare at <400 ms.",
+  },
+  voted: {
+    title: "Voted",
+    body: "Validators have voted but haven't finalized. Reorg risk drops sharply. Good gate before revealing the next step in a multi-step flow.",
+  },
+  finalized: {
+    title: "Finalized",
+    body: "Cryptographically locked in — can't be reverted without slashing ~1/3 of stake. Use for any transfer of value or irreversible record.",
+  },
+  verified: {
+    title: "Verified",
+    body: "State root has been independently re-executed. Use when proofs of state are needed — light clients, cross-chain bridges, audits.",
+  },
+};
+
+const METRICS_HINTS: Record<string, LayerMapHint> = {
+  throughput: {
+    title: "Throughput",
+    body: "10k tx/s changes app architecture. No need to batch user actions or push activity off-chain to feel responsive.",
+  },
+  "block-frequency": {
+    title: "Block frequency",
+    body: "Sub-second blocks make the chain feel like a normal database. Users get acknowledgement before they retry the action.",
+  },
+  finality: {
+    title: "Finality",
+    body: "Single-slot finality, not probabilistic. One block is enough to act on — no waiting for 12 confirmations.",
+  },
+  "gas-throughput": {
+    title: "Gas throughput",
+    body: "More gas per second means richer contracts can run without budgeting around the chain. Heavy logic stays on-chain.",
+  },
+};
+
+const EDGE_HINTS: Record<string, LayerMapHint> = {
+  "tail-fork": {
+    title: "Tail-fork resistance",
+    body: "MonadBFT proves a leader can't fork away the predecessor. Reorder-based MEV (sandwiches, frontruns on committed blocks) doesn't apply.",
+  },
+  "speculative-exec": {
+    title: "Speculative reads",
+    body: "Reads like eth_call and eth_estimateGas hit the freshest proposed block, not the last finalized one. Wallets see seconds-fresher state.",
+  },
+};
+
+const REALTIME_HINTS: Record<string, LayerMapHint> = {
+  "executing-block": {
+    title: "Executing block N",
+    body: "While the next block is being ordered, the current block's transactions execute and emit events live — no waiting for the block to close.",
+  },
+  indexer: {
+    title: "Indexer",
+    body: "Subscribes to libmonad_event for zero-poll, near-realtime state. Catches events as they're written, not 12 seconds later.",
+  },
+  dashboard: {
+    title: "Dashboard",
+    body: "Live UI updates. No 12-second polling cadence — events stream in as the EVM produces them.",
+  },
+  "mev-bot": {
+    title: "MEV bot",
+    body: "Searchers race on the event ring directly. Traditional mempool tricks lose value when reads already hit proposed blocks.",
+  },
+  "ws-subscriber": {
+    title: "WS subscriber",
+    body: "monadNewHeads pushes block-state transitions over WebSocket — proposed → voted → finalized, all on one stream.",
+  },
+  "ipc-card": {
+    title: "Shared-memory IPC",
+    body: "Local-only fast path. libmonad_event / monad-exec-events deliver zero-copy events to indexers running on the same machine as the node.",
+  },
+  "ws-card": {
+    title: "WebSocket extension",
+    body: "Standard JSON-RPC over WebSocket plus Monad-specific topics for block-state progression and richer logs.",
+  },
+};
+
+const BUILD_HINTS: Record<string, LayerMapHint> = {
+  "deploy-cmd": {
+    title: "Same tools, new RPC",
+    body: "Foundry, Hardhat, Remix all work unchanged. The only knob you turn is --rpc-url. Solidity, ABI, addresses — all identical to Ethereum.",
+  },
+  "chain-info": {
+    title: "Network constants",
+    body: "Chain ID 143, native currency MON. Add as a custom EVM network anywhere that supports one.",
+  },
+  status: {
+    title: "Mainnet live",
+    body: "No testnet-only stage — mainnet has been live and processing real traffic. Validate against real chain state from day one.",
+  },
+};
+
+const ENGINE_HINTS: Record<string, LayerMapHint> = {
+  interleaved: {
+    title: "Ethereum-style interleave",
+    body: "Shown for contrast. On Ethereum, propose → execute → vote share one ~12 s slot, so only a fraction is real CPU. Monad's pipeline below skips this trade-off.",
+  },
+  consensus: {
+    title: "Consensus pipeline",
+    body: "Every ~400 ms the next leader proposes a block (N, N+1, N+2…) and validators vote. Consensus advances every slot regardless of execution.",
+  },
+  execution: {
+    title: "Execution pipeline",
+    body: "Execution runs the previous block while consensus orders the next one. Each block gets the full ~400 ms of CPU instead of a sliced budget.",
+  },
+  verify: {
+    title: "Delayed verification",
+    body: "Verification of the state root lands roughly 3 blocks later (~1.2 s). Apps act on committed blocks immediately and reconcile against verified ones afterwards.",
+  },
+  "parallel-block": {
+    title: "Parallel inside one slot",
+    body: "Workers race transactions concurrently inside one execution slot. Conflicts (tx 2) replay; the recorded order is still 1 → 2 → 3 → 4.",
+  },
+};
 
 function HoverExplain({
   id,
@@ -2073,10 +2255,10 @@ function HoverExplain({
   className?: string;
   children: ReactNode;
 }) {
-  const { activeId, setActive } = useLayerMapHover();
+  const { activeId, setActive, hints } = useDiagramHover();
   const isActive = activeId === id;
   const isDim = activeId !== null && !isActive;
-  const hint = LAYER_MAP_HINTS[id];
+  const hint = hints[id];
   return (
     <div
       tabIndex={0}
@@ -2095,17 +2277,27 @@ function HoverExplain({
   );
 }
 
-function LayerMapExplainer() {
-  const { activeId } = useLayerMapHover();
-  const hint = activeId ? LAYER_MAP_HINTS[activeId] : null;
+function DiagramExplainer({
+  defaultText = "Hover or focus any layer to see what it does.",
+  variant = "sidecar",
+}: {
+  defaultText?: string;
+  variant?: "sidecar" | "compact";
+}) {
+  const { activeId, hints } = useDiagramHover();
+  const hint = activeId ? hints[activeId] : null;
+  const sizing =
+    variant === "compact"
+      ? "min-h-[72px]"
+      : "lg:sticky lg:top-6 lg:min-h-[180px]";
   return (
-    <div
-      className="rounded-xl border border-border bg-surface px-4 py-3 min-h-[68px]"
+    <aside
+      className={`rounded-xl border border-border bg-surface-elevated px-4 py-3 ${sizing}`}
       aria-live="polite"
     >
       {hint ? (
         <>
-          <p className="font-mono text-[10px] text-solution-accent tracking-wide uppercase mb-1">
+          <p className="font-mono text-[10px] text-solution-accent tracking-wide uppercase mb-1.5">
             {hint.title}
           </p>
           <p className="text-sm text-text-primary leading-relaxed">
@@ -2113,11 +2305,11 @@ function LayerMapExplainer() {
           </p>
         </>
       ) : (
-        <p className="text-xs text-text-tertiary font-light">
-          Hover or focus any layer above to see what it does.
+        <p className="text-xs text-text-tertiary font-light leading-relaxed">
+          {defaultText}
         </p>
       )}
-    </div>
+    </aside>
   );
 }
 
@@ -2126,29 +2318,33 @@ function LayerMap() {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   return (
-    <LayerMapHoverContext.Provider value={{ activeId, setActive: setActiveId }}>
-      <div
-        className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6 space-y-3"
-        onMouseLeave={() => setActiveId(null)}
-      >
-        <HoverExplain id="surface">
-          <SurfaceRow shouldReduceMotion={shouldReduceMotion} />
-        </HoverExplain>
-        <Connector label="compiled / called" shouldReduceMotion={shouldReduceMotion} />
-        <EngineCard shouldReduceMotion={shouldReduceMotion} />
-        <Connector label="canonical block" shouldReduceMotion={shouldReduceMotion} />
-        <HoverExplain id="result">
-          <ResultRow shouldReduceMotion={shouldReduceMotion} />
-        </HoverExplain>
-        <LayerMapExplainer />
-        <div className="flex justify-end pt-2">
-          <DocsQRBadge
-            src="/qr-identity.svg"
-            href="https://docs.monad.xyz/introduction/monad-for-developers"
-          />
+    <DiagramHoverContext.Provider
+      value={{ activeId, setActive: setActiveId, hints: LAYER_MAP_HINTS }}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_220px] gap-3 lg:gap-5 items-start">
+        <div
+          className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6 space-y-3"
+          onMouseLeave={() => setActiveId(null)}
+        >
+          <HoverExplain id="surface">
+            <SurfaceRow shouldReduceMotion={shouldReduceMotion} />
+          </HoverExplain>
+          <Connector label="compiled / called" shouldReduceMotion={shouldReduceMotion} />
+          <EngineCard shouldReduceMotion={shouldReduceMotion} />
+          <Connector label="canonical block" shouldReduceMotion={shouldReduceMotion} />
+          <HoverExplain id="result">
+            <ResultRow shouldReduceMotion={shouldReduceMotion} />
+          </HoverExplain>
+          <div className="flex justify-end pt-2">
+            <DocsQRBadge
+              src="/qr-identity.svg"
+              href="https://docs.monad.xyz/introduction/monad-for-developers"
+            />
+          </div>
         </div>
+        <DiagramExplainer />
       </div>
-    </LayerMapHoverContext.Provider>
+    </DiagramHoverContext.Provider>
   );
 }
 
@@ -2160,7 +2356,7 @@ const SURFACE_ITEMS = [
 ];
 
 function SurfaceRow({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  const { activeId } = useLayerMapHover();
+  const { activeId } = useDiagramHover();
   const frozen = shouldReduceMotion || activeId !== null;
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
@@ -2207,7 +2403,7 @@ function Connector({
   label: string;
   shouldReduceMotion: boolean;
 }) {
-  const { activeId } = useLayerMapHover();
+  const { activeId } = useDiagramHover();
   const frozen = shouldReduceMotion || activeId !== null;
   return (
     <div className="flex items-center justify-center py-1">
@@ -2324,7 +2520,7 @@ function EngineSubsystem({
 }
 
 function ValidatorDots({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  const { activeId } = useLayerMapHover();
+  const { activeId } = useDiagramHover();
   const frozen = shouldReduceMotion || activeId !== null;
   const count = 7;
   const cycleSec = 5;
@@ -2367,7 +2563,7 @@ function RaptorCastChunks({
 }: {
   shouldReduceMotion: boolean;
 }) {
-  const { activeId } = useLayerMapHover();
+  const { activeId } = useDiagramHover();
   const frozen = shouldReduceMotion || activeId !== null;
   const count = 4;
   const cycleSec = 3.2;
@@ -2397,7 +2593,7 @@ function RaptorCastChunks({
 }
 
 function ParallelLanes({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  const { activeId } = useLayerMapHover();
+  const { activeId } = useDiagramHover();
   const frozen = shouldReduceMotion || activeId !== null;
   const cycleSec = 4;
   return (
@@ -2432,7 +2628,7 @@ function ParallelLanes({ shouldReduceMotion }: { shouldReduceMotion: boolean }) 
 }
 
 function JITStream({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  const { activeId } = useLayerMapHover();
+  const { activeId } = useDiagramHover();
   const frozen = shouldReduceMotion || activeId !== null;
   const totalBytes = 18;
   const cycleSec = 4;
@@ -2483,7 +2679,7 @@ function JITStream({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
 }
 
 function MonadDbGrid({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  const { activeId } = useLayerMapHover();
+  const { activeId } = useDiagramHover();
   const frozen = shouldReduceMotion || activeId !== null;
   const cols = 12;
   const rows = 2;
@@ -2532,7 +2728,7 @@ function MonadDbGrid({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
 }
 
 function ResultRow({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  const { activeId } = useLayerMapHover();
+  const { activeId } = useDiagramHover();
   const frozen = shouldReduceMotion || activeId !== null;
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
@@ -2582,12 +2778,14 @@ function EngineDiagram() {
   const shouldReduceMotion = !!useReducedMotion();
   const { ref, isVisible } = useInView(0.18);
   const [cycle, setCycle] = useState(0);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const paused = activeId !== null;
 
   useEffect(() => {
-    if (!isVisible || shouldReduceMotion) return;
+    if (!isVisible || shouldReduceMotion || paused) return;
     const id = setInterval(() => setCycle((c) => c + 1), ENGINE_CYCLE_MS);
     return () => clearInterval(id);
-  }, [isVisible, shouldReduceMotion]);
+  }, [isVisible, shouldReduceMotion, paused]);
 
   const slots = [0, 1, 2, 3];
   const consensusBlocks = ["N−1", "N", "N+1", "N+2"];
@@ -2602,105 +2800,123 @@ function EngineDiagram() {
   ];
 
   return (
-    <div
-      ref={ref}
-      className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6"
+    <DiagramHoverContext.Provider
+      value={{ activeId, setActive: setActiveId, hints: ENGINE_HINTS }}
     >
-      <InterleavedBar cycle={cycle} shouldReduceMotion={shouldReduceMotion} />
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_220px] gap-3 lg:gap-5 items-start">
+        <div
+          ref={ref}
+          className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6"
+          onMouseLeave={() => setActiveId(null)}
+        >
+          <HoverExplain id="interleaved">
+            <InterleavedBar cycle={cycle} shouldReduceMotion={shouldReduceMotion} />
+          </HoverExplain>
 
-      <div className="mb-4 mt-3 flex items-center gap-3">
-        <div className="flex-1 h-px bg-border" />
-        <span className="font-mono text-[10px] text-text-tertiary">
-          ↓ Monad: separate swim-lanes, full block time for each
-        </span>
-        <div className="flex-1 h-px bg-border" />
-      </div>
+          <div className="mb-4 mt-3 flex items-center gap-3">
+            <div className="flex-1 h-px bg-border" />
+            <span className="font-mono text-[10px] text-text-tertiary">
+              ↓ Monad: separate swim-lanes, full block time for each
+            </span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
 
-      <div className="space-y-2">
-        <PipelineRow
-          label="consensus"
-          tone="user"
-          slots={slots}
-          values={consensusBlocks}
-          cycle={cycle}
-          shouldReduceMotion={shouldReduceMotion}
-          delayBase={0}
-        />
-        <PipelineRow
-          label="execution"
-          tone="solution"
-          slots={slots}
-          values={[...executionBlocks]}
-          cycle={cycle}
-          shouldReduceMotion={shouldReduceMotion}
-          delayBase={0.7}
-          highlightSlot={2}
-        />
-        <PipelineRow
-          label="verify"
-          tone="dark"
-          slots={slots}
-          values={[...verifyBlocks]}
-          cycle={cycle}
-          shouldReduceMotion={shouldReduceMotion}
-          delayBase={1.4}
-          trailingNote="3-block delay · ~1.2 s"
-        />
-        <div className="pl-[92px] flex items-center justify-between pt-1">
-          <span className="font-mono text-[10px] text-text-tertiary">
-            time →
-          </span>
-          <span className="font-mono text-[10px] text-text-tertiary">
-            one slot ≈ 400 ms
-          </span>
-        </div>
-      </div>
+          <div className="space-y-1">
+            <HoverExplain id="consensus" className="px-1.5 py-1">
+              <PipelineRow
+                label="consensus"
+                tone="user"
+                slots={slots}
+                values={consensusBlocks}
+                cycle={cycle}
+                shouldReduceMotion={shouldReduceMotion}
+                delayBase={0}
+              />
+            </HoverExplain>
+            <HoverExplain id="execution" className="px-1.5 py-1">
+              <PipelineRow
+                label="execution"
+                tone="solution"
+                slots={slots}
+                values={[...executionBlocks]}
+                cycle={cycle}
+                shouldReduceMotion={shouldReduceMotion}
+                delayBase={0.7}
+                highlightSlot={2}
+              />
+            </HoverExplain>
+            <HoverExplain id="verify" className="px-1.5 py-1">
+              <PipelineRow
+                label="verify"
+                tone="dark"
+                slots={slots}
+                values={[...verifyBlocks]}
+                cycle={cycle}
+                shouldReduceMotion={shouldReduceMotion}
+                delayBase={1.4}
+                trailingNote="3-block delay · ~1.2 s"
+              />
+            </HoverExplain>
+            <div className="pl-[92px] flex items-center justify-between pt-1">
+              <span className="font-mono text-[10px] text-text-tertiary">
+                time →
+              </span>
+              <span className="font-mono text-[10px] text-text-tertiary">
+                one slot ≈ 400 ms
+              </span>
+            </div>
+          </div>
 
-      <div className="my-5 flex items-center gap-3">
-        <div className="flex-1 h-px bg-border" />
-        <span className="font-mono text-[10px] text-text-tertiary">
-          ↓ inside execution of block N
-        </span>
-        <div className="flex-1 h-px bg-border" />
-      </div>
+          <div className="my-5 flex items-center gap-3">
+            <div className="flex-1 h-px bg-border" />
+            <span className="font-mono text-[10px] text-text-tertiary">
+              ↓ inside execution of block N
+            </span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
 
-      <div className="rounded-xl bg-surface border border-border p-4">
-        <div className="grid grid-cols-[56px_minmax(0,1fr)_72px] gap-3 mb-3">
-          <span className="font-mono text-[10px] text-text-tertiary">
-            block N
-          </span>
-          <span className="font-mono text-[10px] text-text-tertiary">
-            parallel
-          </span>
-          <span className="font-mono text-[10px] text-text-tertiary text-center">
-            serial commit
-          </span>
-        </div>
-        <div className="space-y-2.5">
-          {txs.map((tx, i) => (
-            <ParallelRow
-              key={tx.label}
-              label={tx.label}
-              retry={tx.retry}
-              commitLabel={String(i + 1)}
-              cycle={cycle}
-              shouldReduceMotion={shouldReduceMotion}
-              delay={4 + i * 0.4}
+          <HoverExplain id="parallel-block">
+            <div className="rounded-xl bg-surface border border-border p-4">
+              <div className="grid grid-cols-[56px_minmax(0,1fr)_72px] gap-3 mb-3">
+                <span className="font-mono text-[10px] text-text-tertiary">
+                  block N
+                </span>
+                <span className="font-mono text-[10px] text-text-tertiary">
+                  parallel
+                </span>
+                <span className="font-mono text-[10px] text-text-tertiary text-center">
+                  serial commit
+                </span>
+              </div>
+              <div className="space-y-2.5">
+                {txs.map((tx, i) => (
+                  <ParallelRow
+                    key={tx.label}
+                    label={tx.label}
+                    retry={tx.retry}
+                    commitLabel={String(i + 1)}
+                    cycle={cycle}
+                    shouldReduceMotion={shouldReduceMotion}
+                    delay={4 + i * 0.4}
+                  />
+                ))}
+              </div>
+              <p className="mt-4 text-xs text-text-tertiary font-light leading-relaxed">
+                Workers race; conflicts re-run. The block&apos;s recorded order
+                is still 1 → 2 → 3 → 4.
+              </p>
+            </div>
+          </HoverExplain>
+          <div className="mt-4 flex justify-end">
+            <DocsQRBadge
+              src="/qr-mechanics.svg"
+              href="https://docs.monad.xyz/monad-arch/consensus/asynchronous-execution"
             />
-          ))}
+          </div>
         </div>
-        <p className="mt-4 text-xs text-text-tertiary font-light leading-relaxed">
-          Workers race; conflicts re-run. The block&apos;s recorded order is
-          still 1 → 2 → 3 → 4.
-        </p>
+        <DiagramExplainer />
       </div>
-      <div className="mt-4 flex justify-end">
-        <DocsQRBadge
-          src="/qr-mechanics.svg"
-          href="https://docs.monad.xyz/monad-arch/consensus/asynchronous-execution"
-        />
-      </div>
-    </div>
+    </DiagramHoverContext.Provider>
   );
 }
 
@@ -2719,47 +2935,47 @@ function InterleavedBar({
   ];
 
   return (
-    <div className="grid grid-cols-[80px_minmax(0,1fr)] items-center gap-3">
+    <div className="grid grid-cols-[80px_minmax(0,1fr)] items-start gap-3">
       <span
-        className="font-mono text-xs"
+        className="font-mono text-xs mt-2"
         style={{ color: colors.problemAccentStrong }}
       >
         interleaved
       </span>
-      <div
-        className="relative h-9 rounded-lg overflow-hidden border flex"
-        style={{ borderColor: colors.border }}
-      >
-        {segments.map((seg, i) => (
-          <motion.div
-            key={`${i}-${cycle}`}
-            initial={shouldReduceMotion ? false : { width: 0 }}
-            animate={{ width: `${seg.w}%` }}
-            transition={
-              shouldReduceMotion
-                ? { duration: 0 }
-                : {
-                    duration: 0.45,
-                    delay: i * 0.12,
-                    ease: [0.16, 1, 0.3, 1],
-                  }
-            }
-            className="h-full flex items-center justify-center"
-            style={{ backgroundColor: seg.color }}
-          >
-            <span
-              className="font-mono text-[9px] whitespace-nowrap"
-              style={{ color: colors.textPrimary }}
+      <div className="space-y-1">
+        <div
+          className="relative h-9 rounded-lg overflow-hidden border flex"
+          style={{ borderColor: colors.border }}
+        >
+          {segments.map((seg, i) => (
+            <motion.div
+              key={`${i}-${cycle}`}
+              initial={shouldReduceMotion ? false : { width: 0 }}
+              animate={{ width: `${seg.w}%` }}
+              transition={
+                shouldReduceMotion
+                  ? { duration: 0 }
+                  : {
+                      duration: 0.45,
+                      delay: i * 0.12,
+                      ease: [0.16, 1, 0.3, 1],
+                    }
+              }
+              className="h-full flex items-center justify-center"
+              style={{ backgroundColor: seg.color }}
             >
-              {seg.w >= 18 ? seg.label : ""}
-            </span>
-          </motion.div>
-        ))}
-        <div className="flex-1 flex items-center justify-end pr-3">
-          <span className="font-mono text-[10px] text-text-tertiary">
-            ~100 ms exec budget per block
-          </span>
+              <span
+                className="font-mono text-[9px] whitespace-nowrap"
+                style={{ color: colors.textPrimary }}
+              >
+                {seg.w >= 18 ? seg.label : ""}
+              </span>
+            </motion.div>
+          ))}
         </div>
+        <p className="font-mono text-[10px] text-text-tertiary text-right pr-1">
+          ~100 ms exec budget per block
+        </p>
       </div>
     </div>
   );
@@ -2963,27 +3179,43 @@ function ParallelRow({
 function MetricsDiagram() {
   const shouldReduceMotion = !!useReducedMotion();
   const { ref, enterCount } = useEnterCount(0.4);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   return (
-    <div ref={ref} className="space-y-3">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {METRICS.map((metric, index) => (
-          <MetricCard
-            key={metric.label}
-            metric={metric}
-            index={index}
-            shouldReduceMotion={shouldReduceMotion}
-            enterCount={enterCount}
-          />
-        ))}
+    <DiagramHoverContext.Provider
+      value={{ activeId, setActive: setActiveId, hints: METRICS_HINTS }}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_220px] gap-3 lg:gap-5 items-start">
+        <div
+          ref={ref}
+          className="space-y-3"
+          onMouseLeave={() => setActiveId(null)}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {METRICS.map((metric, index) => (
+              <HoverExplain
+                key={metric.label}
+                id={metric.label.toLowerCase().replace(/\s+/g, "-")}
+              >
+                <MetricCard
+                  metric={metric}
+                  index={index}
+                  shouldReduceMotion={shouldReduceMotion}
+                  enterCount={enterCount}
+                />
+              </HoverExplain>
+            ))}
+          </div>
+          <div className="flex justify-end">
+            <DocsQRBadge
+              src="/qr-identity.svg"
+              href="https://docs.monad.xyz/introduction/monad-for-developers"
+            />
+          </div>
+        </div>
+        <DiagramExplainer defaultText="Hover a metric to see why it matters for product UX." />
       </div>
-      <div className="flex justify-end">
-        <DocsQRBadge
-          src="/qr-identity.svg"
-          href="https://docs.monad.xyz/introduction/monad-for-developers"
-        />
-      </div>
-    </div>
+    </DiagramHoverContext.Provider>
   );
 }
 
@@ -3162,7 +3394,7 @@ function ClosingSection() {
   const { presenterMode } = usePresenter();
   return (
     <section className="slide min-h-screen px-6 py-20 flex items-center bg-surface">
-      <div className="w-full max-w-5xl mx-auto">
+      <div className="w-full max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)] gap-8 lg:gap-14 mb-14">
           <div>
             <SectionEyebrow large={presenterMode}>05 / Porting</SectionEyebrow>
@@ -3170,7 +3402,7 @@ function ClosingSection() {
               className={`${
                 presenterMode
                   ? "text-4xl sm:text-5xl md:text-6xl mb-6"
-                  : "text-3xl sm:text-4xl mb-4"
+                  : "text-2xl sm:text-3xl mb-4 text-balance"
               } font-semibold leading-tight`}
             >
               Before you ship, re-audit these
