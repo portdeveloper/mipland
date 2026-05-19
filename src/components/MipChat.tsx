@@ -135,6 +135,7 @@ function MipChatInner() {
             onSubmit={async (msg) => {
               const text = msg.text.trim();
               if (!text) return;
+              controller.textInput.clear();
               await sendMessage(
                 { text },
                 {
