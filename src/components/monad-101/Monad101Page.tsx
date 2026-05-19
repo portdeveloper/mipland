@@ -2022,23 +2022,133 @@ function PipelineSlide({ shouldReduceMotion }: SlideProps) {
   );
 }
 
+type LayerMapHint = { title: string; body: string };
+
+const LAYER_MAP_HINTS: Record<string, LayerMapHint> = {
+  surface: {
+    title: "EVM surface",
+    body: "Everything users and apps touch — transactions, contracts, RPC calls, wallets — looks exactly like Ethereum. Same opcodes, same addresses, same tools.",
+  },
+  validators: {
+    title: "Validators (MonadBFT)",
+    body: "A rotating committee proposes and votes on each block in pipelined rounds. The flashing dot is the current leader's slot.",
+  },
+  raptorcast: {
+    title: "RaptorCast",
+    body: "The leader splits each block into erasure-coded chunks and fans them out across validators. Any sufficient subset is enough to rebuild the whole block.",
+  },
+  parallel: {
+    title: "Parallel execution",
+    body: "Transactions in a block run concurrently across lanes. Conflicts are detected and replayed before commit, so the result matches a serial run.",
+  },
+  jit: {
+    title: "JIT compile",
+    body: "Hot contracts are compiled from EVM bytecode to native machine code as they run. The strip shows bytecode being upgraded byte by byte.",
+  },
+  monaddb: {
+    title: "MonadDb",
+    body: "A purpose-built state database tuned for SSDs. Reads and writes hit individual cells in a flat, on-disk trie.",
+  },
+  result: {
+    title: "Canonical block",
+    body: "Even though the engine ran transactions in parallel, every node sees the same serial order — 1 → 2 → 3 → 4 — committed atomically.",
+  },
+};
+
+const LayerMapHoverContext = createContext<{
+  activeId: string | null;
+  setActive: (id: string | null) => void;
+}>({ activeId: null, setActive: () => {} });
+
+function useLayerMapHover() {
+  return useContext(LayerMapHoverContext);
+}
+
+function HoverExplain({
+  id,
+  className = "",
+  children,
+}: {
+  id: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  const { activeId, setActive } = useLayerMapHover();
+  const isActive = activeId === id;
+  const isDim = activeId !== null && !isActive;
+  const hint = LAYER_MAP_HINTS[id];
+  return (
+    <div
+      tabIndex={0}
+      role="group"
+      aria-label={hint?.title}
+      onMouseEnter={() => setActive(id)}
+      onMouseLeave={() => setActive(null)}
+      onFocus={() => setActive(id)}
+      onBlur={() => setActive(null)}
+      className={`rounded-xl outline outline-2 transition-[outline-color,opacity] duration-200 cursor-help focus:outline-solution-accent focus-visible:outline-solution-accent ${
+        isActive ? "outline-solution-accent" : "outline-transparent"
+      } ${isDim ? "opacity-40" : "opacity-100"} ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function LayerMapExplainer() {
+  const { activeId } = useLayerMapHover();
+  const hint = activeId ? LAYER_MAP_HINTS[activeId] : null;
+  return (
+    <div
+      className="rounded-xl border border-border bg-surface px-4 py-3 min-h-[68px]"
+      aria-live="polite"
+    >
+      {hint ? (
+        <>
+          <p className="font-mono text-[10px] text-solution-accent tracking-wide uppercase mb-1">
+            {hint.title}
+          </p>
+          <p className="text-sm text-text-primary leading-relaxed">
+            {hint.body}
+          </p>
+        </>
+      ) : (
+        <p className="text-xs text-text-tertiary font-light">
+          Hover or focus any layer above to see what it does.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function LayerMap() {
   const shouldReduceMotion = !!useReducedMotion();
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   return (
-    <div className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6 space-y-3">
-      <SurfaceRow shouldReduceMotion={shouldReduceMotion} />
-      <Connector label="compiled / called" shouldReduceMotion={shouldReduceMotion} />
-      <EngineCard shouldReduceMotion={shouldReduceMotion} />
-      <Connector label="canonical block" shouldReduceMotion={shouldReduceMotion} />
-      <ResultRow shouldReduceMotion={shouldReduceMotion} />
-      <div className="flex justify-end pt-2">
-        <DocsQRBadge
-          src="/qr-identity.svg"
-          href="https://docs.monad.xyz/introduction/monad-for-developers"
-        />
+    <LayerMapHoverContext.Provider value={{ activeId, setActive: setActiveId }}>
+      <div
+        className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6 space-y-3"
+        onMouseLeave={() => setActiveId(null)}
+      >
+        <HoverExplain id="surface">
+          <SurfaceRow shouldReduceMotion={shouldReduceMotion} />
+        </HoverExplain>
+        <Connector label="compiled / called" shouldReduceMotion={shouldReduceMotion} />
+        <EngineCard shouldReduceMotion={shouldReduceMotion} />
+        <Connector label="canonical block" shouldReduceMotion={shouldReduceMotion} />
+        <HoverExplain id="result">
+          <ResultRow shouldReduceMotion={shouldReduceMotion} />
+        </HoverExplain>
+        <LayerMapExplainer />
+        <div className="flex justify-end pt-2">
+          <DocsQRBadge
+            src="/qr-identity.svg"
+            href="https://docs.monad.xyz/introduction/monad-for-developers"
+          />
+        </div>
       </div>
-    </div>
+    </LayerMapHoverContext.Provider>
   );
 }
 
@@ -2050,6 +2160,8 @@ const SURFACE_ITEMS = [
 ];
 
 function SurfaceRow({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
+  const { activeId } = useLayerMapHover();
+  const frozen = shouldReduceMotion || activeId !== null;
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
       <div className="flex items-center justify-between mb-3">
@@ -2065,13 +2177,9 @@ function SurfaceRow({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
           <motion.div
             key={item.label}
             className="rounded-lg border border-solution-accent-light bg-solution-bg px-2 py-2 text-center"
-            animate={
-              shouldReduceMotion
-                ? undefined
-                : { scale: [1, 1.06, 1] }
-            }
+            animate={frozen ? undefined : { scale: [1, 1.06, 1] }}
             transition={
-              shouldReduceMotion
+              frozen
                 ? undefined
                 : {
                     duration: 0.7,
@@ -2099,13 +2207,15 @@ function Connector({
   label: string;
   shouldReduceMotion: boolean;
 }) {
+  const { activeId } = useLayerMapHover();
+  const frozen = shouldReduceMotion || activeId !== null;
   return (
     <div className="flex items-center justify-center py-1">
       <motion.span
         className="font-mono text-[10px] text-text-tertiary flex items-center gap-2"
-        animate={shouldReduceMotion ? undefined : { opacity: [0.5, 1, 0.5] }}
+        animate={frozen ? undefined : { opacity: [0.5, 1, 0.5] }}
         transition={
-          shouldReduceMotion
+          frozen
             ? undefined
             : { duration: 2.6, repeat: Infinity, ease: "easeInOut" }
         }
@@ -2135,52 +2245,62 @@ function EngineCard({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
         </span>
       </div>
 
-      <div className="space-y-3.5">
-        <EngineSubsystem
-          label={
-            <>
-              validators (BFT)<Cite n={2} />
-            </>
-          }
-        >
-          <ValidatorDots shouldReduceMotion={shouldReduceMotion} />
-        </EngineSubsystem>
-        <EngineSubsystem
-          label={
-            <>
-              RaptorCast<Cite n={3} />
-            </>
-          }
-        >
-          <RaptorCastChunks shouldReduceMotion={shouldReduceMotion} />
-        </EngineSubsystem>
-        <EngineSubsystem
-          label={
-            <>
-              parallel exec<Cite n={5} />
-            </>
-          }
-        >
-          <ParallelLanes shouldReduceMotion={shouldReduceMotion} />
-        </EngineSubsystem>
-        <EngineSubsystem
-          label={
-            <>
-              JIT compile<Cite n={11} />
-            </>
-          }
-        >
-          <JITStream shouldReduceMotion={shouldReduceMotion} />
-        </EngineSubsystem>
-        <EngineSubsystem
-          label={
-            <>
-              MonadDb<Cite n={9} />
-            </>
-          }
-        >
-          <MonadDbGrid shouldReduceMotion={shouldReduceMotion} />
-        </EngineSubsystem>
+      <div className="space-y-1.5 -mx-1.5">
+        <HoverExplain id="validators" className="px-1.5 py-1">
+          <EngineSubsystem
+            label={
+              <>
+                validators (BFT)<Cite n={2} />
+              </>
+            }
+          >
+            <ValidatorDots shouldReduceMotion={shouldReduceMotion} />
+          </EngineSubsystem>
+        </HoverExplain>
+        <HoverExplain id="raptorcast" className="px-1.5 py-1">
+          <EngineSubsystem
+            label={
+              <>
+                RaptorCast<Cite n={3} />
+              </>
+            }
+          >
+            <RaptorCastChunks shouldReduceMotion={shouldReduceMotion} />
+          </EngineSubsystem>
+        </HoverExplain>
+        <HoverExplain id="parallel" className="px-1.5 py-1">
+          <EngineSubsystem
+            label={
+              <>
+                parallel exec<Cite n={5} />
+              </>
+            }
+          >
+            <ParallelLanes shouldReduceMotion={shouldReduceMotion} />
+          </EngineSubsystem>
+        </HoverExplain>
+        <HoverExplain id="jit" className="px-1.5 py-1">
+          <EngineSubsystem
+            label={
+              <>
+                JIT compile<Cite n={11} />
+              </>
+            }
+          >
+            <JITStream shouldReduceMotion={shouldReduceMotion} />
+          </EngineSubsystem>
+        </HoverExplain>
+        <HoverExplain id="monaddb" className="px-1.5 py-1">
+          <EngineSubsystem
+            label={
+              <>
+                MonadDb<Cite n={9} />
+              </>
+            }
+          >
+            <MonadDbGrid shouldReduceMotion={shouldReduceMotion} />
+          </EngineSubsystem>
+        </HoverExplain>
       </div>
     </div>
   );
@@ -2204,6 +2324,8 @@ function EngineSubsystem({
 }
 
 function ValidatorDots({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
+  const { activeId } = useLayerMapHover();
+  const frozen = shouldReduceMotion || activeId !== null;
   const count = 7;
   const cycleSec = 5;
   return (
@@ -2216,7 +2338,7 @@ function ValidatorDots({ shouldReduceMotion }: { shouldReduceMotion: boolean }) 
             className="h-2 w-2 rounded-full"
             style={{ backgroundColor: colors.solutionAccent, opacity: 0.4 }}
             animate={
-              shouldReduceMotion
+              frozen
                 ? undefined
                 : {
                     scale: [1, 1, 1.7, 1, 1],
@@ -2224,7 +2346,7 @@ function ValidatorDots({ shouldReduceMotion }: { shouldReduceMotion: boolean }) 
                   }
             }
             transition={
-              shouldReduceMotion
+              frozen
                 ? undefined
                 : {
                     duration: cycleSec,
@@ -2245,6 +2367,8 @@ function RaptorCastChunks({
 }: {
   shouldReduceMotion: boolean;
 }) {
+  const { activeId } = useLayerMapHover();
+  const frozen = shouldReduceMotion || activeId !== null;
   const count = 4;
   const cycleSec = 3.2;
   return (
@@ -2255,13 +2379,9 @@ function RaptorCastChunks({
           className="absolute top-0 h-2 rounded-full"
           style={{ backgroundColor: colors.solutionAccent, width: 14 }}
           initial={{ left: "-15%" }}
-          animate={
-            shouldReduceMotion
-              ? undefined
-              : { left: ["-15%", "115%"] }
-          }
+          animate={frozen ? undefined : { left: ["-15%", "115%"] }}
           transition={
-            shouldReduceMotion
+            frozen
               ? undefined
               : {
                   duration: cycleSec,
@@ -2277,6 +2397,8 @@ function RaptorCastChunks({
 }
 
 function ParallelLanes({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
+  const { activeId } = useLayerMapHover();
+  const frozen = shouldReduceMotion || activeId !== null;
   const cycleSec = 4;
   return (
     <div className="space-y-1">
@@ -2290,13 +2412,9 @@ function ParallelLanes({ shouldReduceMotion }: { shouldReduceMotion: boolean }) 
             className="h-full origin-left rounded-full"
             style={{ backgroundColor: colors.solutionAccent }}
             initial={{ scaleX: 0 }}
-            animate={
-              shouldReduceMotion
-                ? { scaleX: 1 }
-                : { scaleX: [0, 1, 1, 0] }
-            }
+            animate={frozen ? { scaleX: 1 } : { scaleX: [0, 1, 1, 0] }}
             transition={
-              shouldReduceMotion
+              frozen
                 ? { duration: 0 }
                 : {
                     duration: cycleSec,
@@ -2314,6 +2432,8 @@ function ParallelLanes({ shouldReduceMotion }: { shouldReduceMotion: boolean }) 
 }
 
 function JITStream({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
+  const { activeId } = useLayerMapHover();
+  const frozen = shouldReduceMotion || activeId !== null;
   const totalBytes = 18;
   const cycleSec = 4;
   return (
@@ -2326,7 +2446,7 @@ function JITStream({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
             className="w-1 rounded-sm origin-bottom"
             style={{ backgroundColor: colors.solutionAccentLight, height: 6 }}
             animate={
-              shouldReduceMotion
+              frozen
                 ? undefined
                 : {
                     backgroundColor: [
@@ -2340,7 +2460,7 @@ function JITStream({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
                   }
             }
             transition={
-              shouldReduceMotion
+              frozen
                 ? undefined
                 : {
                     duration: cycleSec,
@@ -2363,6 +2483,8 @@ function JITStream({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
 }
 
 function MonadDbGrid({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
+  const { activeId } = useLayerMapHover();
+  const frozen = shouldReduceMotion || activeId !== null;
   const cols = 12;
   const rows = 2;
   const total = cols * rows;
@@ -2380,7 +2502,7 @@ function MonadDbGrid({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
             className="aspect-square rounded-sm"
             style={{ backgroundColor: colors.solutionAccentLight }}
             animate={
-              shouldReduceMotion
+              frozen
                 ? undefined
                 : {
                     backgroundColor: [
@@ -2393,7 +2515,7 @@ function MonadDbGrid({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
                   }
             }
             transition={
-              shouldReduceMotion
+              frozen
                 ? undefined
                 : {
                     duration: cycleSec,
@@ -2410,6 +2532,8 @@ function MonadDbGrid({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
 }
 
 function ResultRow({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
+  const { activeId } = useLayerMapHover();
+  const frozen = shouldReduceMotion || activeId !== null;
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
       <p className="font-mono text-[10px] text-text-tertiary mb-3 tracking-wide uppercase">
@@ -2424,11 +2548,9 @@ function ResultRow({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
                 backgroundColor: colors.textPrimary,
                 color: colors.surface,
               }}
-              animate={
-                shouldReduceMotion ? undefined : { scale: [1, 1.1, 1] }
-              }
+              animate={frozen ? undefined : { scale: [1, 1.1, 1] }}
               transition={
-                shouldReduceMotion
+                frozen
                   ? undefined
                   : {
                       duration: 0.6,
