@@ -4,6 +4,7 @@ import {
   type ModelMessage,
   type UIMessage,
 } from "ai";
+import { checkBotId } from "botid/server";
 import { z } from "zod";
 
 import { getChatConfig } from "@/lib/ai/config";
@@ -28,6 +29,14 @@ const RequestSchema = z.object({
 type PageContext = z.infer<typeof PageContextSchema>;
 
 export async function POST(req: Request) {
+  // Block obvious bots at the edge before doing any work. Free at the Basic
+  // level; Deep Analysis can be opted into from the Vercel Firewall dashboard
+  // without a code change. Returns isBot: false in local dev.
+  const verification = await checkBotId();
+  if (verification.isBot) {
+    return Response.json({ error: "Access denied." }, { status: 403 });
+  }
+
   const ip = getClientIp(req.headers);
   const rl = await checkRateLimit(ip);
   if (!rl.success) {

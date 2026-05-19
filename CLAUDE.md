@@ -58,9 +58,14 @@ src/app/admin/chat/page.tsx ──► Server Action ──► Vercel REST API �
   Gateway slug (e.g. `deepseek/deepseek-v4-flash` for ~3x cheaper than v4-pro,
   or back to `anthropic/claude-sonnet-4-6` if quality dips).
 
+- **Vercel BotID** on `/api/chat` (basic level, free) — blocks
+  scrapers/headless bots at the edge. Registered in
+  `instrumentation-client.ts` via `initBotId({ protect: [...] })`, checked
+  server-side with `await checkBotId()` at the top of the route. Deep
+  Analysis is opt-in from the Firewall dashboard, no code change.
+
 ## Cost controls (deferred until real traffic)
 
-- **Vercel BotID** on `/api/chat` — block scrapers/headless bots at the edge.
 - **Keyword pre-filter** if `content/mips/` grows past ~30k tokens — match
   the question against MIP titles/summaries before injecting files.
 

@@ -4,7 +4,8 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { MessageCircle, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import posthog from "posthog-js";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Conversation,
@@ -41,9 +42,30 @@ function TypingDots() {
 export default function MipChat() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const sentAtRef = useRef<number | null>(null);
+  const sentPathRef = useRef<string>("");
 
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
+    onFinish: ({ message }) => {
+      if (sentAtRef.current == null) return;
+      const length = (message.parts ?? [])
+        .map((p) => (p.type === "text" ? p.text : ""))
+        .join("").length;
+      posthog.capture("chat_message_completed", {
+        path: sentPathRef.current,
+        response_ms: Date.now() - sentAtRef.current,
+        length,
+      });
+      sentAtRef.current = null;
+    },
+    onError: (error) => {
+      posthog.capture("chat_error", {
+        path: sentPathRef.current || pathname,
+        message: error.message?.slice(0, 200),
+      });
+      sentAtRef.current = null;
+    },
   });
 
   // Listen for "Ask AI" tooltip — open panel and send the question immediately.
@@ -53,6 +75,15 @@ export default function MipChat() {
       const text = detail?.text?.trim();
       if (!text) return;
       setOpen(true);
+      posthog.capture("chat_opened", { source: "ask_ai_tooltip", path: pathname });
+      posthog.capture("chat_message_sent", {
+        source: "ask_ai_tooltip",
+        path: pathname,
+        length: text.length,
+        message_count: messages.length,
+      });
+      sentAtRef.current = Date.now();
+      sentPathRef.current = pathname;
       void sendMessage(
         { text },
         {
@@ -70,7 +101,7 @@ export default function MipChat() {
     }
     window.addEventListener("mip-chat:ask", handler);
     return () => window.removeEventListener("mip-chat:ask", handler);
-  }, [pathname, sendMessage]);
+  }, [pathname, sendMessage, messages.length]);
 
   return (
     <>
@@ -149,6 +180,14 @@ export default function MipChat() {
             onSubmit={async (msg) => {
               const text = msg.text.trim();
               if (!text) return;
+              posthog.capture("chat_message_sent", {
+                source: "manual",
+                path: pathname,
+                length: text.length,
+                message_count: messages.length,
+              });
+              sentAtRef.current = Date.now();
+              sentPathRef.current = pathname;
               await sendMessage(
                 { text },
                 {
@@ -179,7 +218,14 @@ export default function MipChat() {
       {/* Pill trigger — toggles open/closed. */}
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setOpen((v) => {
+            if (!v) {
+              posthog.capture("chat_opened", { source: "pill", path: pathname });
+            }
+            return !v;
+          });
+        }}
         aria-label={open ? "Close MIP assistant" : "Open MIP assistant"}
         aria-expanded={open}
         className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-[var(--color-solution-accent)] px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-black/10 transition hover:bg-[var(--color-solution-accent)]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-solution-accent)]"
