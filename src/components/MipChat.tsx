@@ -24,6 +24,20 @@ import {
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 
+function TypingDots() {
+  return (
+    <div
+      role="status"
+      aria-label="Assistant is typing"
+      className="flex items-center gap-1 py-1"
+    >
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current opacity-60 [animation-delay:0ms] [animation-duration:1s]" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current opacity-60 [animation-delay:150ms] [animation-duration:1s]" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current opacity-60 [animation-delay:300ms] [animation-duration:1s]" />
+    </div>
+  );
+}
+
 export default function MipChat() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -118,6 +132,13 @@ export default function MipChat() {
                     </MessageContent>
                   </Message>
                 ))
+            )}
+            {status === "submitted" && (
+              <Message from="assistant">
+                <MessageContent>
+                  <TypingDots />
+                </MessageContent>
+              </Message>
             )}
           </ConversationContent>
           <ConversationScrollButton />
