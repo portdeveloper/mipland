@@ -2,7 +2,7 @@
 
 Interactive explainers for Monad Improvement Proposals and blockchain research. Understand MIPs through visualizations, not just specs.
 
-**Live:** [mipland.com](https://mipland.com)
+**Live:** [mipland.com](https://mipland.com) · **Built by:** [@portdeveloper](https://portdeveloper.github.io)
 
 ## Pages
 
