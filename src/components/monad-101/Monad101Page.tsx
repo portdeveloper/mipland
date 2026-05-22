@@ -118,7 +118,7 @@ const REFERENCES: { id: number; title: string; url: string }[] = [
   },
   {
     id: 10,
-    title: "Reserve Balance — newly funded account timing",
+    title: "Reserve Balance — 10 MON reserve rules",
     url: "https://docs.monad.xyz/developer-essentials/reserve-balance",
   },
   {
@@ -199,7 +199,6 @@ type Metric = {
   format: (v: number) => string;
   suffix: string;
   note: string;
-  width: number;
 };
 
 const METRICS: Metric[] = [
@@ -210,7 +209,6 @@ const METRICS: Metric[] = [
     format: (v) => Math.round(v).toLocaleString(),
     suffix: " tx/s",
     note: "More onchain interactions fit inside one product flow.",
-    width: 92,
   },
   {
     label: "Block frequency",
@@ -219,7 +217,6 @@ const METRICS: Metric[] = [
     format: (v) => Math.round(v).toString(),
     suffix: " ms",
     note: "Fast enough for subsecond feedback instead of loading screens.",
-    width: 78,
   },
   {
     label: "Finality",
@@ -228,7 +225,6 @@ const METRICS: Metric[] = [
     format: (v) => Math.round(v).toString(),
     suffix: " ms",
     note: "Irreversible product decisions can settle quickly.",
-    width: 86,
   },
   {
     label: "Gas throughput",
@@ -237,7 +233,6 @@ const METRICS: Metric[] = [
     format: (v) => `${Math.round(v)}M`,
     suffix: " gas/s",
     note: "More contract work can happen without hiding chain latency.",
-    width: 82,
   },
 ];
 
@@ -610,7 +605,7 @@ function EdgeDiagram() {
             />
           </div>
         </div>
-        <DiagramExplainer defaultText="Hover either panel to see the developer edge." />
+        <DiagramExplainer defaultText="Hover either panel for the porting impact." />
       </div>
     </DiagramHoverContext.Provider>
   );
@@ -817,9 +812,9 @@ function RealtimeDataDiagram() {
 
   const consumers: { id: string; label: string }[] = [
     { id: "indexer", label: "indexer" },
-    { id: "dashboard", label: "dashboard" },
+    { id: "explorer-ui", label: "explorer UI" },
     { id: "trading-app", label: "trading app" },
-    { id: "ws-subscriber", label: "WS subscriber" },
+    { id: "wallet-ui", label: "wallet UI" },
   ];
 
   return (
@@ -858,8 +853,9 @@ function RealtimeDataDiagram() {
 
             <div className="relative h-32 overflow-hidden">
               {!frozen &&
-                Array.from({ length: 14 }).map((_, i) => {
-                  const lane = i % 4;
+                Array.from({ length: 16 }).map((_, i) => {
+                  const lane = i % consumers.length;
+                  const burst = Math.floor(i / consumers.length);
                   const yPct = 12 + lane * 22;
                   return (
                     <motion.div
@@ -871,7 +867,7 @@ function RealtimeDataDiagram() {
                       }}
                       transition={{
                         duration: 2.2,
-                        delay: i * 0.28,
+                        delay: burst * 0.58,
                         times: [0, 0.1, 0.85, 1],
                         repeat: Infinity,
                         repeatDelay: 0,
@@ -888,7 +884,7 @@ function RealtimeDataDiagram() {
             </div>
 
             <div className="space-y-1.5">
-              {consumers.map((c, i) => (
+              {consumers.map((c) => (
                 <HoverExplain key={c.id} id={c.id}>
                   <motion.div
                     className="rounded-md border border-border bg-surface px-2.5 py-1.5"
@@ -902,7 +898,7 @@ function RealtimeDataDiagram() {
                         ? undefined
                         : {
                             duration: 0.6,
-                            delay: 1 + i * 0.18,
+                            delay: 1,
                             repeat: Infinity,
                             repeatDelay: 2.5,
                             ease: "easeInOut",
@@ -1357,8 +1353,8 @@ function BlockStatesDiagram() {
       label: "Verified",
       rpcTag: null,
       timing: "T+5 · ~2 s",
-      body: "Delayed root assurance",
-      example: "Release escrow against a verified state root.",
+      body: "Delayed Merkle root finalized",
+      example: "Latest verified block = latest finalized block - execution delay.",
       color: colors.textPrimary,
     },
   ];
@@ -1563,102 +1559,169 @@ function PipelineHeroVisual() {
 }
 
 function RaptorCastSlide({ shouldReduceMotion }: SlideProps) {
-  const centerX = SLIDE_W / 2;
-  const centerY = SLIDE_H / 2;
-  const validatorCount = 8;
-  const validatorRadius = 134;
-  const validators = Array.from({ length: validatorCount }, (_, i) => {
-    const angle = (i / validatorCount) * Math.PI * 2 - Math.PI / 2;
-    return {
-      id: i,
-      x: centerX + Math.cos(angle) * validatorRadius,
-      y: centerY + Math.sin(angle) * validatorRadius,
-    };
+  const originator = { x: 96, y: 180 };
+  const firstHopNodes = [
+    { id: "v2", x: 300, y: 88, range: "c0-c2" },
+    { id: "v5", x: 300, y: 180, range: "c3-c5" },
+    { id: "v7", x: 300, y: 272, range: "c6-c8" },
+  ];
+  const secondHopGroups = [
+    {
+      parent: firstHopNodes[0],
+      recipients: [
+        { id: "v1", x: 512, y: 70 },
+        { id: "v3", x: 540, y: 132 },
+      ],
+    },
+    {
+      parent: firstHopNodes[1],
+      recipients: [
+        { id: "v4", x: 530, y: 162 },
+        { id: "v6", x: 530, y: 214 },
+      ],
+    },
+    {
+      parent: firstHopNodes[2],
+      recipients: [
+        { id: "v8", x: 540, y: 262 },
+        { id: "v9", x: 512, y: 326 },
+      ],
+    },
+  ];
+  const makeEdge = (
+    key: string,
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+    delay: number,
+    tone: string
+  ) => ({
+    key,
+    from,
+    to,
+    dx: to.x - from.x,
+    dy: to.y - from.y,
+    delay,
+    tone,
   });
+  const secondHopNodes = secondHopGroups.flatMap((group) => group.recipients);
+  const edges = secondHopGroups.flatMap((group) => [
+    makeEdge(
+      `leader-${group.parent.id}`,
+      originator,
+      group.parent,
+      group.parent.y / SLIDE_H,
+      colors.userAccent
+    ),
+    ...group.recipients.map((recipient, i) =>
+      makeEdge(
+        `${group.parent.id}-${recipient.id}`,
+        group.parent,
+        recipient,
+        0.55 + i * 0.18 + group.parent.y / SLIDE_H,
+        colors.solutionAccent
+      )
+    ),
+  ]);
 
   const blockW = 84;
   const blockH = 50;
-  const chunksPerLane = 3;
-  const chunkPeriod = 1.25;
+  const chunkPeriod = 1.7;
   const chunkSize = 5;
-
-  const chunks = validators.flatMap((v) =>
-    Array.from({ length: chunksPerLane }, (_, i) => {
-      const phaseOffset = (v.id * 0.213) % 1;
-      const inLanePhase = i / chunksPerLane;
-      const delay = ((inLanePhase + phaseOffset) % 1) * chunkPeriod;
-      return {
-        key: `${v.id}-${i}`,
-        dx: v.x - centerX,
-        dy: v.y - centerY,
-        delay,
-      };
-    })
-  );
 
   return (
     <svg
       role="img"
-      aria-label="A central leader block emits erasure-coded chunks through broadcast paths so validators can reconstruct the proposal from enough chunks."
+      aria-label="A leader sends erasure-coded chunk ranges to first-hop validators, and those first-hop validators forward chunks to second-hop recipients."
       viewBox={`0 0 ${SLIDE_W} ${SLIDE_H}`}
       className="w-full h-full"
     >
-      {validators.map((v) => (
+      <text
+        x={originator.x}
+        y={42}
+        fontSize="11"
+        fontFamily="monospace"
+        fill={colors.textTertiary}
+        textAnchor="middle"
+      >
+        originator
+      </text>
+      <text
+        x={300}
+        y={42}
+        fontSize="11"
+        fontFamily="monospace"
+        fill={colors.textTertiary}
+        textAnchor="middle"
+      >
+        first-hop
+      </text>
+      <text
+        x={526}
+        y={42}
+        fontSize="11"
+        fontFamily="monospace"
+        fill={colors.textTertiary}
+        textAnchor="middle"
+      >
+        second-hop
+      </text>
+
+      {edges.map((edge) => (
         <line
-          key={`line-${v.id}`}
-          x1={centerX}
-          y1={centerY}
-          x2={v.x}
-          y2={v.y}
+          key={`line-${edge.key}`}
+          x1={edge.from.x}
+          y1={edge.from.y}
+          x2={edge.to.x}
+          y2={edge.to.y}
           stroke={colors.borderSoft}
-          strokeWidth="0.6"
-          strokeDasharray="2 5"
-          opacity={0.55}
+          strokeWidth="1"
+          strokeDasharray="3 5"
+          opacity={0.9}
         />
       ))}
 
-      {validators.map((v) => (
-        <g key={`v-${v.id}`}>
+      {secondHopNodes.map((recipient) => (
+        <g key={recipient.id}>
           <circle
-            cx={v.x}
-            cy={v.y}
-            r={16}
+            cx={recipient.x}
+            cy={recipient.y}
+            r={15}
             fill={colors.solutionBg}
             stroke={colors.solutionAccent}
-            strokeWidth="1.4"
+            strokeWidth="1.3"
           />
           <text
-            x={v.x}
-            y={v.y + 4}
-            fontSize="11"
+            x={recipient.x}
+            y={recipient.y + 4}
+            fontSize="10"
             fontFamily="monospace"
             fill={colors.solutionAccent}
             textAnchor="middle"
           >
-            v{v.id + 1}
+            {recipient.id}
           </text>
         </g>
       ))}
 
       {!shouldReduceMotion &&
-        chunks.map((c) => (
+        edges.map((edge) => (
           <motion.rect
-            key={c.key}
-            x={centerX - chunkSize / 2}
-            y={centerY - chunkSize / 2}
+            key={edge.key}
+            x={edge.from.x - chunkSize / 2}
+            y={edge.from.y - chunkSize / 2}
             width={chunkSize}
             height={chunkSize}
             rx={1.2}
-            fill={colors.solutionAccent}
+            fill={edge.tone}
             initial={{ x: 0, y: 0, opacity: 0 }}
             animate={{
-              x: [0, c.dx * 0.02, c.dx * 0.98, c.dx],
-              y: [0, c.dy * 0.02, c.dy * 0.98, c.dy],
+              x: [0, edge.dx * 0.02, edge.dx * 0.98, edge.dx],
+              y: [0, edge.dy * 0.02, edge.dy * 0.98, edge.dy],
               opacity: [0, 1, 1, 0],
             }}
             transition={{
               duration: chunkPeriod,
-              delay: c.delay,
+              delay: edge.delay % chunkPeriod,
               repeat: Infinity,
               ease: "linear",
               times: [0, 0.06, 0.9, 1],
@@ -1666,22 +1729,55 @@ function RaptorCastSlide({ shouldReduceMotion }: SlideProps) {
           />
         ))}
 
+      {firstHopNodes.map((node) => (
+        <g key={node.id}>
+          <circle
+            cx={node.x}
+            cy={node.y}
+            r={19}
+            fill={colors.userBg}
+            stroke={colors.userAccent}
+            strokeWidth="1.5"
+          />
+          <text
+            x={node.x}
+            y={node.y + 4}
+            fontSize="11"
+            fontFamily="monospace"
+            fill={colors.userAccent}
+            textAnchor="middle"
+          >
+            {node.id}
+          </text>
+          <text
+            x={node.x}
+            y={node.y + 33}
+            fontSize="9"
+            fontFamily="monospace"
+            fill={colors.textTertiary}
+            textAnchor="middle"
+          >
+            {node.range}
+          </text>
+        </g>
+      ))}
+
       <motion.g
         initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.55, ease: HERO_EASE }}
       >
         <rect
-          x={centerX - blockW / 2}
-          y={centerY - blockH / 2}
+          x={originator.x - blockW / 2}
+          y={originator.y - blockH / 2}
           width={blockW}
           height={blockH}
           rx={8}
           fill={colors.userAccent}
         />
         <text
-          x={centerX}
-          y={centerY + 5}
+          x={originator.x}
+          y={originator.y + 5}
           fontSize="14"
           fontFamily="monospace"
           fill={colors.surface}
@@ -1847,22 +1943,30 @@ function ParallelSlide({ shouldReduceMotion }: SlideProps) {
               />
             )}
 
-            {lane.retry && !shouldReduceMotion && (
+            {lane.retry && (
               <motion.g
                 initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 0, 1, 1, 0, 0] }}
-                transition={{
-                  duration: cycleSec,
-                  times: [0, 0.20, 0.24, 0.34, 0.38, 1],
-                  delay: i * 0.07,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
+                animate={
+                  shouldReduceMotion
+                    ? { opacity: 1 }
+                    : { opacity: [0, 0, 1, 1, 0, 0] }
+                }
+                transition={
+                  shouldReduceMotion
+                    ? { duration: 0 }
+                    : {
+                        duration: cycleSec,
+                        times: [0, 0.20, 0.24, 0.34, 0.38, 1],
+                        delay: i * 0.07,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }
+                }
               >
                 <rect
-                  x={laneStartX + laneWidth * 0.42}
-                  y={y - 9}
-                  width={62}
+                  x={laneStartX + laneWidth * 0.36}
+                  y={y - 11}
+                  width={96}
                   height={laneHeight + 18}
                   rx={5}
                   fill={colors.problemBg}
@@ -1870,9 +1974,19 @@ function ParallelSlide({ shouldReduceMotion }: SlideProps) {
                   strokeWidth="1"
                 />
                 <text
-                  x={laneStartX + laneWidth * 0.42 + 31}
-                  y={cy + 4}
-                  fontSize="10"
+                  x={laneStartX + laneWidth * 0.36 + 48}
+                  y={cy - 2}
+                  fontSize="9"
+                  fontFamily="monospace"
+                  fill={colors.problemAccentStrong}
+                  textAnchor="middle"
+                >
+                  state conflict
+                </text>
+                <text
+                  x={laneStartX + laneWidth * 0.36 + 48}
+                  y={cy + 10}
+                  fontSize="9"
                   fontFamily="monospace"
                   fill={colors.problemAccentStrong}
                   textAnchor="middle"
@@ -2201,17 +2315,17 @@ const REALTIME_HINTS: Record<string, LayerMapHint> = {
     title: "Indexer",
     body: "Uses libmonad_event or monad-exec-events to read execution events from shared memory instead of polling JSON-RPC.",
   },
-  dashboard: {
-    title: "Dashboard",
-    body: "Dashboards can consume pushed WebSocket updates or execution events instead of polling JSON-RPC for every new block.",
+  "explorer-ui": {
+    title: "Explorer UI",
+    body: "A block explorer or activity feed can stream updates instead of polling JSON-RPC for every new block.",
   },
   "trading-app": {
     title: "Trading app",
     body: "Latency-sensitive apps can prepare work from speculative events, then act or discard it as the block advances through consensus states.",
   },
-  "ws-subscriber": {
-    title: "WS subscriber",
-    body: "monadNewHeads and monadLogs include blockId plus commitState updates for Proposed, Voted, Finalized, and Verified. Some blocks can skip Voted.",
+  "wallet-ui": {
+    title: "Wallet UI",
+    body: "Wallets can refresh transaction status as commitState advances through Proposed, Voted, Finalized, and Verified. Some blocks can skip Voted.",
   },
   "ipc-card": {
     title: "Shared-memory IPC",
@@ -2917,7 +3031,7 @@ function EngineDiagram() {
                 ))}
               </div>
               <p className="mt-4 text-xs text-text-tertiary font-light leading-relaxed">
-                Transactions run in parallel; conflicts re-execute. The
+                Transactions run in parallel; state conflicts re-execute. The
                 block&apos;s recorded order is still 1 → 2 → 3 → 4.
               </p>
             </div>
@@ -3154,10 +3268,10 @@ function ParallelRow({
               delay: delay + 0.85,
               times: [0, 0.2, 0.75, 1],
             }}
-            className="absolute top-1/2 left-[46%] -translate-y-1/2 font-mono text-[9px] text-surface px-1.5 py-0.5 rounded"
+            className="absolute top-1/2 left-[42%] -translate-y-1/2 font-mono text-[9px] text-surface px-1.5 py-0.5 rounded whitespace-nowrap"
             style={{ backgroundColor: colors.problemAccentStrong }}
           >
-            re-run
+            conflict → re-run
           </motion.span>
         )}
       </div>
@@ -3248,6 +3362,7 @@ function MetricCard({
   const delay = index * 0.35;
   const fillEnd = METRICS_FILL_SEC / METRICS_CYCLE_SEC;
   const holdEnd = 0.88;
+  const monadValue = `${metric.format(metric.target)}${metric.suffix}`;
 
   return (
     <div className="rounded-xl bg-surface-elevated border border-border p-5">
@@ -3265,33 +3380,23 @@ function MetricCard({
         />
         {metric.suffix}
       </p>
-      <p className="font-mono text-[10px] text-text-tertiary mb-3">
-        vs Ethereum {metric.ethereum}
-      </p>
-      <div className="h-1.5 rounded-full bg-border overflow-hidden mb-3">
-        <motion.div
-          key={`bar-${enterCount}`}
-          initial={{ scaleX: 0 }}
-          animate={
-            shouldReduceMotion
-              ? { scaleX: metric.width / 100 }
-              : {
-                  scaleX: [0, metric.width / 100, metric.width / 100, 0],
-                }
-          }
-          transition={
-            shouldReduceMotion
-              ? { duration: 0 }
-              : {
-                  duration: METRICS_CYCLE_SEC,
-                  delay,
-                  times: [0, fillEnd, holdEnd, 1],
-                  repeat: Infinity,
-                  ease: [0.16, 1, 0.3, 1],
-                }
-          }
-          className="h-full origin-left rounded-full bg-solution-accent"
-        />
+      <div className="rounded-lg border border-border bg-surface px-3 py-2 mb-3 space-y-1.5">
+        <div className="flex items-center justify-between gap-3">
+          <span className="font-mono text-[10px] text-text-tertiary">
+            Monad
+          </span>
+          <span className="font-mono text-[10px] text-solution-accent tabular-nums">
+            {monadValue}
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="font-mono text-[10px] text-text-tertiary">
+            Ethereum
+          </span>
+          <span className="font-mono text-[10px] text-text-secondary tabular-nums">
+            {metric.ethereum}
+          </span>
+        </div>
       </div>
       <p className="text-xs text-text-secondary font-light leading-relaxed">
         {metric.note}
@@ -3452,8 +3557,8 @@ function ClosingSection() {
                   <Cite n={6} />
                 </>,
                 <>
-                  Newly funded zero-balance accounts wait about D=3 blocks
-                  after receipt before spending<Cite n={10} />
+                  If account B had zero MON before A funded it, wait for the
+                  receipt, then another ~1.2 s before B sends<Cite n={4} />
                 </>,
                 <>
                   EIP-4844 blob transactions are not supported<Cite n={8} />
@@ -3485,8 +3590,8 @@ function ClosingSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <NextCard
               href="/mip-4"
-              title="See a developer edge"
-              body="Reserve balance and asynchronous execution."
+              title="Review reserve-balance cases"
+              body="Zero-balance funding delay and delegated-EOA reserve checks."
               index={0}
             />
             <NextCard
