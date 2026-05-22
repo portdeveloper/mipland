@@ -113,7 +113,7 @@ const REFERENCES: { id: number; title: string; url: string }[] = [
   },
   {
     id: 9,
-    title: "MonadDb — Ethereum state storage",
+    title: "MonadDb — authenticated state storage",
     url: "https://docs.monad.xyz/monad-arch/execution/monaddb",
   },
   {
@@ -125,6 +125,16 @@ const REFERENCES: { id: number; title: string; url: string }[] = [
     id: 11,
     title: "JIT Compilation — native-code compilation of hot EVM contracts",
     url: "https://docs.monad.xyz/monad-arch/execution/native-compilation",
+  },
+  {
+    id: 12,
+    title: "Real-Time Data Sources — WebSocket feeds and execution events SDK",
+    url: "https://docs.monad.xyz/monad-arch/realtime-data/data-sources",
+  },
+  {
+    id: 13,
+    title: "Network Information — mainnet chain ID and RPC endpoints",
+    url: "https://docs.monad.xyz/developer-essentials/network-information",
   },
 ];
 
@@ -365,8 +375,8 @@ export default function Monad101Page() {
             <p>
               Consensus orders the next block while execution runs the previous
               one<Cite n={[2, 4]} />. Inside each execution slot, transactions
-              fan out across workers and merge back in the block&apos;s original
-              order<Cite n={5} />.
+              execute optimistically in parallel and merge back in the
+              block&apos;s original order<Cite n={5} />.
             </p>
             <p className="mt-3">
               The outer pipeline and the inner parallelism compose.
@@ -411,17 +421,19 @@ export default function Monad101Page() {
       <VisualSection
         tone="alt"
         eyebrow="06 / Edge"
-        title="No tail-forks. Always-fresh state on RPC."
+        title="No tail-forks. Proposed-state reads."
         copy={
           <>
             <p>
-              MonadBFT proves leaders can&apos;t fork away their predecessor.
-              Reorder-based MEV doesn&apos;t apply<Cite n={2} />.
+              MonadBFT prevents the tail-fork vector where a leader forks away
+              its predecessor&apos;s block. That removes that specific
+              predecessor-block reorder or replacement path<Cite n={2} />.
             </p>
             <p className="mt-3">
               Meanwhile, RPC reads (<span className="font-mono">eth_call</span>,
-              <span className="font-mono"> eth_estimateGas</span>) hit the
-              freshest proposed block — not the last finalized one<Cite n={4} />.
+              <span className="font-mono"> eth_estimateGas</span>) can run
+              against the latest proposed state — not only the finalized
+              state<Cite n={[4, 6]} />.
             </p>
           </>
         }
@@ -432,12 +444,15 @@ export default function Monad101Page() {
       <VisualSection
         tone="surface"
         eyebrow="07 / Data out"
-        title="Events stream out of execution as they happen"
+        title="Fast data comes from WebSockets and execution events"
         copy={
           <p>
-            Indexers, dashboards, and MEV bots don&apos;t poll for blocks — they
-            subscribe to a shared-memory event ring as the EVM executes, and to
-            <span className="font-mono"> monadNewHeads</span> over WebSocket.
+            High-throughput consumers can avoid polling: Monad offers
+            Geth-compatible WebSocket feeds, Monad-specific{" "}
+            <span className="font-mono">monadNewHeads</span> /{" "}
+            <span className="font-mono">monadLogs</span>, and a local
+            execution-events SDK that reads shared memory as execution publishes
+            events<Cite n={12} />.
           </p>
         }
       >
@@ -447,12 +462,12 @@ export default function Monad101Page() {
       <VisualSection
         tone="alt"
         eyebrow="08 / Build today"
-        title="Mainnet is live. Same tools, new RPC."
+        title="Mainnet constants. Same EVM workflow."
         copy={
           <p>
-            Chain 143, currency MON. Foundry, Hardhat, Remix, Etherscan-style
-            explorers all work — point them at{" "}
-            <span className="font-mono">rpc.monad.xyz</span>.
+            Chain ID 143, currency MON, and public RPC endpoints are listed in
+            Network Information. Standard EVM tools and wallets keep the same
+            shape; update the chain ID and RPC endpoint<Cite n={[1, 13]} />.
           </p>
         }
       >
@@ -788,7 +803,7 @@ function SpeculativeExecPanel({
         </div>
       </div>
       <p className="font-mono text-[10px] text-text-tertiary mt-3 text-center">
-        latest, not last-finalized · seconds fresher
+        latest tag · ahead of finalized
       </p>
     </div>
   );
@@ -803,7 +818,7 @@ function RealtimeDataDiagram() {
   const consumers: { id: string; label: string }[] = [
     { id: "indexer", label: "indexer" },
     { id: "dashboard", label: "dashboard" },
-    { id: "mev-bot", label: "MEV bot" },
+    { id: "trading-app", label: "trading app" },
     { id: "ws-subscriber", label: "WS subscriber" },
   ];
 
@@ -922,7 +937,7 @@ function RealtimeDataDiagram() {
                 </p>
                 <p className="text-xs text-text-secondary leading-relaxed">
                   <span className="font-mono">monadNewHeads</span> /{" "}
-                  <span className="font-mono">monadLogs</span> tracks block-state progression
+                  <span className="font-mono">monadLogs</span> include blockId + commitState
                 </p>
               </div>
             </HoverExplain>
@@ -949,10 +964,10 @@ function BuildTodayDiagram() {
   const facts: { label: string; value: string }[] = [
     { label: "Chain ID", value: "143" },
     { label: "Currency", value: "MON" },
-    { label: "RPC", value: "rpc.monad.xyz" },
+    { label: "RPC", value: "https://rpc.monad.xyz" },
     { label: "WS", value: "wss://rpc.monad.xyz" },
     { label: "Explorer", value: "monadvision.com" },
-    { label: "Tools", value: "Foundry · Hardhat · Remix" },
+    { label: "Tools", value: "Monad Foundry · Hardhat" },
   ];
 
   return (
@@ -1034,7 +1049,7 @@ function BuildTodayDiagram() {
                 className="font-mono text-xs"
                 style={{ color: colors.solutionAccent }}
               >
-                mainnet · live · same Solidity, new RPC
+                mainnet · chain 143 · MON
               </p>
             </div>
           </HoverExplain>
@@ -1314,7 +1329,7 @@ function BlockStatesDiagram() {
       id: "proposed",
       label: "Proposed",
       rpcTag: "latest",
-      timing: "< 400 ms",
+      timing: "T",
       body: "Fast UI feedback",
       example: "Echo that the tap landed before the user retries.",
       color: colors.userAccent,
@@ -1323,7 +1338,7 @@ function BlockStatesDiagram() {
       id: "voted",
       label: "Voted",
       rpcTag: "safe",
-      timing: "~400 ms",
+      timing: "T+1 · ~400 ms",
       body: "Stronger confidence",
       example: "Reveal the next step in a multi-step flow.",
       color: colors.problemAccentStrong,
@@ -1332,7 +1347,7 @@ function BlockStatesDiagram() {
       id: "finalized",
       label: "Finalized",
       rpcTag: "finalized",
-      timing: "~800 ms",
+      timing: "T+2 · ~800 ms",
       body: "Settlement decisions",
       example: "Record an irreversible payment or transfer.",
       color: colors.solutionAccent,
@@ -1341,7 +1356,7 @@ function BlockStatesDiagram() {
       id: "verified",
       label: "Verified",
       rpcTag: null,
-      timing: "~2 s",
+      timing: "T+5 · ~2 s",
       body: "Delayed root assurance",
       example: "Release escrow against a verified state root.",
       color: colors.textPrimary,
@@ -1463,7 +1478,7 @@ const SLIDES: {
   {
     key: "raptorcast",
     title: "RaptorCast",
-    note: "one block, erasure-coded chunks, every validator",
+    note: "erasure-coded chunks through two-hop broadcast trees",
     Component: RaptorCastSlide,
   },
   {
@@ -1475,7 +1490,7 @@ const SLIDES: {
   {
     key: "pipeline",
     title: "Async execution pipeline",
-    note: "consensus orders the next block while execution runs the last",
+    note: "consensus orders the next block while execution runs the previous",
     Component: PipelineSlide,
   },
 ];
@@ -1584,7 +1599,7 @@ function RaptorCastSlide({ shouldReduceMotion }: SlideProps) {
   return (
     <svg
       role="img"
-      aria-label="A central leader block emits a continuous stream of small erasure-coded chunks that fan out to a ring of eight validators."
+      aria-label="A central leader block emits erasure-coded chunks through broadcast paths so validators can reconstruct the proposal from enough chunks."
       viewBox={`0 0 ${SLIDE_W} ${SLIDE_H}`}
       className="w-full h-full"
     >
@@ -2090,15 +2105,15 @@ type LayerMapHint = { title: string; body: string };
 const LAYER_MAP_HINTS: Record<string, LayerMapHint> = {
   surface: {
     title: "EVM surface",
-    body: "Everything users and apps touch — transactions, contracts, RPC calls, wallets — looks exactly like Ethereum. Same opcodes, same addresses, same tools.",
+    body: "Transactions, contracts, RPC calls, wallets, and addresses stay Ethereum-compatible. Monad uses the Fusaka opcode set, with documented gas and protocol differences.",
   },
   validators: {
     title: "Validators (MonadBFT)",
-    body: "A rotating committee proposes and votes on each block in pipelined rounds. The flashing dot is the current leader's slot.",
+    body: "Validators vote on block proposals in pipelined rounds, with a scheduled leader for each round. The flashing dot is the current leader's slot.",
   },
   raptorcast: {
     title: "RaptorCast",
-    body: "The leader splits each block into erasure-coded chunks and fans them out across validators. Any sufficient subset is enough to rebuild the whole block.",
+    body: "The leader erasure-codes a proposal into chunks and sends them through two-level broadcast trees. Any sufficiently large subset can rebuild the proposal.",
   },
   parallel: {
     title: "Parallel execution",
@@ -2106,15 +2121,15 @@ const LAYER_MAP_HINTS: Record<string, LayerMapHint> = {
   },
   jit: {
     title: "JIT compile",
-    body: "Hot contracts are compiled from EVM bytecode to native machine code as they run. The strip shows bytecode being upgraded byte by byte.",
+    body: "Hot contracts are compiled from EVM bytecode to cached native code, while cold or not-yet-compiled contracts keep running in the interpreter.",
   },
   monaddb: {
     title: "MonadDb",
-    body: "A purpose-built state database tuned for SSDs. Reads and writes hit individual cells in a flat, on-disk trie.",
+    body: "A purpose-built database tuned for SSDs, with a persistent on-disk Patricia trie for authenticated blockchain state.",
   },
   result: {
     title: "Canonical block",
-    body: "Even though the engine ran transactions in parallel, every node sees the same serial order — 1 → 2 → 3 → 4 — committed atomically.",
+    body: "Even though execution ran transactions in parallel, every node arrives at the result of the same serial order: 1 → 2 → 3 → 4.",
   },
 };
 
@@ -2131,87 +2146,87 @@ function useDiagramHover() {
 const BLOCK_STATES_HINTS: Record<string, LayerMapHint> = {
   proposed: {
     title: "Proposed",
-    body: "The block is on the wire but not yet voted. Use for instant UI echoes — tap confirmations, optimistic UI. Reorgs are rare at <400 ms.",
+    body: "The block has been proposed but not yet voted. Use for instant UI echoes, while remembering that a proposal can still fail.",
   },
   voted: {
     title: "Voted",
-    body: "Validators have voted but haven't finalized. Reorg risk drops sharply. Good gate before revealing the next step in a multi-step flow.",
+    body: "The observer has a Quorum Certificate for the block, but not QC-squared finality. Good gate before revealing the next step in a multi-step flow.",
   },
   finalized: {
     title: "Finalized",
-    body: "Cryptographically locked in — can't be reverted without slashing ~1/3 of stake. Use for any transfer of value or irreversible record.",
+    body: "Canonical chain state; the docs describe finalized blocks as not revertible without a hard fork. Use for transfers of value or irreversible records.",
   },
   verified: {
     title: "Verified",
-    body: "State root has been independently re-executed. Use when proofs of state are needed — light clients, cross-chain bridges, audits.",
+    body: "The delayed Merkle root for the block has been finalized. Use when state proofs or root assurance matter.",
   },
 };
 
 const METRICS_HINTS: Record<string, LayerMapHint> = {
   throughput: {
     title: "Throughput",
-    body: "10k tx/s changes app architecture. No need to batch user actions or push activity off-chain to feel responsive.",
+    body: "10k tx/s gives apps more room for onchain interactions before they need offchain batching for responsiveness.",
   },
   "block-frequency": {
     title: "Block frequency",
-    body: "Sub-second blocks make the chain feel like a normal database. Users get acknowledgement before they retry the action.",
+    body: "Sub-second blocks let users see acknowledgements quickly, before they are likely to retry the action.",
   },
   finality: {
     title: "Finality",
-    body: "Single-slot finality, not probabilistic. One block is enough to act on — no waiting for 12 confirmations.",
+    body: "Full finality arrives in two slots, about 800 ms; speculative finality can arrive in one slot.",
   },
   "gas-throughput": {
     title: "Gas throughput",
-    body: "More gas per second means richer contracts can run without budgeting around the chain. Heavy logic stays on-chain.",
+    body: "More gas per second leaves more room for contract work before chain capacity shapes the product flow.",
   },
 };
 
 const EDGE_HINTS: Record<string, LayerMapHint> = {
   "tail-fork": {
     title: "Tail-fork resistance",
-    body: "MonadBFT proves a leader can't fork away the predecessor. Reorder-based MEV (sandwiches, frontruns on committed blocks) doesn't apply.",
+    body: "MonadBFT prevents a leader from forking away its predecessor's block, closing that predecessor-block reorder or replacement attack path.",
   },
   "speculative-exec": {
     title: "Speculative reads",
-    body: "Reads like eth_call and eth_estimateGas hit the freshest proposed block, not the last finalized one. Wallets see seconds-fresher state.",
+    body: "Reads like eth_call and eth_estimateGas can run against the latest proposed state instead of waiting for finalized state.",
   },
 };
 
 const REALTIME_HINTS: Record<string, LayerMapHint> = {
   "executing-block": {
     title: "Executing block N",
-    body: "While the next block is being ordered, the current block's transactions execute and emit events live — no waiting for the block to close.",
+    body: "During speculative execution, the EVM records events for the proposed block before consensus has finalized that block.",
   },
   indexer: {
     title: "Indexer",
-    body: "Subscribes to libmonad_event for zero-poll, near-realtime state. Catches events as they're written, not 12 seconds later.",
+    body: "Uses libmonad_event or monad-exec-events to read execution events from shared memory instead of polling JSON-RPC.",
   },
   dashboard: {
     title: "Dashboard",
-    body: "Live UI updates. No 12-second polling cadence — events stream in as the EVM produces them.",
+    body: "Dashboards can consume pushed WebSocket updates or execution events instead of polling JSON-RPC for every new block.",
   },
-  "mev-bot": {
-    title: "MEV bot",
-    body: "Searchers race on the event ring directly. Traditional mempool tricks lose value when reads already hit proposed blocks.",
+  "trading-app": {
+    title: "Trading app",
+    body: "Latency-sensitive apps can prepare work from speculative events, then act or discard it as the block advances through consensus states.",
   },
   "ws-subscriber": {
     title: "WS subscriber",
-    body: "monadNewHeads pushes block-state transitions over WebSocket — proposed → voted → finalized, all on one stream.",
+    body: "monadNewHeads and monadLogs include blockId plus commitState updates for Proposed, Voted, Finalized, and Verified. Some blocks can skip Voted.",
   },
   "ipc-card": {
     title: "Shared-memory IPC",
-    body: "Local-only fast path. libmonad_event / monad-exec-events deliver zero-copy events to indexers running on the same machine as the node.",
+    body: "Local-only fast path. libmonad_event / monad-exec-events read execution events from shared memory on the same host as the node.",
   },
   "ws-card": {
     title: "WebSocket extension",
-    body: "Standard JSON-RPC over WebSocket plus Monad-specific topics for block-state progression and richer logs.",
+    body: "Standard JSON-RPC over WebSocket plus Monad-specific subscriptions that include block IDs and commit-state progression.",
   },
 };
 
 const BUILD_HINTS: Record<string, LayerMapHint> = {
   "deploy-cmd": {
     title: "Same tools, new RPC",
-    body: "Foundry, Hardhat, Remix all work unchanged. The only knob you turn is --rpc-url. Solidity, ABI, addresses — all identical to Ethereum.",
+    body: "Use familiar Solidity workflows with Monad network settings. For local Foundry work, use the Monad Foundry fork so tests match Monad gas, opcode, and precompile behavior.",
   },
   "chain-info": {
     title: "Network constants",
@@ -2219,7 +2234,7 @@ const BUILD_HINTS: Record<string, LayerMapHint> = {
   },
   status: {
     title: "Mainnet live",
-    body: "No testnet-only stage — mainnet has been live and processing real traffic. Validate against real chain state from day one.",
+    body: "Use the current mainnet constants from Network Information: chain ID 143, MON as native currency, and the listed public RPC endpoints.",
   },
 };
 
@@ -2230,7 +2245,7 @@ const ENGINE_HINTS: Record<string, LayerMapHint> = {
   },
   consensus: {
     title: "Consensus pipeline",
-    body: "Every ~400 ms the next leader proposes a block (N, N+1, N+2…) and validators vote. Consensus advances every slot regardless of execution.",
+    body: "Every ~400 ms the next leader proposes a block (N, N+1, N+2…) and validators vote. Consensus can keep advancing without waiting for execution of the current block.",
   },
   execution: {
     title: "Execution pipeline",
@@ -2238,11 +2253,11 @@ const ENGINE_HINTS: Record<string, LayerMapHint> = {
   },
   verify: {
     title: "Delayed verification",
-    body: "Verification of the state root lands roughly 3 blocks later (~1.2 s). Apps act on committed blocks immediately and reconcile against verified ones afterwards.",
+    body: "State-root verification lands after the D=3 delayed Merkle root. Some apps can act on finalized blocks; higher-assurance workflows may wait for Verified.",
   },
   "parallel-block": {
     title: "Parallel inside one slot",
-    body: "Workers race transactions concurrently inside one execution slot. Conflicts (tx 2) replay; the recorded order is still 1 → 2 → 3 → 4.",
+    body: "Transactions run concurrently inside one execution slot. Conflicts (tx 2) replay; the recorded order is still 1 → 2 → 3 → 4.",
   },
 };
 
@@ -2902,8 +2917,8 @@ function EngineDiagram() {
                 ))}
               </div>
               <p className="mt-4 text-xs text-text-tertiary font-light leading-relaxed">
-                Workers race; conflicts re-run. The block&apos;s recorded order
-                is still 1 → 2 → 3 → 4.
+                Transactions run in parallel; conflicts re-execute. The
+                block&apos;s recorded order is still 1 → 2 → 3 → 4.
               </p>
             </div>
           </HoverExplain>
@@ -3437,16 +3452,22 @@ function ClosingSection() {
                   <Cite n={6} />
                 </>,
                 <>
-                  Newly funded accounts wait ~1.2 s before spending<Cite n={10} />
+                  Newly funded zero-balance accounts wait about D=3 blocks
+                  after receipt before spending<Cite n={10} />
                 </>,
                 <>
                   EIP-4844 blob transactions are not supported<Cite n={8} />
                 </>,
                 <>
+                  No global mempool; transactions forward to upcoming leaders
+                  <Cite n={8} />
+                </>,
+                <>
                   Contract size up to 128 KB (Ethereum: 24 KB)<Cite n={8} />
                 </>,
                 <>
-                  EIP-7702 delegated EOAs keep a 10 MON reserve<Cite n={10} />
+                  Transactions that reduce delegated EOAs below 10 MON revert
+                  <Cite n={10} />
                 </>,
               ]}
             />
@@ -3465,7 +3486,7 @@ function ClosingSection() {
             <NextCard
               href="/mip-4"
               title="See a developer edge"
-              body="Reserve balance and deferred execution."
+              body="Reserve balance and asynchronous execution."
               index={0}
             />
             <NextCard
