@@ -78,7 +78,7 @@ const REFERENCES: { id: number; title: string; url: string }[] = [
   },
   {
     id: 2,
-    title: "MonadBFT — pipelined consensus and the tail-fork problem",
+    title: "MonadBFT — pipelined consensus and the tail-forking problem",
     url: "https://docs.monad.xyz/monad-arch/consensus/monad-bft",
   },
   {
@@ -103,7 +103,7 @@ const REFERENCES: { id: number; title: string; url: string }[] = [
   },
   {
     id: 7,
-    title: "Gas Pricing — gas charged by limit, not consumption",
+    title: "Gas Pricing — gas charged by limit, not usage",
     url: "https://docs.monad.xyz/developer-essentials/gas-pricing",
   },
   {
@@ -135,6 +135,26 @@ const REFERENCES: { id: number; title: string; url: string }[] = [
     id: 13,
     title: "Network Information — mainnet chain ID and RPC endpoints",
     url: "https://docs.monad.xyz/developer-essentials/network-information",
+  },
+  {
+    id: 14,
+    title: "Deployment Summary — gas limits, timing, WebSockets, and execution events",
+    url: "https://docs.monad.xyz/developer-essentials/summary",
+  },
+  {
+    id: 15,
+    title: "JSON-RPC overview — WebSocket subscriptions and Monad-specific fields",
+    url: "https://docs.monad.xyz/reference/json-rpc/overview",
+  },
+  {
+    id: 16,
+    title: "Toolkits — Monad Foundry and Hardhat compatibility",
+    url: "https://docs.monad.xyz/tooling-and-infra/toolkits",
+  },
+  {
+    id: 17,
+    title: "Changelog — MONAD_NINE Osaka fork activation",
+    url: "https://docs.monad.xyz/developer-essentials/changelog/releases#v0130-monad_nine",
   },
 ];
 
@@ -353,7 +373,7 @@ export default function Monad101Page() {
         copy={
           <p>
             Contracts, wallets, accounts, and RPC integrations stay
-            familiar<Cite n={8} />. Underneath, Monad is its own Layer 1 with
+            familiar<Cite n={[1, 8]} />. Underneath, Monad is its own Layer 1 with
             its own validators, state, and ordered blocks<Cite n={2} />.
           </p>
         }
@@ -392,7 +412,7 @@ export default function Monad101Page() {
           <p>
             Monad gives applications earlier signals for feedback and stronger
             signals for settlement, accounting, and delayed state-root
-            assurance<Cite n={6} />.
+            assurance<Cite n={[4, 6, 14, 15]} />.
           </p>
         }
       >
@@ -406,7 +426,7 @@ export default function Monad101Page() {
         copy={
           <p>
             The headline metrics matter because they change what product teams
-            can show immediately, settle quickly, and keep onchain<Cite n={1} />.
+            can show immediately, settle quickly, and keep onchain<Cite n={[1, 4, 14]} />.
           </p>
         }
       >
@@ -415,8 +435,8 @@ export default function Monad101Page() {
 
       <VisualSection
         tone="alt"
-        eyebrow="06 / Edge"
-        title="No tail-forks. Proposed-state reads."
+        eyebrow="05 / Edge"
+        title="Tail-fork resistance. Proposed-state reads."
         copy={
           <>
             <p>
@@ -428,7 +448,7 @@ export default function Monad101Page() {
               Meanwhile, RPC reads (<span className="font-mono">eth_call</span>,
               <span className="font-mono"> eth_estimateGas</span>) can run
               against the latest proposed state — not only the finalized
-              state<Cite n={[4, 6]} />.
+              state<Cite n={[4, 6, 15]} />.
             </p>
           </>
         }
@@ -438,7 +458,7 @@ export default function Monad101Page() {
 
       <VisualSection
         tone="surface"
-        eyebrow="07 / Data out"
+        eyebrow="06 / Data out"
         title="Fast data comes from WebSockets and execution events"
         copy={
           <p>
@@ -447,7 +467,7 @@ export default function Monad101Page() {
             <span className="font-mono">monadNewHeads</span> /{" "}
             <span className="font-mono">monadLogs</span>, and a local
             execution-events SDK that reads shared memory as execution publishes
-            events<Cite n={12} />.
+            events<Cite n={[12, 15]} />.
           </p>
         }
       >
@@ -456,13 +476,13 @@ export default function Monad101Page() {
 
       <VisualSection
         tone="alt"
-        eyebrow="08 / Build today"
+        eyebrow="07 / Build today"
         title="Mainnet constants. Same EVM workflow."
         copy={
           <p>
             Chain ID 143, currency MON, and public RPC endpoints are listed in
             Network Information. Standard EVM tools and wallets keep the same
-            shape; update the chain ID and RPC endpoint<Cite n={[1, 13]} />.
+            shape; update the chain ID and RPC endpoint<Cite n={[1, 13, 16]} />.
           </p>
         }
       >
@@ -1324,7 +1344,7 @@ function BlockStatesDiagram() {
     {
       id: "proposed",
       label: "Proposed",
-      rpcTag: "latest",
+      rpcTag: "latest / pending",
       timing: "T",
       body: "Fast UI feedback",
       example: "Echo that the tap landed before the user retries.",
@@ -2219,7 +2239,7 @@ type LayerMapHint = { title: string; body: string };
 const LAYER_MAP_HINTS: Record<string, LayerMapHint> = {
   surface: {
     title: "EVM surface",
-    body: "Transactions, contracts, RPC calls, wallets, and addresses stay Ethereum-compatible. Monad uses the Fusaka opcode set, with documented gas and protocol differences.",
+    body: "Transactions, contracts, RPC calls, wallets, and addresses stay Ethereum-compatible. Current mainnet uses the MONAD_NINE / Osaka EVM surface, with documented gas and protocol differences.",
   },
   validators: {
     title: "Validators (MonadBFT)",
@@ -2355,7 +2375,7 @@ const BUILD_HINTS: Record<string, LayerMapHint> = {
 const ENGINE_HINTS: Record<string, LayerMapHint> = {
   interleaved: {
     title: "Ethereum-style interleave",
-    body: "Shown for contrast. On Ethereum, propose → execute → vote share one ~12 s slot, so only a fraction is real CPU. Monad's pipeline below skips this trade-off.",
+    body: "Shown for contrast. On Ethereum-style chains, leader execution, proposal, validator execution, and voting share one ~12 s slot, so only a fraction is real CPU. Monad's pipeline below skips this trade-off.",
   },
   consensus: {
     title: "Consensus pipeline",
@@ -2494,7 +2514,7 @@ function SurfaceRow({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
           EVM surface
         </p>
         <span className="font-mono text-[10px] text-text-tertiary">
-          Fusaka fork
+          Osaka fork <Cite n={17} />
         </span>
       </div>
       <div className="grid grid-cols-4 gap-2">
@@ -3517,7 +3537,7 @@ function ClosingSection() {
       <div className="w-full max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)] gap-8 lg:gap-14 mb-14">
           <div>
-            <SectionEyebrow large={presenterMode}>05 / Porting</SectionEyebrow>
+            <SectionEyebrow large={presenterMode}>08 / Porting</SectionEyebrow>
             <h2
               className={`${
                 presenterMode
@@ -3548,13 +3568,17 @@ function ClosingSection() {
                   </span>{" "}
                   /{" "}
                   <span className="font-mono text-[11px] text-solution-accent">
+                    pending
+                  </span>{" "}
+                  /{" "}
+                  <span className="font-mono text-[11px] text-solution-accent">
                     safe
                   </span>{" "}
                   /{" "}
                   <span className="font-mono text-[11px] text-solution-accent">
                     finalized
                   </span>
-                  <Cite n={6} />
+                  <Cite n={[6, 15]} />
                 </>,
                 <>
                   If account B had zero MON before A funded it, wait for the
@@ -3571,7 +3595,7 @@ function ClosingSection() {
                   Contract size up to 128 KB (Ethereum: 24 KB)<Cite n={8} />
                 </>,
                 <>
-                  Transactions that reduce delegated EOAs below 10 MON revert
+                  Transactions that decrement delegated EOAs and end below 10 MON revert
                   <Cite n={10} />
                 </>,
               ]}
