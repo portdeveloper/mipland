@@ -153,8 +153,8 @@ const REFERENCES: { id: number; title: string; url: string }[] = [
   },
   {
     id: 17,
-    title: "Changelog — MONAD_NINE Osaka fork activation",
-    url: "https://docs.monad.xyz/developer-essentials/changelog/releases#v0130-monad_nine",
+    title: "Transaction Lifecycle in Monad",
+    url: "https://docs.monad.xyz/monad-arch/transaction-lifecycle",
   },
 ];
 
@@ -266,9 +266,11 @@ export default function Monad101Page() {
   const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("monad101-present") === "1";
+    const saved = window.localStorage.getItem("monad101-present") === "1";
     const url = new URLSearchParams(window.location.search);
-    if (url.get("present") === "1" || saved) setPresenterMode(true);
+    if (url.get("present") !== "1" && !saved) return;
+    const id = window.setTimeout(() => setPresenterMode(true), 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   useEffect(() => {
@@ -281,8 +283,13 @@ export default function Monad101Page() {
 
   useEffect(() => {
     const sections = document.querySelectorAll<HTMLElement>("section.slide");
-    setTotalSlides(sections.length);
-    if (sections.length === 0) return;
+    const totalSlidesId = window.setTimeout(
+      () => setTotalSlides(sections.length),
+      0
+    );
+    if (sections.length === 0) {
+      return () => window.clearTimeout(totalSlidesId);
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -295,7 +302,10 @@ export default function Monad101Page() {
       { threshold: [0.35, 0.55, 0.75] }
     );
     sections.forEach((s) => observer.observe(s));
-    return () => observer.disconnect();
+    return () => {
+      window.clearTimeout(totalSlidesId);
+      observer.disconnect();
+    };
   }, [presenterMode]);
 
   useEffect(() => {
@@ -369,12 +379,13 @@ export default function Monad101Page() {
       <VisualSection
         tone="alt"
         eyebrow="01 / Identity"
-        title="Same EVM surface, new engine underneath"
+        title="EVM apps, Monad chain"
         copy={
           <p>
-            Contracts, wallets, accounts, and RPC integrations stay
-            familiar<Cite n={[1, 8]} />. Underneath, Monad is its own Layer 1 with
-            its own validators, state, and ordered blocks<Cite n={2} />.
+            Monad is an Ethereum-compatible Layer 1. Contracts, wallets,
+            accounts, and RPC integrations stay familiar<Cite n={[1, 8]} />.
+            Underneath, Monad has its own validators, state, and ordered
+            blocks<Cite n={2} />.
           </p>
         }
       >
@@ -383,8 +394,24 @@ export default function Monad101Page() {
 
       <VisualSection
         tone="surface"
-        eyebrow="02 / Mechanics"
-        title="Order, run parallel, commit serial, repeat"
+        eyebrow="02 / Transaction path"
+        title="A familiar transaction becomes Monad history"
+        copy={
+          <p>
+            A user signs through a wallet, the RPC node forwards the transaction
+            toward upcoming leaders, a leader includes it in a block, validators
+            advance that block through consensus states, and each node executes
+            the ordered transactions locally<Cite n={17} />.
+          </p>
+        }
+      >
+        <TransactionJourneyDiagram />
+      </VisualSection>
+
+      <VisualSection
+        tone="alt"
+        eyebrow="03 / Mechanics"
+        title="Pipeline the blocks. Parallelize the work."
         copy={
           <>
             <p>
@@ -405,9 +432,9 @@ export default function Monad101Page() {
       </VisualSection>
 
       <WideSection
-        tone="alt"
-        eyebrow="03 / Block states"
-        title="Use block states as product confidence levels"
+        tone="surface"
+        eyebrow="04 / Block confidence"
+        title="Use block states as confidence levels"
         copy={
           <p>
             Monad gives applications earlier signals for feedback and stronger
@@ -420,9 +447,9 @@ export default function Monad101Page() {
       </WideSection>
 
       <VisualSection
-        tone="surface"
-        eyebrow="04 / Numbers"
-        title="Read the numbers as UX constraints"
+        tone="alt"
+        eyebrow="05 / Numbers"
+        title="Translate performance into UX budgets"
         copy={
           <p>
             The headline metrics matter because they change what product teams
@@ -434,21 +461,21 @@ export default function Monad101Page() {
       </VisualSection>
 
       <VisualSection
-        tone="alt"
-        eyebrow="05 / Edge"
-        title="Tail-fork resistance. Proposed-state reads."
+        tone="surface"
+        eyebrow="06 / Fast reads"
+        title="Fresh state still needs a confidence label"
         copy={
           <>
             <p>
-              MonadBFT prevents the tail-fork vector where a leader forks away
-              its predecessor&apos;s block. That removes that specific
-              predecessor-block reorder or replacement path<Cite n={2} />.
+              MonadBFT closes the tail-fork path where a leader forks away its
+              predecessor&apos;s block<Cite n={2} />. That helps low-latency
+              data feel safer, but it does not make every early signal final.
             </p>
             <p className="mt-3">
               Meanwhile, RPC reads (<span className="font-mono">eth_call</span>,
               <span className="font-mono"> eth_estimateGas</span>) can run
-              against the latest proposed state — not only the finalized
-              state<Cite n={[4, 6, 15]} />.
+              through an RPC node against the latest proposed state — not only
+              the finalized state<Cite n={[4, 6, 15]} />.
             </p>
           </>
         }
@@ -457,9 +484,9 @@ export default function Monad101Page() {
       </VisualSection>
 
       <VisualSection
-        tone="surface"
-        eyebrow="06 / Data out"
-        title="Fast data comes from WebSockets and execution events"
+        tone="alt"
+        eyebrow="07 / Data out"
+        title="At Monad speed, polling is not the default"
         copy={
           <p>
             High-throughput consumers can avoid polling: Monad offers
@@ -475,9 +502,9 @@ export default function Monad101Page() {
       </VisualSection>
 
       <VisualSection
-        tone="alt"
-        eyebrow="07 / Build today"
-        title="Mainnet constants. Same EVM workflow."
+        tone="surface"
+        eyebrow="08 / Build today"
+        title="Set the network. Keep the EVM workflow."
         copy={
           <p>
             Chain ID 143, currency MON, and public RPC endpoints are listed in
@@ -618,14 +645,16 @@ function EdgeDiagram() {
               shouldReduceMotion={shouldReduceMotion}
             />
           </HoverExplain>
-          <div className="mt-5 flex justify-end">
+        </div>
+        <div className="space-y-3">
+          <DiagramExplainer defaultText="Hover either panel for what confidence level it affects." />
+          <div className="flex justify-end">
             <DocsQRBadge
               src="/qr-monad-bft.svg"
               href="https://docs.monad.xyz/monad-arch/consensus/monad-bft"
             />
           </div>
         </div>
-        <DiagramExplainer defaultText="Hover either panel for the porting impact." />
       </div>
     </DiagramHoverContext.Provider>
   );
@@ -642,7 +671,7 @@ function TailForkPanel({
   return (
     <div>
       <p className="font-mono text-[10px] text-text-tertiary mb-3 tracking-wide uppercase">
-        Tail-fork resistance
+        Ordering safety
       </p>
       <div className="relative pl-2">
         <div className="flex items-center gap-2">
@@ -735,16 +764,15 @@ function SpeculativeExecPanel({
   enterCount: number;
   shouldReduceMotion: boolean;
 }) {
-  const ease = [0.16, 1, 0.3, 1] as const;
   return (
     <div>
       <p className="font-mono text-[10px] text-text-tertiary mb-3 tracking-wide uppercase">
-        Speculative execution
+        Proposed-state reads
       </p>
-      <div className="grid grid-cols-[80px_minmax(0,1fr)_110px] items-center gap-3">
+      <div className="grid grid-cols-[84px_minmax(80px,1fr)_104px] items-center gap-3">
         <div className="rounded-lg border border-border bg-surface px-3 py-2 text-center">
-          <p className="font-mono text-[10px] text-text-tertiary">your app</p>
-          <p className="font-mono text-xs text-text-primary">wallet</p>
+          <p className="font-mono text-[10px] text-text-tertiary">client</p>
+          <p className="font-mono text-xs text-text-primary">RPC</p>
         </div>
 
         <div className="relative h-9 rounded-full bg-border/50 overflow-hidden">
@@ -752,8 +780,8 @@ function SpeculativeExecPanel({
             <>
               <motion.div
                 key={`call-${enterCount}`}
-                initial={{ left: "-10%", width: "20%" }}
-                animate={{ left: ["-10%", "85%"] }}
+                initial={{ left: "-56px" }}
+                animate={{ left: ["-56px", "calc(100% - 56px)"] }}
                 transition={{
                   duration: 1.6,
                   delay: 0.3,
@@ -761,20 +789,20 @@ function SpeculativeExecPanel({
                   repeatDelay: 2,
                   ease: "easeInOut",
                 }}
-                className="absolute inset-y-1 rounded-full flex items-center justify-center"
+                className="absolute inset-y-1 w-14 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: colors.userAccent }}
               >
                 <span
                   className="font-mono text-[10px]"
                   style={{ color: colors.surface }}
                 >
-                  eth_call
+                  call
                 </span>
               </motion.div>
               <motion.div
                 key={`return-${enterCount}`}
-                initial={{ right: "-10%", width: "20%" }}
-                animate={{ right: ["-10%", "85%"] }}
+                initial={{ right: "-56px" }}
+                animate={{ right: ["-56px", "calc(100% - 56px)"] }}
                 transition={{
                   duration: 1.4,
                   delay: 2.2,
@@ -782,14 +810,14 @@ function SpeculativeExecPanel({
                   repeatDelay: 2.2,
                   ease: "easeInOut",
                 }}
-                className="absolute inset-y-1 rounded-full flex items-center justify-center"
+                className="absolute inset-y-1 w-14 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: colors.solutionAccent }}
               >
                 <span
                   className="font-mono text-[10px]"
                   style={{ color: colors.surface }}
                 >
-                  fresh
+                  result
                 </span>
               </motion.div>
             </>
@@ -807,18 +835,18 @@ function SpeculativeExecPanel({
             className="font-mono text-[10px]"
             style={{ color: colors.solutionAccent }}
           >
-            proposed
+            RPC node
           </p>
           <p
             className="font-mono text-xs"
             style={{ color: colors.solutionAccent }}
           >
-            block N
+            latest state
           </p>
         </div>
       </div>
       <p className="font-mono text-[10px] text-text-tertiary mt-3 text-center">
-        latest tag · ahead of finalized
+        eth_call with &quot;latest&quot; may include proposed block N
       </p>
     </div>
   );
@@ -958,15 +986,16 @@ function RealtimeDataDiagram() {
               </div>
             </HoverExplain>
           </div>
-
-          <div className="mt-4 flex justify-end">
+        </div>
+        <div className="space-y-3">
+          <DiagramExplainer defaultText="Hover any consumer or transport for how it plugs in." />
+          <div className="flex justify-end">
             <DocsQRBadge
               src="/qr-realtime.svg"
               href="https://docs.monad.xyz/monad-arch/realtime-data"
             />
           </div>
         </div>
-        <DiagramExplainer defaultText="Hover any consumer or transport for how it plugs in." />
       </div>
     </DiagramHoverContext.Provider>
   );
@@ -1069,8 +1098,10 @@ function BuildTodayDiagram() {
               </p>
             </div>
           </HoverExplain>
-
-          <div className="mt-4 flex justify-end">
+        </div>
+        <div className="space-y-3">
+          <DiagramExplainer defaultText="Hover any block for the setup detail." />
+          <div className="flex justify-end">
             <DocsQRBadge
               src="/qr-network.svg"
               href="https://docs.monad.xyz/developer-essentials/network-information"
@@ -1078,7 +1109,6 @@ function BuildTodayDiagram() {
             />
           </div>
         </div>
-        <DiagramExplainer defaultText="Hover any block for what it means for porting." />
       </div>
     </DiagramHoverContext.Provider>
   );
@@ -1181,13 +1211,15 @@ function Hero() {
               : "text-4xl sm:text-5xl md:text-6xl"
           } font-light leading-[1.1] tracking-tight mb-6`}
         >
-          A shared computer,{" "}
-          <span className="font-semibold italic">rebuilt around throughput.</span>
+          Monad:{" "}
+          <span className="font-semibold italic">
+            an EVM-compatible L1 rebuilt for throughput.
+          </span>
         </h1>
         {!presenterMode && (
           <p className="text-lg sm:text-xl text-text-secondary font-light max-w-xl mx-auto leading-relaxed">
-            EVM compatible surface. Pipelined consensus, parallel execution,
-            fast state.
+            Familiar contracts, wallets, and RPC at the surface. Pipelined
+            consensus, parallel execution, and fast state underneath.
           </p>
         )}
       </motion.div>
@@ -1506,7 +1538,7 @@ const SLIDES: {
   {
     key: "pipeline",
     title: "Async execution pipeline",
-    note: "consensus orders the next block while execution runs the previous",
+    note: "consensus state stack feeds the execution lane",
     Component: PipelineSlide,
   },
 ];
@@ -2076,24 +2108,38 @@ function ParallelSlide({ shouldReduceMotion }: SlideProps) {
 }
 
 function PipelineSlide({ shouldReduceMotion }: SlideProps) {
-  const slotW = 96;
-  const slotGap = 16;
-  const startX = 116;
+  const slotW = 108;
+  const slotGap = 10;
+  const startX = 118;
   const slotX = (i: number) => startX + i * (slotW + slotGap);
-  const blockH = 76;
-  const consensusY = 70;
-  const executionY = 200;
+  const consensusH = 96;
+  const executionH = 56;
+  const consensusY = 52;
+  const executionY = 218;
 
   const consensusBlocks = [
-    { col: 0, label: "N−1" },
-    { col: 1, label: "N" },
-    { col: 2, label: "N+1" },
-    { col: 3, label: "N+2" },
+    {
+      col: 0,
+      rows: ["N proposed", "N−1 voted", "N−2 finalized"],
+    },
+    {
+      col: 1,
+      rows: ["N+1 proposed", "N voted", "N−1 finalized"],
+    },
+    {
+      col: 2,
+      rows: ["N+2 proposed", "N+1 voted", "N finalized"],
+    },
+    {
+      col: 3,
+      rows: ["N+3 proposed", "N+2 voted", "N+1 finalized"],
+    },
   ];
   const executionBlocks = [
-    { col: 1, label: "N−1" },
-    { col: 2, label: "N" },
-    { col: 3, label: "N+1" },
+    { col: 0, label: "N−2 executed" },
+    { col: 1, label: "N−1 executed" },
+    { col: 2, label: "N executed" },
+    { col: 3, label: "N+1 executed" },
   ];
 
   const transition = shouldReduceMotion
@@ -2103,13 +2149,25 @@ function PipelineSlide({ shouldReduceMotion }: SlideProps) {
   return (
     <svg
       role="img"
-      aria-label="Top consensus track shows blocks N minus 1, N, N plus 1, and N plus 2; bottom execution track shows the same blocks shifted right by one slot, so execution trails consensus by one block."
+      aria-label="Top consensus track shows each slot's proposed, voted, and finalized blocks. Bottom execution track shows the finalized block being executed in that slot."
       viewBox={`0 0 ${SLIDE_W} ${SLIDE_H}`}
       className="w-full h-full"
     >
+      <defs>
+        <marker
+          id="pipeline-finalized-arrow"
+          markerWidth="8"
+          markerHeight="8"
+          refX="6"
+          refY="4"
+          orient="auto"
+        >
+          <path d="M 0 0 L 8 4 L 0 8 z" fill={colors.textTertiary} />
+        </marker>
+      </defs>
       <text
         x={28}
-        y={consensusY + blockH / 2 + 5}
+        y={consensusY + consensusH / 2 + 5}
         fontSize="14"
         fontFamily="monospace"
         fill={colors.userAccent}
@@ -2118,7 +2176,7 @@ function PipelineSlide({ shouldReduceMotion }: SlideProps) {
       </text>
       <text
         x={28}
-        y={executionY + blockH / 2 + 5}
+        y={executionY + executionH / 2 + 5}
         fontSize="14"
         fontFamily="monospace"
         fill={colors.solutionAccent}
@@ -2128,7 +2186,7 @@ function PipelineSlide({ shouldReduceMotion }: SlideProps) {
 
       {consensusBlocks.map((b, i) => (
         <motion.g
-          key={`c-${b.label}`}
+          key={`c-${b.col}`}
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...transition, delay: shouldReduceMotion ? 0 : i * 0.08 }}
@@ -2137,23 +2195,43 @@ function PipelineSlide({ shouldReduceMotion }: SlideProps) {
             x={slotX(b.col)}
             y={consensusY}
             width={slotW}
-            height={blockH}
+            height={consensusH}
             rx={10}
             fill={colors.userBg}
             stroke={colors.userAccent}
             strokeWidth="1.5"
           />
-          <text
-            x={slotX(b.col) + slotW / 2}
-            y={consensusY + blockH / 2 + 7}
-            fontSize="18"
-            fontFamily="monospace"
-            textAnchor="middle"
-            fill={colors.userAccent}
-          >
-            {b.label}
-          </text>
+          {b.rows.map((row, rowIndex) => (
+            <text
+              key={row}
+              x={slotX(b.col) + slotW / 2}
+              y={consensusY + 28 + rowIndex * 24}
+              fontSize="11"
+              fontFamily="monospace"
+              textAnchor="middle"
+              fill={colors.userAccent}
+            >
+              {row}
+            </text>
+          ))}
         </motion.g>
+      ))}
+
+      {consensusBlocks.map((b, i) => (
+        <motion.line
+          key={`arrow-${b.col}`}
+          x1={slotX(b.col) + slotW / 2}
+          x2={slotX(b.col) + slotW / 2}
+          y1={consensusY + consensusH + 8}
+          y2={executionY - 10}
+          stroke={colors.textTertiary}
+          strokeWidth="1"
+          strokeDasharray="3 4"
+          markerEnd="url(#pipeline-finalized-arrow)"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.65 }}
+          transition={{ ...transition, delay: shouldReduceMotion ? 0 : i * 0.08 + 0.45 }}
+        />
       ))}
 
       {executionBlocks.map((b, i) => (
@@ -2167,7 +2245,7 @@ function PipelineSlide({ shouldReduceMotion }: SlideProps) {
             x={slotX(b.col)}
             y={executionY}
             width={slotW}
-            height={blockH}
+            height={executionH}
             rx={10}
             fill={colors.solutionBg}
             stroke={colors.solutionAccent}
@@ -2175,8 +2253,8 @@ function PipelineSlide({ shouldReduceMotion }: SlideProps) {
           />
           <text
             x={slotX(b.col) + slotW / 2}
-            y={executionY + blockH / 2 + 7}
-            fontSize="18"
+            y={executionY + executionH / 2 + 5}
+            fontSize="11"
             fontFamily="monospace"
             textAnchor="middle"
             fill={colors.solutionAccent}
@@ -2185,31 +2263,6 @@ function PipelineSlide({ shouldReduceMotion }: SlideProps) {
           </text>
         </motion.g>
       ))}
-
-      <motion.g
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.75 }}
-        transition={{ ...transition, delay: shouldReduceMotion ? 0 : 0.7 }}
-      >
-        <line
-          x1={slotX(2) + slotW / 2}
-          x2={slotX(2) + slotW / 2}
-          y1={consensusY + blockH + 4}
-          y2={executionY - 4}
-          stroke={colors.textTertiary}
-          strokeWidth="1"
-          strokeDasharray="3 4"
-        />
-        <text
-          x={slotX(2) + slotW / 2 + 10}
-          y={(consensusY + blockH + executionY) / 2 + 4}
-          fontSize="11"
-          fontFamily="monospace"
-          fill={colors.textTertiary}
-        >
-          + 1 block
-        </text>
-      </motion.g>
 
       <line
         x1={startX - 12}
@@ -2238,15 +2291,15 @@ type LayerMapHint = { title: string; body: string };
 
 const LAYER_MAP_HINTS: Record<string, LayerMapHint> = {
   surface: {
-    title: "EVM surface",
-    body: "Transactions, contracts, RPC calls, wallets, and addresses stay Ethereum-compatible. Current mainnet uses the MONAD_NINE / Osaka EVM surface, with documented gas and protocol differences.",
+    title: "EVM-compatible surface",
+    body: "Transactions, contracts, RPC calls, wallets, and addresses keep an Ethereum-compatible shape, with documented Monad-specific differences.",
   },
   validators: {
     title: "Validators (MonadBFT)",
-    body: "Validators vote on block proposals in pipelined rounds, with a scheduled leader for each round. The flashing dot is the current leader's slot.",
+    body: "Monad has its own validator set. Validators vote on block proposals in pipelined rounds, with a scheduled leader for each round.",
   },
   raptorcast: {
-    title: "RaptorCast",
+    title: "Block propagation",
     body: "The leader erasure-codes a proposal into chunks and sends them through two-level broadcast trees. Any sufficiently large subset can rebuild the proposal.",
   },
   parallel: {
@@ -2259,11 +2312,38 @@ const LAYER_MAP_HINTS: Record<string, LayerMapHint> = {
   },
   monaddb: {
     title: "MonadDb",
-    body: "A purpose-built database tuned for SSDs, with a persistent on-disk Patricia trie for authenticated blockchain state.",
+    body: "Monad stores and authenticates its own chain state in a purpose-built database tuned for SSDs.",
   },
   result: {
-    title: "Canonical block",
-    body: "Even though execution ran transactions in parallel, every node arrives at the result of the same serial order: 1 → 2 → 3 → 4.",
+    title: "Monad block",
+    body: "The result is a canonical Monad block. Even though execution may run in parallel, every node arrives at the same ordered result.",
+  },
+};
+
+const TRANSACTION_JOURNEY_HINTS: Record<string, LayerMapHint> = {
+  sign: {
+    title: "Wallet signs",
+    body: "The user flow starts in familiar EVM territory: an app prepares a transaction and a wallet signs it.",
+  },
+  forward: {
+    title: "RPC forwards",
+    body: "The RPC node checks basics such as signature, nonce, and gas limit, then forwards the transaction toward upcoming leaders.",
+  },
+  include: {
+    title: "Leader includes",
+    body: "A scheduled leader chooses transactions from its local mempool and proposes an ordered block.",
+  },
+  confidence: {
+    title: "Block gains confidence",
+    body: "Validators move the block through Proposed, Voted, and Finalized states as consensus messages arrive.",
+  },
+  execute: {
+    title: "Nodes execute locally",
+    body: "Each node executes the ordered transactions locally. Execution can be parallel internally, but the committed result follows the block order.",
+  },
+  receipt: {
+    title: "App reads outcome",
+    body: "The app queries a receipt or state over JSON-RPC once execution has completed on the RPC node.",
   },
 };
 
@@ -2317,12 +2397,12 @@ const METRICS_HINTS: Record<string, LayerMapHint> = {
 
 const EDGE_HINTS: Record<string, LayerMapHint> = {
   "tail-fork": {
-    title: "Tail-fork resistance",
-    body: "MonadBFT prevents a leader from forking away its predecessor's block, closing that predecessor-block reorder or replacement attack path.",
+    title: "Ordering safety",
+    body: "MonadBFT prevents a leader from forking away its predecessor's block, closing that predecessor-block reorder or replacement path.",
   },
   "speculative-exec": {
-    title: "Speculative reads",
-    body: "Reads like eth_call and eth_estimateGas can run against the latest proposed state instead of waiting for finalized state.",
+    title: "Proposed-state reads",
+    body: "Apps call an RPC node with tags like latest. The node may answer eth_call or eth_estimateGas from speculative execution of the latest proposed block, before that block is finalized.",
   },
 };
 
@@ -2462,6 +2542,170 @@ function DiagramExplainer({
   );
 }
 
+type JourneyStep = {
+  id: string;
+  phase: string;
+  title: string;
+  detail: string;
+  tone: "surface" | "chain" | "result";
+};
+
+const JOURNEY_STEPS: JourneyStep[] = [
+  {
+    id: "sign",
+    phase: "EVM surface",
+    title: "Wallet signs",
+    detail: "App prepares a transaction; user approves it.",
+    tone: "surface",
+  },
+  {
+    id: "forward",
+    phase: "RPC",
+    title: "RPC forwards",
+    detail: "Checks basics, then sends to upcoming leaders.",
+    tone: "surface",
+  },
+  {
+    id: "include",
+    phase: "Monad chain",
+    title: "Leader includes",
+    detail: "A scheduled leader proposes an ordered block.",
+    tone: "chain",
+  },
+  {
+    id: "confidence",
+    phase: "Consensus",
+    title: "Block advances",
+    detail: "Proposed, Voted, then Finalized as votes arrive.",
+    tone: "chain",
+  },
+  {
+    id: "execute",
+    phase: "Execution",
+    title: "Nodes execute",
+    detail: "Parallel inside; committed in block order.",
+    tone: "chain",
+  },
+  {
+    id: "receipt",
+    phase: "EVM surface",
+    title: "App reads result",
+    detail: "Receipt and state are queried over JSON-RPC.",
+    tone: "result",
+  },
+];
+
+function TransactionJourneyDiagram() {
+  const shouldReduceMotion = !!useReducedMotion();
+  const { ref, enterCount } = useEnterCount(0.35);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  return (
+    <DiagramHoverContext.Provider
+      value={{
+        activeId,
+        setActive: setActiveId,
+        hints: TRANSACTION_JOURNEY_HINTS,
+      }}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_220px] gap-3 lg:gap-5 items-start">
+        <div>
+          <div
+            ref={ref}
+            className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6"
+            onMouseLeave={() => setActiveId(null)}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+              {JOURNEY_STEPS.map((step, index) => (
+                <HoverExplain key={step.id} id={step.id} className="h-full">
+                  <JourneyStepCard
+                    step={step}
+                    index={index}
+                    enterCount={enterCount}
+                    shouldReduceMotion={shouldReduceMotion}
+                  />
+                </HoverExplain>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="space-y-3">
+          <DiagramExplainer defaultText="Hover any step to see where the transaction is in the system." />
+          <div className="flex justify-end">
+            <DocsQRBadge
+              src="/qr-docs.svg"
+              href="https://docs.monad.xyz/monad-arch/transaction-lifecycle"
+            />
+          </div>
+        </div>
+      </div>
+    </DiagramHoverContext.Provider>
+  );
+}
+
+function JourneyStepCard({
+  step,
+  index,
+  enterCount,
+  shouldReduceMotion,
+}: {
+  step: JourneyStep;
+  index: number;
+  enterCount: number;
+  shouldReduceMotion: boolean;
+}) {
+  const toneStyles = {
+    surface: {
+      bg: colors.surface,
+      border: colors.border,
+      accent: colors.userAccent,
+    },
+    chain: {
+      bg: colors.solutionBg,
+      border: colors.solutionAccentLight,
+      accent: colors.solutionAccent,
+    },
+    result: {
+      bg: colors.surface,
+      border: colors.border,
+      accent: colors.textPrimary,
+    },
+  }[step.tone];
+
+  return (
+    <motion.div
+      key={`${step.id}-${enterCount}`}
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={
+        shouldReduceMotion
+          ? { duration: 0 }
+          : { duration: 0.45, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }
+      }
+      className="h-full min-h-[132px] rounded-xl border p-4"
+      style={{ backgroundColor: toneStyles.bg, borderColor: toneStyles.border }}
+    >
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <span className="font-mono text-[10px] text-text-tertiary">
+          {step.phase}
+        </span>
+        <span
+          className="font-mono text-[10px] rounded-full border px-2 py-0.5 tabular-nums"
+          style={{ color: toneStyles.accent, borderColor: toneStyles.border }}
+        >
+          {index + 1}
+        </span>
+      </div>
+      <h3 className="text-base font-semibold text-text-primary mb-2">
+        {step.title}
+      </h3>
+      <p className="text-xs text-text-secondary font-light leading-relaxed">
+        {step.detail}
+      </p>
+    </motion.div>
+  );
+}
+
 function LayerMap() {
   const shouldReduceMotion = !!useReducedMotion();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -2478,20 +2722,22 @@ function LayerMap() {
           <HoverExplain id="surface">
             <SurfaceRow shouldReduceMotion={shouldReduceMotion} />
           </HoverExplain>
-          <Connector label="compiled / called" shouldReduceMotion={shouldReduceMotion} />
+          <Connector label="signed tx / RPC call" shouldReduceMotion={shouldReduceMotion} />
           <EngineCard shouldReduceMotion={shouldReduceMotion} />
-          <Connector label="canonical block" shouldReduceMotion={shouldReduceMotion} />
+          <Connector label="Monad block" shouldReduceMotion={shouldReduceMotion} />
           <HoverExplain id="result">
             <ResultRow shouldReduceMotion={shouldReduceMotion} />
           </HoverExplain>
-          <div className="flex justify-end pt-2">
+        </div>
+        <div className="space-y-3">
+          <DiagramExplainer />
+          <div className="flex justify-end">
             <DocsQRBadge
               src="/qr-identity.svg"
               href="https://docs.monad.xyz/introduction/monad-for-developers"
             />
           </div>
         </div>
-        <DiagramExplainer />
       </div>
     </DiagramHoverContext.Provider>
   );
@@ -2511,10 +2757,10 @@ function SurfaceRow({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
     <div className="rounded-xl border border-border bg-surface p-4">
       <div className="flex items-center justify-between mb-3">
         <p className="font-mono text-[10px] text-text-tertiary tracking-wide uppercase">
-          EVM surface
+          EVM-compatible surface
         </p>
         <span className="font-mono text-[10px] text-text-tertiary">
-          Osaka fork <Cite n={17} />
+          contracts · wallets · RPC
         </span>
       </div>
       <div className="grid grid-cols-4 gap-2">
@@ -2583,10 +2829,10 @@ function EngineCard({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
     >
       <div className="flex items-center justify-between mb-4">
         <p className="font-mono text-xs text-solution-accent tracking-wide uppercase">
-          Monad L1 engine
+          Monad chain underneath
         </p>
         <span className="font-mono text-[10px] text-solution-accent border border-solution-accent-light rounded-full px-2 py-0.5">
-          this page
+          own L1
         </span>
       </div>
 
@@ -2606,7 +2852,7 @@ function EngineCard({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
           <EngineSubsystem
             label={
               <>
-                RaptorCast<Cite n={3} />
+                block propagation<Cite n={3} />
               </>
             }
           >
@@ -2617,7 +2863,7 @@ function EngineCard({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
           <EngineSubsystem
             label={
               <>
-                parallel exec<Cite n={5} />
+                parallel execution<Cite n={5} />
               </>
             }
           >
@@ -2628,7 +2874,7 @@ function EngineCard({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
           <EngineSubsystem
             label={
               <>
-                JIT compile<Cite n={11} />
+                hot EVM code<Cite n={11} />
               </>
             }
           >
@@ -2639,7 +2885,7 @@ function EngineCard({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
           <EngineSubsystem
             label={
               <>
-                MonadDb<Cite n={9} />
+                MonadDb state<Cite n={9} />
               </>
             }
           >
@@ -2659,7 +2905,7 @@ function EngineSubsystem({
   children: ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[110px_minmax(0,1fr)] gap-3 items-center">
+    <div className="grid grid-cols-[126px_minmax(0,1fr)] gap-3 items-center">
       <span className="font-mono text-[10px] text-solution-accent">
         {label}
       </span>
@@ -2882,7 +3128,7 @@ function ResultRow({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
       <p className="font-mono text-[10px] text-text-tertiary mb-3 tracking-wide uppercase">
-        Canonical block result
+        Canonical Monad block
       </p>
       <div className="flex items-center gap-2 flex-wrap">
         {[1, 2, 3, 4].map((n, i) => (
@@ -2914,7 +3160,7 @@ function ResultRow({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
           </div>
         ))}
         <span className="font-mono text-[10px] text-text-tertiary ml-1">
-          … serial
+          canonical order
         </span>
       </div>
     </div>
@@ -3056,14 +3302,16 @@ function EngineDiagram() {
               </p>
             </div>
           </HoverExplain>
-          <div className="mt-4 flex justify-end">
+        </div>
+        <div className="space-y-3">
+          <DiagramExplainer />
+          <div className="flex justify-end">
             <DocsQRBadge
               src="/qr-mechanics.svg"
               href="https://docs.monad.xyz/monad-arch/consensus/asynchronous-execution"
             />
           </div>
         </div>
-        <DiagramExplainer />
       </div>
     </DiagramHoverContext.Provider>
   );
@@ -3355,6 +3603,9 @@ function MetricsDiagram() {
               </HoverExplain>
             ))}
           </div>
+        </div>
+        <div className="space-y-3">
+          <DiagramExplainer defaultText="Hover a metric to see why it matters for product UX." />
           <div className="flex justify-end">
             <DocsQRBadge
               src="/qr-identity.svg"
@@ -3362,7 +3613,6 @@ function MetricsDiagram() {
             />
           </div>
         </div>
-        <DiagramExplainer defaultText="Hover a metric to see why it matters for product UX." />
       </div>
     </DiagramHoverContext.Provider>
   );
@@ -3446,12 +3696,10 @@ function AnimatedCount({
   useEffect(() => {
     if (shouldReduceMotion) {
       mv.set(metric.target);
-      setText(metric.format(metric.target));
       return;
     }
-    mv.set(0);
-    setText(metric.format(0));
     const unsubscribe = mv.on("change", (v) => setText(metric.format(v)));
+    mv.set(0);
     const controls = animate(mv, [0, metric.target, metric.target, 0], {
       duration: METRICS_CYCLE_SEC,
       delay,
@@ -3465,7 +3713,7 @@ function AnimatedCount({
     };
   }, [mv, metric, delay, fillEnd, holdEnd, shouldReduceMotion, enterCount]);
 
-  return <>{text}</>;
+  return <>{shouldReduceMotion ? metric.format(metric.target) : text}</>;
 }
 
 const LIST_CYCLE_SEC = 8;
@@ -3537,7 +3785,7 @@ function ClosingSection() {
       <div className="w-full max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)] gap-8 lg:gap-14 mb-14">
           <div>
-            <SectionEyebrow large={presenterMode}>08 / Porting</SectionEyebrow>
+            <SectionEyebrow large={presenterMode}>09 / Porting checklist</SectionEyebrow>
             <h2
               className={`${
                 presenterMode
