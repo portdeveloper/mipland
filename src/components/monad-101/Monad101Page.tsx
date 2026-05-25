@@ -191,6 +191,21 @@ function DocsQRBadge({
   );
 }
 
+type SectionQR = {
+  src: string;
+  href: string;
+  label?: string;
+};
+
+function SectionQRBadge({ qr }: { qr?: SectionQR }) {
+  if (!qr) return null;
+  return (
+    <div className="hidden lg:flex justify-start">
+      <DocsQRBadge src={qr.src} href={qr.href} label={qr.label} size={96} />
+    </div>
+  );
+}
+
 function Cite({ n }: { n: number | number[] }) {
   const { presenterMode } = usePresenter();
   if (presenterMode) return null;
@@ -380,6 +395,10 @@ export default function Monad101Page() {
         tone="alt"
         eyebrow="01 / Identity"
         title="EVM apps, Monad chain"
+        qr={{
+          src: "/qr-identity.svg",
+          href: "https://docs.monad.xyz/introduction/monad-for-developers",
+        }}
         copy={
           <p>
             Monad is an Ethereum-compatible Layer 1. Contracts, wallets,
@@ -396,6 +415,10 @@ export default function Monad101Page() {
         tone="surface"
         eyebrow="02 / Transaction path"
         title="A familiar transaction becomes Monad history"
+        qr={{
+          src: "/qr-docs.svg",
+          href: "https://docs.monad.xyz/monad-arch/transaction-lifecycle",
+        }}
         copy={
           <p>
             A user signs through a wallet, the RPC node forwards the transaction
@@ -412,6 +435,10 @@ export default function Monad101Page() {
         tone="alt"
         eyebrow="03 / Mechanics"
         title="Pipeline the blocks. Parallelize the work."
+        qr={{
+          src: "/qr-mechanics.svg",
+          href: "https://docs.monad.xyz/monad-arch/consensus/asynchronous-execution",
+        }}
         copy={
           <>
             <p>
@@ -435,6 +462,10 @@ export default function Monad101Page() {
         tone="surface"
         eyebrow="04 / Block confidence"
         title="Use block states as confidence levels"
+        qr={{
+          src: "/qr-block-states.svg",
+          href: "https://docs.monad.xyz/monad-arch/consensus/block-states",
+        }}
         copy={
           <p>
             Monad gives applications earlier signals for feedback and stronger
@@ -450,6 +481,10 @@ export default function Monad101Page() {
         tone="alt"
         eyebrow="05 / Numbers"
         title="Translate performance into UX budgets"
+        qr={{
+          src: "/qr-identity.svg",
+          href: "https://docs.monad.xyz/introduction/monad-for-developers",
+        }}
         copy={
           <p>
             The headline metrics matter because they change what product teams
@@ -464,6 +499,10 @@ export default function Monad101Page() {
         tone="surface"
         eyebrow="06 / Fast reads"
         title="Fresh state still needs a confidence label"
+        qr={{
+          src: "/qr-monad-bft.svg",
+          href: "https://docs.monad.xyz/monad-arch/consensus/monad-bft",
+        }}
         copy={
           <>
             <p>
@@ -487,6 +526,10 @@ export default function Monad101Page() {
         tone="alt"
         eyebrow="07 / Data out"
         title="At Monad speed, polling is not the default"
+        qr={{
+          src: "/qr-realtime.svg",
+          href: "https://docs.monad.xyz/monad-arch/realtime-data",
+        }}
         copy={
           <p>
             High-throughput consumers can avoid polling: Monad offers
@@ -505,6 +548,11 @@ export default function Monad101Page() {
         tone="surface"
         eyebrow="08 / Build today"
         title="Set the network. Keep the EVM workflow."
+        qr={{
+          src: "/qr-network.svg",
+          href: "https://docs.monad.xyz/developer-essentials/network-information",
+          label: "scan · network info",
+        }}
         copy={
           <p>
             Chain ID 143, currency MON, and public RPC endpoints are listed in
@@ -553,7 +601,7 @@ function PresenterChrome() {
           ))}
         </div>
       )}
-      <div className="fixed bottom-4 right-6 z-50 font-mono text-[10px] text-text-tertiary px-2.5 py-1 rounded-full bg-surface-elevated/70 border border-border backdrop-blur-sm pointer-events-none uppercase tracking-wide">
+      <div className="fixed bottom-4 left-20 z-50 hidden sm:block font-mono text-[10px] text-text-tertiary px-2.5 py-1 rounded-full bg-surface-elevated/70 border border-border backdrop-blur-sm pointer-events-none uppercase tracking-wide">
         {presenterMode ? (
           <>
             <kbd className="text-text-primary">P</kbd> exit ·{" "}
@@ -648,12 +696,6 @@ function EdgeDiagram() {
         </div>
         <div className="space-y-3">
           <DiagramExplainer defaultText="Hover either panel for what confidence level it affects." />
-          <div className="flex justify-end">
-            <DocsQRBadge
-              src="/qr-monad-bft.svg"
-              href="https://docs.monad.xyz/monad-arch/consensus/monad-bft"
-            />
-          </div>
         </div>
       </div>
     </DiagramHoverContext.Provider>
@@ -989,12 +1031,6 @@ function RealtimeDataDiagram() {
         </div>
         <div className="space-y-3">
           <DiagramExplainer defaultText="Hover any consumer or transport for how it plugs in." />
-          <div className="flex justify-end">
-            <DocsQRBadge
-              src="/qr-realtime.svg"
-              href="https://docs.monad.xyz/monad-arch/realtime-data"
-            />
-          </div>
         </div>
       </div>
     </DiagramHoverContext.Provider>
@@ -1101,13 +1137,6 @@ function BuildTodayDiagram() {
         </div>
         <div className="space-y-3">
           <DiagramExplainer defaultText="Hover any block for the setup detail." />
-          <div className="flex justify-end">
-            <DocsQRBadge
-              src="/qr-network.svg"
-              href="https://docs.monad.xyz/developer-essentials/network-information"
-              label="scan · network info"
-            />
-          </div>
         </div>
       </div>
     </DiagramHoverContext.Provider>
@@ -1260,12 +1289,14 @@ function VisualSection({
   children,
   tone = "alt",
   eyebrow,
+  qr,
 }: {
   title: string;
   copy: ReactNode;
   children: ReactNode;
   tone?: "alt" | "surface";
   eyebrow?: string;
+  qr?: SectionQR;
 }) {
   const { presenterMode } = usePresenter();
   const { ref, isVisible } = useInView(0.12);
@@ -1276,10 +1307,11 @@ function VisualSection({
     >
       <div
         ref={ref}
-        className={`w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,0.62fr)_minmax(0,1.38fr)] gap-9 lg:gap-14 items-center section-reveal ${
+        className={`w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[96px_minmax(0,0.62fr)_minmax(0,1.38fr)] gap-9 lg:gap-10 xl:gap-14 items-start section-reveal ${
           isVisible ? "visible" : ""
         }`}
       >
+        <SectionQRBadge qr={qr} />
         <div>
           {eyebrow && (
             <SectionEyebrow large={presenterMode}>{eyebrow}</SectionEyebrow>
@@ -1311,12 +1343,14 @@ function WideSection({
   children,
   tone = "alt",
   eyebrow,
+  qr,
 }: {
   title: string;
   copy: ReactNode;
   children: ReactNode;
   tone?: "alt" | "surface";
   eyebrow?: string;
+  qr?: SectionQR;
 }) {
   const { presenterMode } = usePresenter();
   const { ref, isVisible } = useInView(0.12);
@@ -1327,30 +1361,33 @@ function WideSection({
     >
       <div
         ref={ref}
-        className={`w-full max-w-7xl mx-auto section-reveal ${
+        className={`w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[96px_minmax(0,1fr)] gap-9 lg:gap-10 xl:gap-14 items-start section-reveal ${
           isVisible ? "visible" : ""
         }`}
       >
-        <div className="max-w-3xl mb-10">
-          {eyebrow && (
-            <SectionEyebrow large={presenterMode}>{eyebrow}</SectionEyebrow>
-          )}
-          <h2
-            className={`${
-              presenterMode
-                ? "text-4xl sm:text-5xl md:text-6xl mb-6"
-                : "text-3xl sm:text-4xl mb-4"
-            } font-semibold leading-tight`}
-          >
-            {title}
-          </h2>
-          {!presenterMode && (
-            <div className="text-base text-text-secondary font-light leading-relaxed">
-              {copy}
-            </div>
-          )}
+        <SectionQRBadge qr={qr} />
+        <div>
+          <div className="max-w-3xl mb-10">
+            {eyebrow && (
+              <SectionEyebrow large={presenterMode}>{eyebrow}</SectionEyebrow>
+            )}
+            <h2
+              className={`${
+                presenterMode
+                  ? "text-4xl sm:text-5xl md:text-6xl mb-6"
+                  : "text-3xl sm:text-4xl mb-4"
+              } font-semibold leading-tight`}
+            >
+              {title}
+            </h2>
+            {!presenterMode && (
+              <div className="text-base text-text-secondary font-light leading-relaxed">
+                {copy}
+              </div>
+            )}
+          </div>
+          {children}
         </div>
-        {children}
       </div>
     </section>
   );
@@ -1497,12 +1534,6 @@ function BlockStatesDiagram() {
           <DiagramExplainer
             defaultText="Hover any state for when to use it."
             variant="compact"
-          />
-        </div>
-        <div className="mt-4 flex justify-end">
-          <DocsQRBadge
-            src="/qr-block-states.svg"
-            href="https://docs.monad.xyz/monad-arch/consensus/block-states"
           />
         </div>
       </div>
@@ -2631,12 +2662,6 @@ function TransactionJourneyDiagram() {
         </div>
         <div className="space-y-3">
           <DiagramExplainer defaultText="Hover any step to see where the transaction is in the system." />
-          <div className="flex justify-end">
-            <DocsQRBadge
-              src="/qr-docs.svg"
-              href="https://docs.monad.xyz/monad-arch/transaction-lifecycle"
-            />
-          </div>
         </div>
       </div>
     </DiagramHoverContext.Provider>
@@ -2731,12 +2756,6 @@ function LayerMap() {
         </div>
         <div className="space-y-3">
           <DiagramExplainer />
-          <div className="flex justify-end">
-            <DocsQRBadge
-              src="/qr-identity.svg"
-              href="https://docs.monad.xyz/introduction/monad-for-developers"
-            />
-          </div>
         </div>
       </div>
     </DiagramHoverContext.Provider>
@@ -3305,12 +3324,6 @@ function EngineDiagram() {
         </div>
         <div className="space-y-3">
           <DiagramExplainer />
-          <div className="flex justify-end">
-            <DocsQRBadge
-              src="/qr-mechanics.svg"
-              href="https://docs.monad.xyz/monad-arch/consensus/asynchronous-execution"
-            />
-          </div>
         </div>
       </div>
     </DiagramHoverContext.Provider>
@@ -3606,12 +3619,6 @@ function MetricsDiagram() {
         </div>
         <div className="space-y-3">
           <DiagramExplainer defaultText="Hover a metric to see why it matters for product UX." />
-          <div className="flex justify-end">
-            <DocsQRBadge
-              src="/qr-identity.svg"
-              href="https://docs.monad.xyz/introduction/monad-for-developers"
-            />
-          </div>
         </div>
       </div>
     </DiagramHoverContext.Provider>
@@ -3782,97 +3789,99 @@ function ClosingSection() {
   const { presenterMode } = usePresenter();
   return (
     <section className="slide min-h-screen px-6 py-20 flex items-center bg-surface">
-      <div className="w-full max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)] gap-8 lg:gap-14 mb-14">
-          <div>
-            <SectionEyebrow large={presenterMode}>09 / Porting checklist</SectionEyebrow>
-            <h2
-              className={`${
-                presenterMode
-                  ? "text-4xl sm:text-5xl md:text-6xl mb-6"
-                  : "text-2xl sm:text-3xl mb-4 text-balance"
-              } font-semibold leading-tight`}
-            >
-              Before you ship, re-audit these
-            </h2>
-            {!presenterMode && (
-              <p className="text-base text-text-secondary font-light leading-relaxed">
-                The EVM surface carries over. The assumptions underneath it need
-                a second pass — timing, gas, indexing, mempool, and the meaning
-                of block tags.
-              </p>
-            )}
-          </div>
-          <div className="rounded-xl bg-surface-elevated border border-border p-5 sm:p-6 space-y-4">
-            <List
-              items={[
-                <>
-                  Gas is charged by limit, not by usage<Cite n={7} />
-                </>,
-                <>
-                  Block tags map to states:{" "}
-                  <span className="font-mono text-[11px] text-solution-accent">
-                    latest
-                  </span>{" "}
-                  /{" "}
-                  <span className="font-mono text-[11px] text-solution-accent">
-                    pending
-                  </span>{" "}
-                  /{" "}
-                  <span className="font-mono text-[11px] text-solution-accent">
-                    safe
-                  </span>{" "}
-                  /{" "}
-                  <span className="font-mono text-[11px] text-solution-accent">
-                    finalized
-                  </span>
-                  <Cite n={[6, 15]} />
-                </>,
-                <>
-                  If account B had zero MON before A funded it, wait for the
-                  receipt, then another ~1.2 s before B sends<Cite n={4} />
-                </>,
-                <>
-                  EIP-4844 blob transactions are not supported<Cite n={8} />
-                </>,
-                <>
-                  No global mempool; transactions forward to upcoming leaders
-                  <Cite n={8} />
-                </>,
-                <>
-                  Contract size up to 128 KB (Ethereum: 24 KB)<Cite n={8} />
-                </>,
-                <>
-                  Transactions that decrement delegated EOAs and end below 10 MON revert
-                  <Cite n={10} />
-                </>,
-              ]}
-            />
-            <div className="flex justify-end pt-1">
-              <DocsQRBadge
-                src="/qr-differences.svg"
-                href="https://docs.monad.xyz/developer-essentials/differences"
+      <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[96px_minmax(0,1fr)] gap-9 lg:gap-10 xl:gap-14 items-start">
+        <SectionQRBadge
+          qr={{
+            src: "/qr-differences.svg",
+            href: "https://docs.monad.xyz/developer-essentials/differences",
+          }}
+        />
+        <div>
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)] gap-8 lg:gap-14 mb-14">
+            <div>
+              <SectionEyebrow large={presenterMode}>09 / Porting checklist</SectionEyebrow>
+              <h2
+                className={`${
+                  presenterMode
+                    ? "text-4xl sm:text-5xl md:text-6xl mb-6"
+                    : "text-2xl sm:text-3xl mb-4 text-balance"
+                } font-semibold leading-tight`}
+              >
+                Before you ship, re-audit these
+              </h2>
+              {!presenterMode && (
+                <p className="text-base text-text-secondary font-light leading-relaxed">
+                  The EVM surface carries over. The assumptions underneath it need
+                  a second pass — timing, gas, indexing, mempool, and the meaning
+                  of block tags.
+                </p>
+              )}
+            </div>
+            <div className="rounded-xl bg-surface-elevated border border-border p-5 sm:p-6 space-y-4">
+              <List
+                items={[
+                  <>
+                    Gas is charged by limit, not by usage<Cite n={7} />
+                  </>,
+                  <>
+                    Block tags map to states:{" "}
+                    <span className="font-mono text-[11px] text-solution-accent">
+                      latest
+                    </span>{" "}
+                    /{" "}
+                    <span className="font-mono text-[11px] text-solution-accent">
+                      pending
+                    </span>{" "}
+                    /{" "}
+                    <span className="font-mono text-[11px] text-solution-accent">
+                      safe
+                    </span>{" "}
+                    /{" "}
+                    <span className="font-mono text-[11px] text-solution-accent">
+                      finalized
+                    </span>
+                    <Cite n={[6, 15]} />
+                  </>,
+                  <>
+                    If account B had zero MON before A funded it, wait for the
+                    receipt, then another ~1.2 s before B sends<Cite n={4} />
+                  </>,
+                  <>
+                    EIP-4844 blob transactions are not supported<Cite n={8} />
+                  </>,
+                  <>
+                    No global mempool; transactions forward to upcoming leaders
+                    <Cite n={8} />
+                  </>,
+                  <>
+                    Contract size up to 128 KB (Ethereum: 24 KB)<Cite n={8} />
+                  </>,
+                  <>
+                    Transactions that decrement delegated EOAs and end below 10 MON revert
+                    <Cite n={10} />
+                  </>,
+                ]}
               />
             </div>
           </div>
-        </div>
 
-        <div className="border-t border-border pt-10">
-          <h3 className="text-2xl font-semibold mb-6">Where next</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <NextCard
-              href="/mip-4"
-              title="Review reserve-balance cases"
-              body="Zero-balance funding delay and delegated-EOA reserve checks."
-              index={0}
-            />
-            <NextCard
-              href="https://docs.monad.xyz/developer-essentials/summary"
-              title="Deploy deliberately"
-              body="Port contracts and infra assumptions."
-              external
-              index={1}
-            />
+          <div className="border-t border-border pt-10">
+            <h3 className="text-2xl font-semibold mb-6">Where next</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <NextCard
+                href="/mip-4"
+                title="Review reserve-balance cases"
+                body="Zero-balance funding delay and delegated-EOA reserve checks."
+                index={0}
+              />
+              <NextCard
+                href="https://docs.monad.xyz/developer-essentials/summary"
+                title="Deploy deliberately"
+                body="Port contracts and infra assumptions."
+                external
+                index={1}
+              />
+            </div>
           </div>
         </div>
       </div>
