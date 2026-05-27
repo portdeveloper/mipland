@@ -2322,32 +2322,16 @@ type LayerMapHint = { title: string; body: string };
 
 const LAYER_MAP_HINTS: Record<string, LayerMapHint> = {
   surface: {
-    title: "EVM-compatible surface",
-    body: "Transactions, contracts, RPC calls, wallets, and addresses keep an Ethereum-compatible shape, with documented Monad-specific differences.",
+    title: "EVM app surface",
+    body: "The developer-facing pieces keep an Ethereum-compatible shape: Solidity contracts, wallets, accounts, addresses, and JSON-RPC integrations.",
   },
-  validators: {
-    title: "Validators (MonadBFT)",
-    body: "Monad has its own validator set. Validators vote on block proposals in pipelined rounds, with a scheduled leader for each round.",
+  interface: {
+    title: "Same EVM interface",
+    body: "Apps still submit transactions and read state through familiar EVM routes. The next sections show what Monad does after that transaction enters the chain.",
   },
-  raptorcast: {
-    title: "Block propagation",
-    body: "The leader erasure-codes a proposal into chunks and sends them through two-level broadcast trees. Any sufficiently large subset can rebuild the proposal.",
-  },
-  parallel: {
-    title: "Parallel execution",
-    body: "Transactions in a block run concurrently across lanes. Conflicts are detected and replayed before commit, so the result matches a serial run.",
-  },
-  jit: {
-    title: "JIT compile",
-    body: "Hot contracts are compiled from EVM bytecode to cached native code, while cold or not-yet-compiled contracts keep running in the interpreter.",
-  },
-  monaddb: {
-    title: "MonadDb",
-    body: "Monad stores and authenticates its own chain state in a purpose-built database tuned for SSDs.",
-  },
-  result: {
-    title: "Monad block",
-    body: "The result is a canonical Monad block. Even though execution may run in parallel, every node arrives at the same ordered result.",
+  chain: {
+    title: "Monad L1",
+    body: "Monad is the chain underneath that interface. It has its own validator set, state, and ordered blocks rather than borrowing Ethereum mainnet state.",
   },
 };
 
@@ -2732,7 +2716,6 @@ function JourneyStepCard({
 }
 
 function LayerMap() {
-  const shouldReduceMotion = !!useReducedMotion();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   return (
@@ -2741,447 +2724,144 @@ function LayerMap() {
     >
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_220px] gap-3 lg:gap-5 items-start">
         <div
-          className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6 space-y-3"
+          className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6"
           onMouseLeave={() => setActiveId(null)}
         >
-          <HoverExplain id="surface">
-            <SurfaceRow shouldReduceMotion={shouldReduceMotion} />
-          </HoverExplain>
-          <Connector label="signed tx / RPC call" shouldReduceMotion={shouldReduceMotion} />
-          <EngineCard shouldReduceMotion={shouldReduceMotion} />
-          <Connector label="Monad block" shouldReduceMotion={shouldReduceMotion} />
-          <HoverExplain id="result">
-            <ResultRow shouldReduceMotion={shouldReduceMotion} />
-          </HoverExplain>
+          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="font-mono text-[10px] text-text-tertiary tracking-wide uppercase">
+                Identity map
+              </p>
+              <h3 className="mt-1 text-lg sm:text-xl font-semibold text-text-primary">
+                EVM interface. Monad chain.
+              </h3>
+            </div>
+            <span className="w-fit rounded-full border border-solution-accent-light px-2.5 py-1 font-mono text-[10px] text-solution-accent">
+              Layer 1
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            <HoverExplain id="surface">
+              <IdentityLayerCard
+                eyebrow="What apps already know"
+                title="Ethereum-style app surface"
+                tone="surface"
+              >
+                <IdentityChipGrid items={["contracts", "wallets", "RPC", "accounts"]} />
+              </IdentityLayerCard>
+            </HoverExplain>
+
+            <HoverExplain id="interface">
+              <div className="rounded-xl border border-border bg-surface px-4 py-3">
+                <div className="grid grid-cols-[32px_minmax(0,1fr)] gap-3 items-center">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-solution-bg font-mono text-sm text-solution-accent">
+                    ↓
+                  </span>
+                  <div>
+                    <p className="font-mono text-[10px] text-text-tertiary tracking-wide uppercase">
+                      Same EVM interface
+                    </p>
+                    <p className="mt-1 text-sm text-text-primary">
+                      Apps submit transactions and read state in familiar ways.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </HoverExplain>
+
+            <HoverExplain id="chain">
+              <IdentityLayerCard
+                eyebrow="What Monad provides"
+                title="Monad Layer 1"
+                tone="chain"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <IdentityFact label="own validators" />
+                  <IdentityFact label="own state" />
+                  <IdentityFact label="own blocks" />
+                </div>
+              </IdentityLayerCard>
+            </HoverExplain>
+          </div>
         </div>
         <div className="space-y-3">
-          <DiagramExplainer />
+          <DiagramExplainer defaultText="Hover or focus a layer to see what it means." />
         </div>
       </div>
     </DiagramHoverContext.Provider>
   );
 }
 
-const SURFACE_ITEMS = [
-  { label: "tx", glyph: "▦" },
-  { label: "contract", glyph: "◇" },
-  { label: "RPC", glyph: "⇄" },
-  { label: "wallet", glyph: "◉" },
-];
-
-function SurfaceRow({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  const { activeId } = useDiagramHover();
-  const frozen = shouldReduceMotion || activeId !== null;
-  return (
-    <div className="rounded-xl border border-border bg-surface p-4">
-      <div className="flex items-center justify-between mb-3">
-        <p className="font-mono text-[10px] text-text-tertiary tracking-wide uppercase">
-          EVM-compatible surface
-        </p>
-        <span className="font-mono text-[10px] text-text-tertiary">
-          contracts · wallets · RPC
-        </span>
-      </div>
-      <div className="grid grid-cols-4 gap-2">
-        {SURFACE_ITEMS.map((item, i) => (
-          <motion.div
-            key={item.label}
-            className="rounded-lg border border-solution-accent-light bg-solution-bg px-2 py-2 text-center"
-            animate={frozen ? undefined : { scale: [1, 1.06, 1] }}
-            transition={
-              frozen
-                ? undefined
-                : {
-                    duration: 0.7,
-                    delay: i * 0.25,
-                    repeat: Infinity,
-                    repeatDelay: 5,
-                    ease: "easeInOut",
-                  }
-            }
-          >
-            <span className="font-mono text-[11px] text-solution-accent">
-              {item.glyph} {item.label}
-            </span>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Connector({
-  label,
-  shouldReduceMotion,
-}: {
-  label: string;
-  shouldReduceMotion: boolean;
-}) {
-  const { activeId } = useDiagramHover();
-  const frozen = shouldReduceMotion || activeId !== null;
-  return (
-    <div className="flex items-center justify-center py-1">
-      <motion.span
-        className="font-mono text-[10px] text-text-tertiary flex items-center gap-2"
-        animate={frozen ? undefined : { opacity: [0.5, 1, 0.5] }}
-        transition={
-          frozen
-            ? undefined
-            : { duration: 2.6, repeat: Infinity, ease: "easeInOut" }
-        }
-      >
-        <span>↓</span>
-        <span>{label}</span>
-      </motion.span>
-    </div>
-  );
-}
-
-function EngineCard({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  return (
-    <div
-      className="rounded-xl border-2 p-4 sm:p-5"
-      style={{
-        borderColor: colors.solutionAccent,
-        backgroundColor: colors.solutionBg,
-      }}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <p className="font-mono text-xs text-solution-accent tracking-wide uppercase">
-          Monad chain underneath
-        </p>
-        <span className="font-mono text-[10px] text-solution-accent border border-solution-accent-light rounded-full px-2 py-0.5">
-          own L1
-        </span>
-      </div>
-
-      <div className="space-y-1.5 -mx-1.5">
-        <HoverExplain id="validators" className="px-1.5 py-1">
-          <EngineSubsystem
-            label={
-              <>
-                validators (BFT)<Cite n={2} />
-              </>
-            }
-          >
-            <ValidatorDots shouldReduceMotion={shouldReduceMotion} />
-          </EngineSubsystem>
-        </HoverExplain>
-        <HoverExplain id="raptorcast" className="px-1.5 py-1">
-          <EngineSubsystem
-            label={
-              <>
-                block propagation<Cite n={3} />
-              </>
-            }
-          >
-            <RaptorCastChunks shouldReduceMotion={shouldReduceMotion} />
-          </EngineSubsystem>
-        </HoverExplain>
-        <HoverExplain id="parallel" className="px-1.5 py-1">
-          <EngineSubsystem
-            label={
-              <>
-                parallel execution<Cite n={5} />
-              </>
-            }
-          >
-            <ParallelLanes shouldReduceMotion={shouldReduceMotion} />
-          </EngineSubsystem>
-        </HoverExplain>
-        <HoverExplain id="jit" className="px-1.5 py-1">
-          <EngineSubsystem
-            label={
-              <>
-                hot EVM code<Cite n={11} />
-              </>
-            }
-          >
-            <JITStream shouldReduceMotion={shouldReduceMotion} />
-          </EngineSubsystem>
-        </HoverExplain>
-        <HoverExplain id="monaddb" className="px-1.5 py-1">
-          <EngineSubsystem
-            label={
-              <>
-                MonadDb state<Cite n={9} />
-              </>
-            }
-          >
-            <MonadDbGrid shouldReduceMotion={shouldReduceMotion} />
-          </EngineSubsystem>
-        </HoverExplain>
-      </div>
-    </div>
-  );
-}
-
-function EngineSubsystem({
-  label,
+function IdentityLayerCard({
+  eyebrow,
+  title,
+  tone,
   children,
 }: {
-  label: ReactNode;
+  eyebrow: string;
+  title: string;
+  tone: "surface" | "chain";
   children: ReactNode;
 }) {
-  return (
-    <div className="grid grid-cols-[126px_minmax(0,1fr)] gap-3 items-center">
-      <span className="font-mono text-[10px] text-solution-accent">
-        {label}
-      </span>
-      <div>{children}</div>
-    </div>
-  );
-}
+  const styles =
+    tone === "chain"
+      ? {
+          borderColor: colors.solutionAccent,
+          backgroundColor: colors.solutionBg,
+          eyebrowColor: colors.solutionAccent,
+        }
+      : {
+          borderColor: colors.border,
+          backgroundColor: colors.surface,
+          eyebrowColor: colors.textTertiary,
+        };
 
-function ValidatorDots({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  const { activeId } = useDiagramHover();
-  const frozen = shouldReduceMotion || activeId !== null;
-  const count = 7;
-  const cycleSec = 5;
   return (
-    <div className="flex gap-1.5">
-      {Array.from({ length: count }).map((_, i) => {
-        const peak = 0.05 + (i / count) * 0.75;
-        return (
-          <motion.div
-            key={i}
-            className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: colors.solutionAccent, opacity: 0.4 }}
-            animate={
-              frozen
-                ? undefined
-                : {
-                    scale: [1, 1, 1.7, 1, 1],
-                    opacity: [0.4, 0.4, 1, 0.4, 0.4],
-                  }
-            }
-            transition={
-              frozen
-                ? undefined
-                : {
-                    duration: cycleSec,
-                    times: [0, Math.max(0.001, peak - 0.02), peak, peak + 0.02, 1],
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }
-            }
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-function RaptorCastChunks({
-  shouldReduceMotion,
-}: {
-  shouldReduceMotion: boolean;
-}) {
-  const { activeId } = useDiagramHover();
-  const frozen = shouldReduceMotion || activeId !== null;
-  const count = 4;
-  const cycleSec = 3.2;
-  return (
-    <div className="relative h-2 rounded-full overflow-hidden bg-solution-accent-light/40">
-      {Array.from({ length: count }).map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute top-0 h-2 rounded-full"
-          style={{ backgroundColor: colors.solutionAccent, width: 14 }}
-          initial={{ left: "-15%" }}
-          animate={frozen ? undefined : { left: ["-15%", "115%"] }}
-          transition={
-            frozen
-              ? undefined
-              : {
-                  duration: cycleSec,
-                  delay: i * (cycleSec / count),
-                  repeat: Infinity,
-                  ease: "linear",
-                }
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
-function ParallelLanes({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  const { activeId } = useDiagramHover();
-  const frozen = shouldReduceMotion || activeId !== null;
-  const cycleSec = 4;
-  return (
-    <div className="space-y-1">
-      {[0, 1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="h-1 rounded-full overflow-hidden"
-          style={{ backgroundColor: `${colors.solutionAccentLight}` }}
+    <div
+      className="rounded-xl border p-4"
+      style={{
+        borderColor: styles.borderColor,
+        backgroundColor: styles.backgroundColor,
+      }}
+    >
+      <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <p
+          className="font-mono text-[10px] tracking-wide uppercase"
+          style={{ color: styles.eyebrowColor }}
         >
-          <motion.div
-            className="h-full origin-left rounded-full"
-            style={{ backgroundColor: colors.solutionAccent }}
-            initial={{ scaleX: 0 }}
-            animate={frozen ? { scaleX: 1 } : { scaleX: [0, 1, 1, 0] }}
-            transition={
-              frozen
-                ? { duration: 0 }
-                : {
-                    duration: cycleSec,
-                    delay: i * 0.18,
-                    times: [0, 0.45, 0.85, 1],
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }
-            }
-          />
+          {eyebrow}
+        </p>
+        <p className="text-base font-semibold text-text-primary">{title}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function IdentityChipGrid({ items }: { items: string[] }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      {items.map((item) => (
+        <div
+          key={item}
+          className="rounded-lg border border-solution-accent-light bg-solution-bg px-3 py-2 text-center"
+        >
+          <span className="font-mono text-[11px] text-solution-accent">
+            {item}
+          </span>
         </div>
       ))}
     </div>
   );
 }
 
-function JITStream({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  const { activeId } = useDiagramHover();
-  const frozen = shouldReduceMotion || activeId !== null;
-  const totalBytes = 18;
-  const cycleSec = 4;
+function IdentityFact({ label }: { label: string }) {
   return (
-    <div className="flex items-end gap-[3px] h-3">
-      {Array.from({ length: totalBytes }).map((_, i) => {
-        const peak = 0.05 + (i / totalBytes) * 0.7;
-        return (
-          <motion.div
-            key={i}
-            className="w-1 rounded-sm origin-bottom"
-            style={{ backgroundColor: colors.solutionAccentLight, height: 6 }}
-            animate={
-              frozen
-                ? undefined
-                : {
-                    backgroundColor: [
-                      colors.solutionAccentLight,
-                      colors.solutionAccentLight,
-                      colors.solutionAccent,
-                      colors.solutionAccent,
-                      colors.solutionAccentLight,
-                    ],
-                    scaleY: [1, 1, 2, 2, 1],
-                  }
-            }
-            transition={
-              frozen
-                ? undefined
-                : {
-                    duration: cycleSec,
-                    times: [
-                      0,
-                      Math.max(0.001, peak - 0.02),
-                      peak,
-                      peak + 0.04,
-                      1,
-                    ],
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }
-            }
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-function MonadDbGrid({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  const { activeId } = useDiagramHover();
-  const frozen = shouldReduceMotion || activeId !== null;
-  const cols = 12;
-  const rows = 2;
-  const total = cols * rows;
-  const cycleSec = 5;
-  return (
-    <div
-      className="grid gap-0.5"
-      style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-    >
-      {Array.from({ length: total }).map((_, i) => {
-        const peak = 0.05 + (i / total) * 0.75;
-        return (
-          <motion.div
-            key={i}
-            className="aspect-square rounded-sm"
-            style={{ backgroundColor: colors.solutionAccentLight }}
-            animate={
-              frozen
-                ? undefined
-                : {
-                    backgroundColor: [
-                      colors.solutionAccentLight,
-                      colors.solutionAccentLight,
-                      colors.solutionAccent,
-                      colors.solutionAccentLight,
-                      colors.solutionAccentLight,
-                    ],
-                  }
-            }
-            transition={
-              frozen
-                ? undefined
-                : {
-                    duration: cycleSec,
-                    times: [0, Math.max(0.001, peak - 0.015), peak, peak + 0.015, 1],
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }
-            }
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-function ResultRow({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
-  const { activeId } = useDiagramHover();
-  const frozen = shouldReduceMotion || activeId !== null;
-  return (
-    <div className="rounded-xl border border-border bg-surface p-4">
-      <p className="font-mono text-[10px] text-text-tertiary mb-3 tracking-wide uppercase">
-        Canonical Monad block
-      </p>
-      <div className="flex items-center gap-2 flex-wrap">
-        {[1, 2, 3, 4].map((n, i) => (
-          <div key={n} className="flex items-center gap-2">
-            <motion.div
-              className="h-7 w-7 rounded-md flex items-center justify-center"
-              style={{
-                backgroundColor: colors.textPrimary,
-                color: colors.surface,
-              }}
-              animate={frozen ? undefined : { scale: [1, 1.1, 1] }}
-              transition={
-                frozen
-                  ? undefined
-                  : {
-                      duration: 0.6,
-                      delay: i * 0.35,
-                      repeat: Infinity,
-                      repeatDelay: 3,
-                      ease: "easeInOut",
-                    }
-              }
-            >
-              <span className="font-mono text-xs">{n}</span>
-            </motion.div>
-            {i < 3 && (
-              <span className="font-mono text-xs text-text-tertiary">→</span>
-            )}
-          </div>
-        ))}
-        <span className="font-mono text-[10px] text-text-tertiary ml-1">
-          canonical order
-        </span>
-      </div>
+    <div className="rounded-lg border border-solution-accent-light bg-surface px-3 py-2 text-center">
+      <span className="font-mono text-[11px] text-solution-accent">
+        {label}
+      </span>
     </div>
   );
 }
