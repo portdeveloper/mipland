@@ -1,0 +1,62 @@
+{
+  "chainId": 143,
+  "generatedAt": "2026-05-28T16:48:27.998Z",
+  "proofs": {
+    "3a": {
+      "beforeTx": "0xa9533f7347e115c9f47252bb3bf5526e76943f98988a206515b86ef23c0203c9",
+      "beforeGas": 2420884,
+      "beforeStatus": "0x1",
+      "afterTx": "0xc71cd662bdfd48cb51ad4c53376e0045181c3a1bd522703ba1166e54dba2a99d",
+      "afterGas": 57003,
+      "afterStatus": "0x1",
+      "kind": "gas-delta"
+    },
+    "3b": {
+      "afterTx": "0x4b1b7ef6b438a554ffc628675fda22076861e2921b9fcd5090f10a72bc73f3a2",
+      "afterGas": 13512834,
+      "afterStatus": "0x1",
+      "kind": "gas-delta",
+      "beforeTx": null,
+      "beforeGas": null,
+      "beforeNote": "No equivalent 'before' tx on Monad — the same source runs on both chains. The qualitative contrast: this call would likely exceed Ethereum's 30 M block gas limit due to quadratic memory expansion of the intermediate keccak buffers."
+    },
+    "8a": {
+      "beforeTx": "0x4383b9624f77487ba1d0fe992ca250f286c4656ea6098c30f9af331f6e254362",
+      "beforeGas": 116281,
+      "beforeStatus": "0x1",
+      "afterTx": "0x731376a8cfaeb3561623bad5e2af81866fca3db7e27656f13de4b9ae86531fb9",
+      "afterGas": 115729,
+      "afterStatus": "0x1",
+      "kind": "gas-delta"
+    },
+    "8b": {
+      "beforeTx": "0x1e003c7e99b1597a7f2f21081f9d7cf136bdbc3cc81ed4ab69ae0c98327d9c8f",
+      "beforeGas": 49267,
+      "beforeStatus": "0x1",
+      "afterTx": "0x51319ac9a35c893f8e371710a6416fa6cac0c71f3c5a6889fdaca594e38c1097",
+      "afterGas": 49292,
+      "afterStatus": "0x1",
+      "kind": "gas-delta"
+    },
+    "8c": {
+      "beforeTx": "0x381d65dee04150baedf2e89311cceaf5117387c67b0ebee4dea65789d712c224",
+      "beforeGas": 400500,
+      "beforeStatus": "0x1",
+      "afterTx": "0xdbb20d97221ea4a6c3bbfdf8ddb9128b8a7f7fd5c997b8f1111feedef4d974a8",
+      "afterGas": 400017,
+      "afterStatus": "0x1",
+      "kind": "gas-delta"
+    },
+    "4a": {
+      "beforeTx": "0x04aa66caf0727cc9cdeb1dbc788900af5ff94f196edd417d688975072bc031d5",
+      "beforeGas": 31398,
+      "beforeStatus": "0x1",
+      "afterTx": "0xb96efe37fac6f275732cf3c62984a3e37562c4bf2636242df64e46f307576a62",
+      "afterGas": 32451,
+      "afterStatus": "0x1",
+      "kind": "behavior",
+      "beforeLabel": "Tx trace contains no probe of 0x1001. If any op had dipped the sender below reserve, the bundler would have no way to identify the offender.",
+      "afterLabel": "Tx trace contains a CALL to 0x1001 with selector 0x3a61584e (dippedIntoReserve) after each op. Correct integration of the MIP-4 precompile."
+    }
+  }
+}

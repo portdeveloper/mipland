@@ -106,6 +106,25 @@ const zh = {
       card3Desc:
         "按页排布的数组、精心打包的数据结构、把相关数据放在同一个 128-slot 页里 — 这些都是新的优化手段。",
     },
+    suggestions: {
+      title: "代码应该怎么改",
+      desc: "MIP-8 规范暗示这些存储布局模式应该带来 gas 节省。下面每个数字都来自 Monad 主网实测 — 而实测显示规范预测的收益目前在 gas 表上还没体现。我们把原始数据放在下面,你可以自己核对。",
+      s8aTitle: "把密集键的 mapping 改成数组",
+      s8aSummary:
+        "mapping 把每个键哈希到存储空间里的零散位置。连续的逻辑索引会落到不同的 MIP-8 页,每次访问都要付一次冷页代价。",
+      s8aExplanation:
+        "MIP-8 规范预测这里有大幅节省(8 次冷页 → 1 次冷 + 7 次热,大约 7 倍便宜)。我们的主网实测只显示 0.5% 差异:散布版 116,281 gas vs 紧凑版 115,729 gas。规范里描述的页局部性收费目前在 Monad 主网的 gas 表上似乎没有区分这两种布局。两个交易哈希都在下面,可以自己验证。目前把这个模式当作向前兼容的改进 — MIP-8 完整 gas 表全部落地之后大概率会成为真实收益 — 但不要为了立竿见影的 gas 下降而重构现有合约。",
+      s8bTitle: "把常一起读的字段放在一起",
+      s8bSummary:
+        "如果一个 struct 的两个字段经常一起读,就让它们在声明里相邻 — 不要被其他字段隔开。",
+      s8bExplanation:
+        "主网实测:散布布局(两个字段隔 128 slot,保证不同页)花 49,267 gas;重排布局(两个字段相邻)花 49,292 gas。重排版本反而贵了 25 gas — 基本等价。和 8a 一样,规范里描述的页局部性收益目前没体现在 gas 上。这个模式仍然是好习惯(代码更清晰,链下 cache 行为也更好),但目前在链上没带来可测的 gas 节省。",
+      s8cTitle: "把新状态写入集中到同一页",
+      s8cSummary:
+        "存储增长按页收费,不按 slot。把 10 个新条目写入 10 个不同的页,代价是写入同一页的 10 倍。",
+      s8cExplanation:
+        "规范预测:10 个新条目散布在 10 个不同页里要付 10 × 状态增长(~170k);10 个挤在同一页里只付 1 × 状态增长 + 9 × 热写(~18k)。主网实测:散布版 400,500 gas,紧凑版 400,017 gas — 差异 0.1%。Monad 主网目前的状态增长似乎按 slot 计费而不是按页,所以紧凑布局没赢。建议跟 8a/8b 一样:作为向前兼容的改进先记下来,但不要指望今天就有 gas 收益。",
+    },
     compatibility: {
       title: "执行层完全兼容",
       desc1:
@@ -298,6 +317,20 @@ const zh = {
       card3Desc:
         "子调用从同一个 8 MB 池里借用内存，而不是各自分配。调用返回时内存释放。嵌套调用不再浪费配额。",
     },
+    suggestions: {
+      title: "代码应该怎么改",
+      desc: "受益于线性内存定价的 Solidity 模式,每个建议都附有 Monad 主网真实交易作为证据。",
+      s3aTitle: "别再用 SSTORE 当事务内的暂存空间",
+      s3aSummary:
+        "一个函数把中间状态写进 storage,只为了同一笔调用里晚一点再读出来 — 你在为本可以放在 memory 里的数据付状态增长和 SLOAD 的代价。",
+      s3aExplanation:
+        "Monad 主网实测:storage 版本花 2,420,884 gas;memory 版本花 57,003 gas — 节省 97.6%。MIP-3 让 memory 对常规用量基本等于免费。任何函数当前为了同笔调用里晚一点读出来而把中间值写进 storage,直接换成 memory 变量。两笔交易哈希都在下面,可以自己验证。",
+      s3bTitle: "大胆分配内存 — 1 MB 很便宜",
+      s3bSummary:
+        "以太坊二次方内存成本让开发者养成了回避大缓冲区的习惯。在 Monad 上,这个约束已经消失。",
+      s3bExplanation:
+        "下面这笔 \"之后\" 交易在 Monad 主网上分配 1 MB memory,用 32,768 次 keccak256 填满它,然后做一次折叠 — 全部在一笔调用里完成,花 13.5M gas(还在单个区块限制以内)。同样的逻辑在以太坊 L1 上,中间 keccak 缓冲区的二次方内存扩展费就会让整个交易超过 30M 区块上限,只能拆成多笔。Monad 上没有等价的 \"之前\" 交易可以部署 — 代码本身完全一样;差别在于哪条链能承担。直接用最朴素的算法。",
+    },
     compatibility: {
       title: "向后兼容",
       desc1:
@@ -405,6 +438,15 @@ const zh = {
         "清空例外：未委托的 EOA 在 k 个区块内的第一笔交易可以花到低于保证金，允许用户完全提取。EIP-7702 委托账户不能使用此例外。",
       o1Cost: "O(1) 开销：通过失败地址集增量跟踪违规情况",
       usageInSolidity: "Solidity 用法示例",
+    },
+    suggestions: {
+      title: "代码应该怎么改",
+      desc: "在 bundler 和编排多步 MON 流转的合约里集成保证金预编译合约的实战模式。",
+      s4aTitle: "在风险操作之后检查保证金预编译",
+      s4aSummary:
+        "不检查的话,你的 bundle 会在 tx 末尾整体回滚,而你根本不知道是哪个 UserOp 把账户压到了保证金线以下。检查之后,你可以精确定位罪魁祸首。",
+      s4aExplanation:
+        "MIP-4 在 0x1001 提供了一个预编译,返回当前账户状态是否违反 10 MON 保证金。bundler(ERC-4337 entrypoint、multicall 聚合器)应该在每个 sub-op 之后调用它:如果返回 true,立即用一个带 offender index 的结构化错误回滚。关键细节:必须用 CALL,不能用 STATICCALL — 规范明确禁止 STATICCALL。目前主网上 ~340 个试图用这个预编译的合约,每一个都在用 STATICCALL 调用,每一个都回滚了。下面这个 \"之后\" 交易 — 据我们所知 — 是 Monad 主网上第一个正确集成 0x1001 的真实 bundler 交易:它的 trace 包含一次成功的 CALL 到 0x1001 带选择器 0x3a61584e。把这个合约(源码已链接)当参考实现。",
     },
   },
   mip7: {
@@ -581,6 +623,20 @@ const zh = {
   specDisclaimer: {
     prefix: "本页信息不应作为引用来源。请以 ",
     suffix: " 原文为准。",
+  },
+  suggestions: {
+    patternLabel: "模式",
+    before: "之前",
+    after: "之后",
+    beforeBehavior: "之前 — 朴素实现",
+    afterBehavior: "之后 — MIP-4 感知",
+    savings: "节省",
+    verifyOnMonadscan: "在 Monadscan 上验证",
+    viewFailingTx: "查看交易",
+    pendingDeploy: "等待主网部署",
+    pendingMeasurement: "待定",
+    proofDisclaimer:
+      "下面每条建议都对应 Monad 主网上一笔真实交易。点任意链接即可在链上核对 gas 开销。",
   },
   discussion: {
     title: "到 Monad 论坛继续讨论",

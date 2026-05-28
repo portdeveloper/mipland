@@ -106,6 +106,25 @@ const en = {
       card3Desc:
         "Page-aware arrays, careful packing, and low-level layouts that keep related data inside the same 128-slot page open a new optimization space for page-aware gas costs.",
     },
+    suggestions: {
+      title: "What to write differently",
+      desc: "Storage-layout patterns that the MIP-8 spec implies should win. Each savings number comes from a mainnet measurement, not spec math — and the measurements reveal that the spec's predicted gains don't yet materialize at the gas-schedule level. We're publishing the raw numbers below so you can verify and judge for yourself.",
+      s8aTitle: "Replace dense-key mappings with arrays",
+      s8aSummary:
+        "Mappings hash each key to a slot scattered across the storage space. Consecutive logical indices land on different MIP-8 pages and pay a fresh cold-page cost each time.",
+      s8aExplanation:
+        "The MIP-8 spec predicts a large saving here (8 cold pages → 1 cold + 7 warm, roughly 7× cheaper). Our mainnet measurement shows only a 0.5% difference: 116,281 gas scattered vs 115,729 gas packed. The page-locality charges the spec describes don't appear to differentiate these two layouts at the gas-schedule level on current Monad mainnet. Both tx hashes are linked so you can verify. For now, treat this pattern as forward-compatible — it will likely become a real win as MIP-8's full gas schedule lands — but don't refactor existing contracts expecting an immediate gas drop.",
+      s8bTitle: "Co-locate hot struct fields",
+      s8bSummary:
+        "If two fields of a struct are usually read together, put them adjacent in the declaration — not separated by unrelated fields.",
+      s8bExplanation:
+        "Measured on mainnet: scattered layout (fields 128 slots apart, guaranteed different pages) cost 49,267 gas; reordered layout (fields adjacent) cost 49,292 gas. The reordered version was actually 25 gas more expensive — essentially identical. As with pattern 8a, the page-locality benefit the spec describes doesn't yet materialize at the measured-gas level. The pattern is still good hygiene (cleaner code, better cache behavior off-chain) but isn't currently delivering a measurable on-chain saving.",
+      s8cTitle: "Batch fresh-state writes into the same page",
+      s8cSummary:
+        "Growing storage charges STATE_GROWTH_COST per page, not per slot. Writing 10 new entries across 10 different pages costs 10× more than writing them into one page.",
+      s8cExplanation:
+        "Spec prediction: 10 new entries spread across 10 different pages should pay 10 × state-growth (~170k); 10 entries packed into one page should pay 1 × state-growth + 9 × warm-write (~18k). Measured on mainnet: scattered cost 400,500 gas, packed cost 400,017 gas — a 0.1% difference. State growth appears to currently be charged per-slot rather than per-page on Monad mainnet, so the packed layout doesn't yet win. Same recommendation as 8a / 8b: keep this in mind as a forward-compatible improvement, but don't expect today's gas drop.",
+    },
     compatibility: {
       title: "Execution stays compatible",
       desc1:
@@ -307,6 +326,20 @@ const en = {
       card3Desc:
         "Child calls borrow from the same 8 MB pool instead of getting isolated memory. When a call returns, its memory is released back. Nested calls no longer waste the budget.",
     },
+    suggestions: {
+      title: "What to write differently",
+      desc: "Concrete Solidity patterns that benefit from linear memory pricing, each backed by a real Monad mainnet transaction.",
+      s3aTitle: "Stop using SSTORE as a within-tx scratchpad",
+      s3aSummary:
+        "When a function writes intermediate state to storage just to read it back later in the same call, you're paying state-growth and SLOAD costs for data that could live in memory.",
+      s3aExplanation:
+        "Measured on Monad mainnet: the storage variant cost 2,420,884 gas; the memory variant cost 57,003 gas — a 97.6% reduction. MIP-3 makes memory effectively free for typical workloads. Anywhere a function currently round-trips intermediate values through storage just to read them back in the same call, swap the storage variable for a memory variable. Both transaction hashes are linked below so you can verify the measurement.",
+      s3bTitle: "Allocate memory liberally — 1 MB is cheap",
+      s3bSummary:
+        "Ethereum's quadratic memory cost trained devs to avoid large in-memory buffers. On Monad, that constraint is gone.",
+      s3bExplanation:
+        "The 'after' tx allocates a 1 MB memory buffer, fills it with 32,768 keccak256 outputs, and folds them — all in one call, in 13.5 M gas (well within a single block). The same logic on Ethereum L1 would pay quadratic memory expansion costs for the intermediate keccak buffers and likely exceed the 30 M block gas limit, forcing devs to chunk the work across multiple transactions. There is no equivalent 'before' tx to deploy on Monad — the same code runs the same way; the difference is which chain can afford it. Reach for the straight-line algorithm.",
+    },
     compatibility: {
       title: "Backwards compatible",
       desc1:
@@ -414,6 +447,15 @@ const en = {
         "Emptying exception: an undelegated EOA's first transaction in k blocks may spend below reserve, letting users fully withdraw. EIP-7702-delegated accounts cannot use this exception.",
       o1Cost: "O(1) cost: tracks violations incrementally via a failed-address set",
       usageInSolidity: "Usage in Solidity",
+    },
+    suggestions: {
+      title: "What to write differently",
+      desc: "Patterns for integrating the reserve precompile into bundlers and other contracts that orchestrate multi-step MON flows.",
+      s4aTitle: "Probe the reserve precompile after risky operations",
+      s4aSummary:
+        "Without checking, your bundle reverts at tx end with no information about which sub-call dipped the account below reserve. With the precompile, you can blame the right UserOp.",
+      s4aExplanation:
+        "MIP-4 adds a precompile at 0x1001 that returns whether the current account state violates the 10 MON reserve. Bundlers (ERC-4337 entrypoints, multicall aggregators) should call it after each sub-operation: if it returns true, revert immediately with a structured error naming the offender. Critical detail: the call must be a CALL, not STATICCALL — the spec explicitly disallows STATICCALL. Of the ~340 contracts attempting to use the precompile on mainnet today, every single one is calling it via STATICCALL and reverting. The 'after' tx linked below is — to our knowledge — the first correct integration of 0x1001 on Monad mainnet: a real bundler tx whose trace contains a successful CALL to 0x1001 with selector 0x3a61584e. Use this contract (src linked) as the reference.",
     },
   },
   mip7: {
@@ -592,6 +634,20 @@ const en = {
   specDisclaimer: {
     prefix: "The information on this page should not be quoted. Please refer to ",
     suffix: " for the authoritative spec.",
+  },
+  suggestions: {
+    patternLabel: "Pattern",
+    before: "Before",
+    after: "After",
+    beforeBehavior: "Before — naive contract",
+    afterBehavior: "After — MIP-4 aware",
+    savings: "Savings",
+    verifyOnMonadscan: "Verify on Monadscan",
+    viewFailingTx: "View tx on Monadscan",
+    pendingDeploy: "Pending mainnet deploy",
+    pendingMeasurement: "Pending",
+    proofDisclaimer:
+      "Each suggestion below is backed by a transaction on Monad mainnet. Click any link to verify the gas cost on-chain.",
   },
   discussion: {
     title: "Continue the discussion on Monad Forum",
