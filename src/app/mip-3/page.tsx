@@ -5,6 +5,7 @@ import Mip3GasCalculatorSection from "@/components/mip3/Mip3GasCalculatorSection
 import MemoryPoolSection from "@/components/mip3/MemoryPoolSection";
 import Mip3TakeawaysSection from "@/components/mip3/Mip3TakeawaysSection";
 import Mip3CompatibilitySection from "@/components/mip3/Mip3CompatibilitySection";
+import SuggestionsSection from "@/components/SuggestionsSection";
 import DiscussionCtaSection from "@/components/DiscussionCtaSection";
 import FooterSection from "@/components/FooterSection";
 
@@ -25,6 +26,7 @@ export default function Mip3Page() {
       <Mip3HeroSection />
       <CostCurveSection />
       <Mip3GasCalculatorSection />
+      <SuggestionsSection mip="mip-3" />
       <MemoryPoolSection />
       <Mip3TakeawaysSection />
       <Mip3CompatibilitySection />
