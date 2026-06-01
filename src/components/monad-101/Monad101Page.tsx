@@ -1641,7 +1641,7 @@ function PipelineHeroVisual() {
             key={s.key}
             onClick={() => setSlide(i)}
             aria-pressed={i === slide}
-            className={`rounded-lg border px-3 py-3 text-center transition-colors duration-300 ${
+            className={`cursor-pointer rounded-lg border px-3 py-3 text-center transition-colors duration-300 ${
               i === slide
                 ? "border-solution-accent bg-solution-bg text-solution-accent"
                 : "border-border bg-surface text-text-tertiary hover:text-text-primary hover:border-text-tertiary/50"
