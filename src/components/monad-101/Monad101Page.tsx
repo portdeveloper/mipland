@@ -1449,8 +1449,9 @@ function VisualSection({
   const { presenterMode } = usePresenter();
   const { ref, isVisible } = useInView(0.12);
   const layout = presenterMode
-    ? "lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]"
+    ? "lg:grid-cols-[96px_minmax(0,0.9fr)_minmax(0,1.2fr)]"
     : "lg:grid-cols-[96px_minmax(0,0.62fr)_minmax(0,1.38fr)]";
+  const maxWidth = presenterMode ? "max-w-[92rem]" : "max-w-7xl";
 
   return (
     <section
@@ -1458,11 +1459,11 @@ function VisualSection({
     >
       <div
         ref={ref}
-        className={`w-full max-w-7xl mx-auto grid grid-cols-1 ${layout} gap-9 lg:gap-10 xl:gap-14 items-start section-reveal ${
+        className={`w-full ${maxWidth} mx-auto grid grid-cols-1 ${layout} gap-9 lg:gap-10 xl:gap-14 items-start section-reveal ${
           isVisible ? "visible" : ""
         }`}
       >
-        {!presenterMode && <SectionQRBadge qr={qr} />}
+        <SectionQRBadge qr={qr} />
         <div>
           <h2
             className={`${
@@ -1503,8 +1504,10 @@ function WideSection({
   const { presenterMode } = usePresenter();
   const { ref, isVisible } = useInView(0.12);
   const layout = presenterMode
-    ? "lg:grid-cols-[minmax(0,1fr)]"
+    ? "lg:grid-cols-[96px_minmax(0,1fr)]"
     : "lg:grid-cols-[96px_minmax(0,1fr)]";
+  const maxWidth = presenterMode ? "max-w-[92rem]" : "max-w-7xl";
+  const textMaxWidth = presenterMode ? "max-w-5xl" : "max-w-3xl";
 
   return (
     <section
@@ -1512,13 +1515,13 @@ function WideSection({
     >
       <div
         ref={ref}
-        className={`w-full max-w-7xl mx-auto grid grid-cols-1 ${layout} gap-9 lg:gap-10 xl:gap-14 items-start section-reveal ${
+        className={`w-full ${maxWidth} mx-auto grid grid-cols-1 ${layout} gap-9 lg:gap-10 xl:gap-14 items-start section-reveal ${
           isVisible ? "visible" : ""
         }`}
       >
-        {!presenterMode && <SectionQRBadge qr={qr} />}
+        <SectionQRBadge qr={qr} />
         <div>
-          <div className="max-w-3xl mb-10">
+          <div className={`${textMaxWidth} mb-10`}>
             <h2
               className={`${
                 presenterMode
