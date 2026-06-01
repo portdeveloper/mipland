@@ -1399,12 +1399,18 @@ function ReferencesList() {
 function Hero() {
   const { presenterMode } = usePresenter();
   return (
-    <section className="slide min-h-screen flex flex-col items-center justify-center px-6 relative overflow-hidden">
+    <section
+      className={`slide ${
+        presenterMode ? "min-h-screen" : "min-h-[75vh]"
+      } flex flex-col items-center justify-center px-6 relative overflow-hidden`}
+    >
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        className="text-center max-w-4xl relative z-10 -mt-12 sm:mt-0"
+        className={`text-center max-w-4xl relative z-10 ${
+          presenterMode ? "mt-0" : "mt-30"
+        }`}
       >
         <h1
           className={`${
@@ -1426,7 +1432,7 @@ function Hero() {
         )}
       </motion.div>
 
-      <div className="mt-12 mb-16 relative z-10 w-full max-w-4xl">
+      <div className="mt-16 mb-16 relative z-10 w-full max-w-4xl">
         <PipelineHeroVisual />
       </div>
     </section>
