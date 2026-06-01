@@ -4,11 +4,11 @@ import Monad101Page from "@/components/monad-101/Monad101Page";
 export const metadata: Metadata = {
   title: "Monad 101",
   description:
-    "A visual primer on Monad: what it is, why it exists, how its architecture fits together, and what developers should understand first.",
+    "A visual primer for EVM developers on Monad's compatibility surface, MonadBFT, RaptorCast, async execution, and MonadDB.",
   openGraph: {
     title: "Monad 101 | MIP Land",
     description:
-      "A visual primer on Monad's shared-state model, Ethereum compatibility, and pipelined architecture.",
+      "A visual primer on Monad's EVM compatibility, consensus, propagation, execution, and storage architecture.",
   },
 };
 
