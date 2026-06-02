@@ -181,7 +181,7 @@ function DocsQRBadge({
         height={size}
         className="block opacity-80 group-hover:opacity-100 transition-opacity"
       />
-      <span className="font-mono text-[9px] text-text-tertiary group-hover:text-text-primary transition-colors uppercase tracking-wide">
+      <span className="font-mono text-[9px] font-medium text-text-tertiary group-hover:text-text-primary transition-colors uppercase tracking-wide">
         {label}
       </span>
     </a>
@@ -401,7 +401,7 @@ export default function Monad101Page() {
         closeHelp: () => setHelpOpen(false),
       }}
     >
-      <main className="bg-surface text-text-primary">
+      <main className="bg-surface text-text-primary [text-rendering:optimizeLegibility]">
         <Hero />
 
       <VisualSection
@@ -684,7 +684,7 @@ function EvmCompatibilityDiagram() {
             key={fact.label}
             className="rounded-lg bg-surface border border-border px-3 py-2"
           >
-            <p className="font-mono text-[10px] text-text-tertiary">
+            <p className="font-mono text-[10px] font-medium text-text-tertiary">
               {fact.label}
             </p>
             <p
@@ -737,7 +737,7 @@ function MonadBftFeatureDiagram() {
             className="rounded-lg border border-solution-accent-light bg-solution-bg px-3 py-2 text-center"
           >
             <div className="flex items-center justify-center gap-1.5">
-              <p className="font-mono text-[10px] text-text-tertiary">
+              <p className="font-mono text-[10px] font-medium text-text-tertiary">
                 {metric.label}
               </p>
               {"help" in metric && metric.help && (
@@ -772,7 +772,7 @@ function MonadBftFeatureDiagram() {
               <p className="text-sm font-semibold text-text-primary">
                 {state.label}
               </p>
-              <p className="mt-1 text-xs text-text-secondary leading-relaxed">
+              <p className="mt-1 text-sm text-text-secondary leading-relaxed">
                 {state.use}
               </p>
             </div>
@@ -802,10 +802,10 @@ function RaptorCastFeatureDiagram() {
             key={fact}
             className="rounded-lg border border-border bg-surface px-3 py-2"
           >
-            <p className="font-mono text-[10px] text-solution-accent mb-1 tabular-nums">
+            <p className="font-mono text-[10px] font-medium text-solution-accent mb-1 tabular-nums">
               0{index + 1}
             </p>
-            <p className="text-xs text-text-secondary leading-relaxed">
+            <p className="text-sm text-text-secondary leading-relaxed">
               {fact}
             </p>
           </div>
@@ -870,7 +870,7 @@ function MonadDbFeatureDiagram() {
             </h3>
             <p
               className={`text-text-secondary leading-relaxed ${
-                presenterMode ? "text-base" : "text-xs"
+                presenterMode ? "text-base" : "text-sm"
               }`}
             >
               {card.body}
@@ -1127,14 +1127,14 @@ function SameDifferentDiagram() {
             key={metric.label}
             className="rounded-xl bg-surface-elevated border border-border p-4"
           >
-            <p className="font-mono text-[10px] text-text-tertiary mb-1">
+            <p className="font-mono text-[10px] font-medium text-text-tertiary mb-1">
               {metric.label}
             </p>
             <p className="text-xl font-semibold text-solution-accent tabular-nums">
               {metric.format(metric.target)}
               {metric.suffix}
             </p>
-            <p className="mt-2 text-xs text-text-secondary leading-relaxed">
+            <p className="mt-2 text-sm text-text-secondary leading-relaxed">
               {metric.note}
             </p>
           </div>
@@ -1185,7 +1185,7 @@ function SameDifferentColumn({
             >
               {index + 1}
             </span>
-            <span className="text-sm text-text-secondary leading-relaxed">
+            <span className="text-sm font-normal text-text-secondary leading-relaxed">
               {item}
             </span>
           </li>
@@ -1322,7 +1322,7 @@ function QASlide() {
   return (
     <section className="slide min-h-screen flex flex-col items-center justify-center px-6 bg-surface text-center">
       <motion.h2
-        className="text-6xl sm:text-7xl md:text-8xl font-light mb-12 leading-tight tracking-tight"
+        className="text-6xl sm:text-7xl md:text-8xl font-normal mb-12 leading-tight tracking-tight"
         initial={{ opacity: 0, y: 18 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: false }}
@@ -1364,10 +1364,10 @@ function ReferencesList() {
       className="bg-surface border-t border-border px-6 py-14 scroll-mt-24"
     >
       <div className="max-w-7xl mx-auto">
-        <p className="font-mono text-[11px] text-text-tertiary tracking-wide mb-5 uppercase">
+        <p className="font-mono text-[11px] font-medium text-text-tertiary tracking-wide mb-5 uppercase">
           References
         </p>
-        <ol className="space-y-2.5 text-sm text-text-secondary font-light">
+        <ol className="space-y-2.5 text-sm text-text-secondary font-normal">
           {REFERENCES.map((ref) => (
             <li
               key={ref.id}
@@ -1417,7 +1417,7 @@ function Hero() {
             presenterMode
               ? "text-5xl sm:text-6xl md:text-7xl"
               : "text-4xl sm:text-5xl md:text-6xl"
-          } font-light leading-[1.1] tracking-tight mb-6`}
+          } font-normal leading-[1.1] tracking-tight mb-6`}
         >
           Monad:{" "}
           <span className="font-semibold italic">
@@ -1425,7 +1425,7 @@ function Hero() {
           </span>
         </h1>
         {!presenterMode && (
-          <p className="text-lg sm:text-xl text-text-secondary font-light max-w-xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl text-text-secondary font-normal max-w-xl mx-auto leading-relaxed">
             Same contracts, wallets, and RPC. Underneath: MonadBFT, RaptorCast,
             async execution, and MonadDB.
           </p>
@@ -1481,7 +1481,7 @@ function VisualSection({
             {title}
           </h2>
           <div
-            className={`text-text-secondary font-light leading-relaxed ${
+            className={`text-text-secondary font-normal leading-relaxed ${
               presenterMode ? "text-xl sm:text-2xl" : "text-base"
             }`}
           >
@@ -1538,7 +1538,7 @@ function WideSection({
               {title}
             </h2>
             <div
-              className={`text-text-secondary font-light leading-relaxed ${
+              className={`text-text-secondary font-normal leading-relaxed ${
                 presenterMode ? "text-xl sm:text-2xl" : "text-base"
               }`}
             >
@@ -1656,7 +1656,9 @@ function PipelineHeroVisual() {
                 : "border-border bg-surface text-text-tertiary hover:text-text-primary hover:border-text-tertiary/50"
             }`}
           >
-            <span className="font-mono text-[11px] sm:text-xs">{s.title}</span>
+            <span className="font-mono text-[11px] sm:text-xs font-medium">
+              {s.title}
+            </span>
           </button>
         ))}
       </div>
@@ -2485,7 +2487,7 @@ function DiagramExplainer({
     >
       {hint ? (
         <>
-          <p className="font-mono text-[10px] text-solution-accent tracking-wide uppercase mb-1.5">
+          <p className="font-mono text-[10px] font-medium text-solution-accent tracking-wide uppercase mb-1.5">
             {hint.title}
           </p>
           <p className="text-sm text-text-primary leading-relaxed">
@@ -2493,7 +2495,7 @@ function DiagramExplainer({
           </p>
         </>
       ) : (
-        <p className="text-xs text-text-tertiary font-light leading-relaxed">
+        <p className="text-xs text-text-tertiary font-normal leading-relaxed">
           {defaultText}
         </p>
       )}
@@ -2630,7 +2632,7 @@ function EngineDiagram() {
                   />
                 ))}
               </div>
-              <p className="mt-4 text-xs text-text-tertiary font-light leading-relaxed">
+              <p className="mt-4 text-xs text-text-tertiary font-normal leading-relaxed">
                 Transactions run in parallel; state conflicts re-execute. The
                 block&apos;s recorded order is still 1 → 2 → 3 → 4.
               </p>
