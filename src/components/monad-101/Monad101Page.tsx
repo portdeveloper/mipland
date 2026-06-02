@@ -1941,12 +1941,13 @@ function RaptorCastSlide({ shouldReduceMotion }: SlideProps) {
             {recipient.id}
           </text>
           <text
-            x={recipient.x}
-            y={recipient.y + 28}
-            fontSize="8"
+            x={recipient.x + 24}
+            y={recipient.y + 1}
+            fontSize="8.5"
             fontFamily="monospace"
             fill={colors.textTertiary}
-            textAnchor="middle"
+            textAnchor="start"
+            dominantBaseline="middle"
           >
             {recipient.label}
           </text>
