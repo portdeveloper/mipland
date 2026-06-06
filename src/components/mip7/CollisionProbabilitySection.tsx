@@ -79,7 +79,7 @@ function fmtPctConfidence(p: number) {
 }
 
 function fmtOneIn(p: number) {
-  if (p <= 0) return "—";
+  if (p <= 0) return "-";
   const n = 1 / p;
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (n >= 10_000) return Math.round(n / 1000).toLocaleString() + "K";
