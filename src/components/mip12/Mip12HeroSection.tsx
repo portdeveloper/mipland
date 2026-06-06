@@ -15,9 +15,6 @@ export default function Mip12HeroSection() {
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         className="text-center max-w-3xl relative z-10 mt-30"
       >
-        <p className="font-mono text-xs text-text-tertiary tracking-widest uppercase mb-6">
-          MIP-12 · {t("mip12.hero.caption")}
-        </p>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-light leading-[1.1] tracking-tight mb-10">
           {t("mip12.hero.title")}
         </h1>
