@@ -39,7 +39,7 @@ const en = {
       title: "Decrease Vote Pace",
       subtitle: "Faster consensus, scaled proportionally",
       description:
-        "A draft proposal to vote on blocks 25% faster — 400ms to 300ms — with per-block limits scaled down to match. See what each parameter change actually means.",
+        "A draft proposal to vote on blocks 25% faster, dropping the pace from 400ms to 300ms, with per-block limits scaled down to match. See what each parameter change actually means.",
     },
   },
   mip8: {
@@ -632,12 +632,12 @@ const en = {
       unit: "ms",
       caption: "vote pace",
       delta: "−25%",
-      desc: "MIP-12 proposes a 25% shorter vote pace — dropping from 400ms to 300ms. Related per-block parameters scale down to match, so blocks arrive sooner, each carrying a little less — not more.",
+      desc: "MIP-12 proposes a 25% shorter vote pace, dropping from 400ms to 300ms. Related per-block parameters scale down to match, so blocks arrive sooner while each one carries a little less.",
     },
     params: {
       title: "What actually changes",
       subtitle:
-        "Vote pace leads the change (above). Four more parameters scale down with it — here's what each one means in plain terms.",
+        "Vote pace leads the change (above). Four more parameters scale down with it. Here's what each one means in plain terms.",
       votePaceName: "Vote pace",
       votePaceMeaning:
         "How often validators vote on a block. Lower means faster confirmations and finality.",
@@ -655,7 +655,7 @@ const en = {
     },
     why: {
       title: "Why turn down every dial?",
-      body: "A block every 300ms instead of every 400ms means about 33% more blocks each second. Since each block now holds 25% fewer transactions, less gas, and fewer bytes, the network's per-second capacity stays roughly the same. You're not getting a bigger pipe — you're getting a faster one. The block reward shrinks for the same reason: smaller, more frequent blocks.",
+      body: "A block every 300ms instead of every 400ms means about 33% more blocks each second. Since each block now holds 25% fewer transactions, less gas, and fewer bytes, the network's per-second capacity stays roughly the same. You're not getting a bigger pipe, just a faster one. The block reward shrinks for the same reason: smaller, more frequent blocks.",
       scopeTitle: "What it touches",
       scopeBody:
         "This is a consensus-layer change only. The execution layer is unaffected and existing contracts behave exactly as before. Activating it requires a hard fork on the consensus client.",
