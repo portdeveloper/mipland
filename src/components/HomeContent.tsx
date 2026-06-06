@@ -269,6 +269,40 @@ function MiniBalanceBar() {
   );
 }
 
+/* ─── Mini-visualization: MIP-12 vote pace ───────────────────────────── */
+function MiniVotePace() {
+  return (
+    <div className="flex items-center justify-center gap-3 h-16">
+      <span className="font-mono text-2xl font-light tabular-nums text-problem-accent/60 line-through decoration-problem-accent/30">
+        400
+      </span>
+      <svg
+        className="w-5 h-5 text-text-tertiary shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M5 12h14m0 0l-6-6m6 6l-6 6"
+        />
+      </svg>
+      <motion.span
+        animate={{ opacity: [0.55, 1, 0.55] }}
+        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        className="font-mono text-4xl font-semibold tabular-nums text-solution-accent"
+      >
+        300
+      </motion.span>
+      <span className="font-mono text-[10px] text-text-tertiary self-end pb-1.5">
+        ms
+      </span>
+    </div>
+  );
+}
+
 /* ─── Card component ─────────────────────────────────────────────────── */
 
 interface MipCardProps {
@@ -557,8 +591,8 @@ export default function HomeContent() {
           </Link>
         </motion.div>
 
-        {/* Three-up: MIP-3 + MIP-4 + MIP-7 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Proposals: MIP-3 + MIP-4 + MIP-7 + MIP-12 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <MipCard
             id="MIP-3"
             href="/mip-3"
@@ -591,6 +625,17 @@ export default function HomeContent() {
             beta
             visualization={<MiniOpcodeGrid />}
             index={2}
+          />
+          <MipCard
+            id="MIP-12"
+            href="/mip-12"
+            title={t("home.mip12.title")}
+            subtitle={t("home.mip12.subtitle")}
+            description={t("home.mip12.description")}
+            exploreLabel={t("home.explore")}
+            beta
+            visualization={<MiniVotePace />}
+            index={3}
           />
         </div>
       </div>

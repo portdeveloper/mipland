@@ -20,6 +20,10 @@ const SPEC_URLS: Record<string, { url: string; mip: string }> = {
     url: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-8.md",
     mip: "MIP-8",
   },
+  "/mip-12": {
+    url: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-12.md",
+    mip: "MIP-12",
+  },
 };
 
 export default function SpecDisclaimer() {

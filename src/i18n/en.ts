@@ -35,6 +35,12 @@ const en = {
       description:
         "One reserved slot expands to ~220 selectors. Monad adds opcode-level features without risking collision with future Ethereum upgrades.",
     },
+    mip12: {
+      title: "Decrease Vote Pace",
+      subtitle: "Faster consensus, scaled proportionally",
+      description:
+        "A draft proposal to vote on blocks 25% faster — 400ms to 300ms — with per-block limits scaled down to match. See what each parameter change actually means.",
+    },
   },
   mip8: {
     hero: {
@@ -618,6 +624,43 @@ const en = {
         "All ~220 selectors are unassigned today. Each future Monad feature claims its own selector via a new MIP. The encoding format never changes; only the dispatch table grows.",
     },
   },
+  mip12: {
+    hero: {
+      title: "Faster consensus.",
+      before: "400",
+      after: "300",
+      unit: "ms",
+      caption: "vote pace",
+      delta: "−25%",
+      desc: "MIP-12 proposes a 25% shorter vote pace — dropping from 400ms to 300ms. Related per-block parameters scale down to match, so blocks arrive sooner, each carrying a little less — not more.",
+    },
+    params: {
+      title: "What actually changes",
+      subtitle:
+        "Vote pace leads the change (above). Four more parameters scale down with it — here's what each one means in plain terms.",
+      votePaceName: "Vote pace",
+      votePaceMeaning:
+        "How often validators vote on a block. Lower means faster confirmations and finality.",
+      txName: "Transactions per block",
+      txMeaning:
+        "The most transactions that can be packed into a single block.",
+      gasName: "Compute per block",
+      gasMeaning:
+        "The total computation a block is allowed to do. “Gas” is the EVM's unit for compute.",
+      bytesName: "Data per block",
+      bytesMeaning: "The largest a single block can get, measured in bytes.",
+      rewardName: "Block reward",
+      rewardMeaning:
+        "The MON paid to the validator that proposes a block.",
+    },
+    why: {
+      title: "Why turn down every dial?",
+      body: "A block every 300ms instead of every 400ms means about 33% more blocks each second. Since each block now holds 25% fewer transactions, less gas, and fewer bytes, the network's per-second capacity stays roughly the same. You're not getting a bigger pipe — you're getting a faster one. The block reward shrinks for the same reason: smaller, more frequent blocks.",
+      scopeTitle: "What it touches",
+      scopeBody:
+        "This is a consensus-layer change only. The execution layer is unaffected and existing contracts behave exactly as before. Activating it requires a hard fork on the consensus client.",
+    },
+  },
   footer: {
     readSpec: "Read the spec",
     about: "About",
@@ -630,6 +673,8 @@ const en = {
       "MIP-4 shipped as part of the MONAD_NINE network upgrade. The precompile at 0x1001 lets contracts detect reserve balance violations mid-execution.",
     mip7Note:
       "MIP-7 aligns with EIP-8163, which reserves 0xAE on Ethereum L1 for non-L1 extension use. All ~220 selectors are currently unassigned; future MIPs will claim specific slots.",
+    mip12Note:
+      "MIP-12 is a draft proposal to reduce the consensus vote pace from 400ms to 300ms, with proportional cuts to per-block limits and reward. It is a consensus-layer change and is not live on mainnet.",
   },
   specDisclaimer: {
     prefix: "The information on this page should not be quoted. Please refer to ",

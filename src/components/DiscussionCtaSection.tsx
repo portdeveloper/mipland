@@ -8,6 +8,7 @@ const FORUM_URLS: Record<string, string> = {
   "/mip-3": "https://forum.monad.xyz/t/mip-3-linear-evm-memory-cost/362",
   "/mip-4": "https://forum.monad.xyz/t/mip-4-reserve-balance-introspection/363",
   "/mip-7": "https://forum.monad.xyz/t/mip-7-extension-opcodes/",
+  "/mip-12": "https://forum.monad.xyz/t/mip-12-decrease-vote-pace/488",
 };
 
 export default function DiscussionCtaSection() {

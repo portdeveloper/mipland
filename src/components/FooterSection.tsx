@@ -24,6 +24,11 @@ const FOOTER_DATA: Record<string, { specUrl: string; specLabel: string; noteKey:
     specLabel: "MIP-7 on GitHub",
     noteKey: "footer.mip7Note",
   },
+  "/mip-12": {
+    specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-12.md",
+    specLabel: "MIP-12 on GitHub",
+    noteKey: "footer.mip12Note",
+  },
 };
 
 export default function FooterSection() {
