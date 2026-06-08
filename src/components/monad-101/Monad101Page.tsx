@@ -819,22 +819,18 @@ function MonadDbFeatureDiagram() {
   const shouldReduceMotion = !!useReducedMotion();
   const { presenterMode } = usePresenter();
   const { ref, enterCount } = useEnterCount(0.3);
-  const cards = [
+  const points = [
     {
-      title: "Native Patricia trie",
-      body: "Ethereum state stays authenticated, but MonadDB stores trie nodes directly instead of nesting the trie inside a generic key-value database.",
+      title: "Readers and the writer never block each other",
+      body: "Execution is the only writer. While it builds the next version, consensus and RPC keep reading the previous one. No locks, no half written state, no torn reads.",
     },
     {
-      title: "Async reads",
-      body: "Execution can keep working while storage requests are in flight, which matters when many transactions execute in parallel.",
+      title: "Every read sees a complete, consistent snapshot",
+      body: "Old versions stay whole until they age out, so a reader always gets a full picture of state at one point in time, never a mix of old and in flight values.",
     },
     {
-      title: "Versioned snapshots",
-      body: "A single writer creates new trie versions while consensus and RPC readers keep seeing complete, consistent state.",
-    },
-    {
-      title: "Sequential writes",
-      body: "Persistent trie updates can be written in SSD-friendly order, then compacted as older versions age out.",
+      title: "Writes are sequential, which is what SSDs want",
+      body: "New node versions append in order instead of overwriting scattered locations. That means cheaper garbage collection, less write amplification, and longer SSD life than the random writes a generic key value store produces.",
     },
   ];
 
@@ -844,14 +840,15 @@ function MonadDbFeatureDiagram() {
       className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6 space-y-5"
     >
       <MonadDbAnimatedDiagram
+        key={enterCount}
         enterCount={enterCount}
         shouldReduceMotion={shouldReduceMotion}
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {cards.map((card, index) => (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {points.map((point, index) => (
           <motion.div
-            key={`${card.title}-${enterCount}`}
+            key={`${point.title}-${enterCount}`}
             initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={
@@ -866,14 +863,14 @@ function MonadDbFeatureDiagram() {
                 presenterMode ? "text-xl" : "text-base"
               }`}
             >
-              {card.title}
+              {point.title}
             </h3>
             <p
               className={`text-text-secondary leading-relaxed ${
                 presenterMode ? "text-base" : "text-sm"
               }`}
             >
-              {card.body}
+              {point.body}
             </p>
           </motion.div>
         ))}
@@ -882,6 +879,13 @@ function MonadDbFeatureDiagram() {
   );
 }
 
+const MONADDB_CAPTIONS = [
+  "A read walks the trie top down: root, account, slot.",
+  "Execution updates a slot. Every node on the path changes.",
+  "Copy on write: a new branch appears, the old version stays.",
+  "New nodes append to SSD in order. Nothing is overwritten.",
+];
+
 function MonadDbAnimatedDiagram({
   enterCount,
   shouldReduceMotion,
@@ -889,23 +893,45 @@ function MonadDbAnimatedDiagram({
   enterCount: number;
   shouldReduceMotion: boolean;
 }) {
-  const ssdBlocks = Array.from({ length: 9 }, (_, i) => ({
-    x: 462 + (i % 3) * 38,
-    y: 122 + Math.floor(i / 3) * 42,
+  const [beat, setBeat] = useState(0);
+
+  useEffect(() => {
+    if (shouldReduceMotion) return;
+    const id = setInterval(() => setBeat((b) => (b + 1) % 4), 2600);
+    return () => clearInterval(id);
+  }, [shouldReduceMotion]);
+
+  const showV2 = shouldReduceMotion || beat >= 2;
+  const showCopy = !shouldReduceMotion && beat === 2;
+  const highlightPath = !shouldReduceMotion && beat === 1;
+  const ssdFilled = shouldReduceMotion || beat === 3;
+  const showReader = !shouldReduceMotion && beat === 0;
+  const showWriter = !shouldReduceMotion && beat === 3;
+
+  const v1 = [
+    { y: 72, label: "root" },
+    { y: 150, label: "acct" },
+    { y: 228, label: "slot=5" },
+  ];
+  const v2 = [
+    { y: 72, label: "root*" },
+    { y: 150, label: "acct*" },
+    { y: 228, label: "slot*=9" },
+  ];
+  const ssdBlocks = Array.from({ length: 8 }, (_, i) => ({
+    x: 476 + (i % 4) * 28,
+    y: 120 + Math.floor(i / 4) * 40,
+    order: (i % 4) + Math.floor(i / 4) * 4,
   }));
-  const packetTransition = {
-    duration: 4.8,
-    repeat: Infinity,
-    repeatDelay: 0.35,
-    ease: "easeInOut" as const,
-  };
+
+  const rect = (x: number, y: number) => ({ x: x - 31, y: y - 15 });
 
   return (
     <div className="rounded-xl bg-surface border border-border p-3 sm:p-4">
       <svg
         role="img"
-        aria-label="MonadDB stores trie versions, serves readers from complete snapshots, and writes updated trie nodes sequentially to SSD."
-        viewBox="0 0 640 330"
+        aria-label="MonadDB stores Ethereum state as a persistent Patricia trie. Updating a slot copies the whole branch to a new version while the old version stays readable, then the new nodes are written to SSD sequentially."
+        viewBox="0 0 640 360"
         className="h-auto w-full"
       >
         <defs>
@@ -921,183 +947,193 @@ function MonadDbAnimatedDiagram({
           </marker>
         </defs>
 
-        <text x="112" y="30" fontSize="12" fontFamily="monospace" fill={colors.textTertiary} textAnchor="middle">
-          persistent Patricia trie
+        <text x="144" y="30" fontSize="12" fontFamily="monospace" fill={colors.textTertiary} textAnchor="middle">
+          persistent state trie
         </text>
-        <text x="322" y="30" fontSize="12" fontFamily="monospace" fill={colors.textTertiary} textAnchor="middle">
+        <text x="346" y="30" fontSize="12" fontFamily="monospace" fill={colors.textTertiary} textAnchor="middle">
           MonadDB
         </text>
-        <text x="518" y="30" fontSize="12" fontFamily="monospace" fill={colors.textTertiary} textAnchor="middle">
-          SSD writes
+        <text x="524" y="30" fontSize="12" fontFamily="monospace" fill={colors.textTertiary} textAnchor="middle">
+          SSD
         </text>
 
-        {[
-          { x: 112, y: 72, label: "root v1", tone: colors.userAccent },
-          { x: 70, y: 140, label: "acct", tone: colors.userAccent },
-          { x: 154, y: 140, label: "slot", tone: colors.userAccent },
-          { x: 154, y: 216, label: "slot v2", tone: colors.solutionAccent },
-        ].map((node, index) => (
-          <motion.g
-            key={`${node.label}-${enterCount}`}
-            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={
-              shouldReduceMotion
-                ? { duration: 0 }
-                : { duration: 0.35, delay: index * 0.08, ease: HERO_EASE }
-            }
-          >
-            <circle
-              cx={node.x}
-              cy={node.y}
-              r={25}
-              fill={node.tone === colors.solutionAccent ? colors.solutionBg : colors.surfaceElevated}
-              stroke={node.tone}
-              strokeWidth="1.5"
-            />
-            <text
-              x={node.x}
-              y={node.y + 4}
-              fontSize="10"
-              fontFamily="monospace"
-              fill={node.tone}
-              textAnchor="middle"
+        {/* v1 edges */}
+        <line x1="92" y1="87" x2="92" y2="135" stroke={highlightPath ? colors.solutionAccent : colors.borderSoft} strokeWidth={highlightPath ? 2 : 1.4} />
+        <line x1="92" y1="165" x2="92" y2="213" stroke={highlightPath ? colors.solutionAccent : colors.borderSoft} strokeWidth={highlightPath ? 2 : 1.4} />
+
+        {/* v1 nodes (old version, always kept) */}
+        {v1.map((node, index) => {
+          const r = rect(92, node.y);
+          const active = highlightPath;
+          return (
+            <motion.g
+              key={`v1-${node.label}-${enterCount}`}
+              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={
+                shouldReduceMotion
+                  ? { duration: 0 }
+                  : { duration: 0.35, delay: index * 0.08, ease: HERO_EASE }
+              }
             >
-              {node.label}
-            </text>
-          </motion.g>
-        ))}
+              <rect
+                x={r.x}
+                y={r.y}
+                width={62}
+                height={30}
+                rx={8}
+                fill={active ? colors.solutionBg : colors.surfaceElevated}
+                stroke={active ? colors.solutionAccent : colors.userAccent}
+                strokeWidth="1.5"
+              />
+              <text
+                x={92}
+                y={node.y + 4}
+                fontSize="10"
+                fontFamily="monospace"
+                fill={active ? colors.solutionAccent : colors.userAccent}
+                textAnchor="middle"
+              >
+                {node.label}
+              </text>
+            </motion.g>
+          );
+        })}
 
-        <path d="M 112 97 L 70 118" stroke={colors.borderSoft} strokeWidth="1.2" />
-        <path d="M 112 97 L 154 118" stroke={colors.borderSoft} strokeWidth="1.2" />
-        <motion.path
-          d="M 154 165 L 154 190"
-          stroke={colors.solutionAccent}
-          strokeWidth="2"
-          strokeDasharray="4 5"
-          initial={shouldReduceMotion ? false : { pathLength: 0.2 }}
-          animate={shouldReduceMotion ? { pathLength: 1 } : { pathLength: [0.2, 1, 1] }}
-          transition={
-            shouldReduceMotion
-              ? { duration: 0 }
-              : { duration: 2.4, repeat: Infinity, repeatDelay: 2.2, ease: "easeInOut" }
-          }
-        />
-
-        <path
-          d="M 190 160 L 246 160"
-          stroke={colors.textTertiary}
-          strokeWidth="1.2"
-          strokeDasharray="4 5"
-          markerEnd="url(#monaddb-arrow)"
-        />
-
-        <rect
-          x="248"
-          y="78"
-          width="148"
-          height="164"
-          rx="16"
-          fill={colors.solutionBg}
-          stroke={colors.solutionAccent}
-          strokeWidth="1.5"
-        />
-        <text x="322" y="114" fontSize="16" fontFamily="monospace" fill={colors.solutionAccent} textAnchor="middle">
-          MonadDB
-        </text>
-        <text x="322" y="146" fontSize="11" fontFamily="monospace" fill={colors.solutionAccent} textAnchor="middle">
-          async I/O
-        </text>
-        <text x="322" y="171" fontSize="11" fontFamily="monospace" fill={colors.solutionAccent} textAnchor="middle">
-          versioned reads
-        </text>
-        <text x="322" y="196" fontSize="11" fontFamily="monospace" fill={colors.solutionAccent} textAnchor="middle">
-          atomic writes
-        </text>
-
-        <path
-          d="M 396 160 L 444 160"
-          stroke={colors.textTertiary}
-          strokeWidth="1.2"
-          strokeDasharray="4 5"
-          markerEnd="url(#monaddb-arrow)"
-        />
-
-        {ssdBlocks.map((block, index) => (
-          <motion.rect
-            key={`${index}-${enterCount}`}
-            x={block.x}
-            y={block.y}
-            width="28"
-            height="30"
-            rx="5"
-            fill={index < 5 ? colors.solutionAccent : colors.surfaceElevated}
+        {/* copy-on-write arrows v1 -> v2 */}
+        {v1.map((node, index) => (
+          <motion.path
+            key={`copy-${index}`}
+            d={`M 123 ${node.y} L 165 ${node.y}`}
             stroke={colors.solutionAccent}
-            strokeWidth="1"
-            animate={
-              shouldReduceMotion
-                ? undefined
-                : {
-                    fill: [
-                      index < 5 ? colors.solutionAccent : colors.surfaceElevated,
-                      colors.solutionAccent,
-                      colors.solutionAccent,
-                      index < 5 ? colors.solutionAccent : colors.surfaceElevated,
-                    ],
-                  }
-            }
-            transition={
-              shouldReduceMotion
-                ? undefined
-                : {
-                    duration: 4.8,
-                    delay: index * 0.13,
-                    repeat: Infinity,
-                    repeatDelay: 0.35,
-                    ease: "easeInOut",
-                  }
-            }
+            strokeWidth="1.4"
+            strokeDasharray="4 4"
+            markerEnd="url(#monaddb-arrow)"
+            animate={{ opacity: showCopy ? 1 : 0 }}
+            transition={{ duration: 0.3, delay: showCopy ? index * 0.12 : 0 }}
           />
         ))}
-        <text x="518" y="266" fontSize="11" fontFamily="monospace" fill={colors.textTertiary} textAnchor="middle">
+
+        {/* v2 edges */}
+        <motion.line x1="196" y1="87" x2="196" y2="135" stroke={colors.solutionAccent} strokeWidth="1.5" animate={{ opacity: showV2 ? 1 : 0 }} transition={{ duration: 0.3 }} />
+        <motion.line x1="196" y1="165" x2="196" y2="213" stroke={colors.solutionAccent} strokeWidth="1.5" animate={{ opacity: showV2 ? 1 : 0 }} transition={{ duration: 0.3 }} />
+
+        {/* v2 nodes (new version) */}
+        {v2.map((node, index) => {
+          const r = rect(196, node.y);
+          return (
+            <motion.g
+              key={`v2-${node.label}`}
+              animate={{ opacity: showV2 ? 1 : 0, scale: showV2 ? 1 : 0.92 }}
+              transition={{ duration: 0.35, delay: showCopy ? index * 0.12 : 0, ease: HERO_EASE }}
+            >
+              <rect
+                x={r.x}
+                y={r.y}
+                width={62}
+                height={30}
+                rx={8}
+                fill={colors.solutionBg}
+                stroke={colors.solutionAccent}
+                strokeWidth="1.5"
+              />
+              <text
+                x={196}
+                y={node.y + 4}
+                fontSize="10"
+                fontFamily="monospace"
+                fill={colors.solutionAccent}
+                textAnchor="middle"
+              >
+                {node.label}
+              </text>
+            </motion.g>
+          );
+        })}
+
+        {/* trie -> MonadDB */}
+        <path
+          d="M 227 150 L 270 150"
+          stroke={colors.textTertiary}
+          strokeWidth="1.2"
+          strokeDasharray="4 5"
+          markerEnd="url(#monaddb-arrow)"
+        />
+
+        {/* MonadDB engine */}
+        <rect x="276" y="92" width="140" height="116" rx="16" fill={colors.solutionBg} stroke={colors.solutionAccent} strokeWidth="1.5" />
+        <text x="346" y="126" fontSize="15" fontFamily="monospace" fill={colors.solutionAccent} textAnchor="middle">
+          MonadDB
+        </text>
+        <text x="346" y="152" fontSize="11" fontFamily="monospace" fill={colors.solutionAccent} textAnchor="middle">
+          async I/O
+        </text>
+        <text x="346" y="176" fontSize="11" fontFamily="monospace" fill={colors.solutionAccent} textAnchor="middle">
+          versioned writes
+        </text>
+
+        {/* MonadDB -> SSD */}
+        <path
+          d="M 416 150 L 470 150"
+          stroke={colors.textTertiary}
+          strokeWidth="1.2"
+          strokeDasharray="4 5"
+          markerEnd="url(#monaddb-arrow)"
+        />
+
+        {/* SSD blocks fill sequentially on write */}
+        {ssdBlocks.map((block, index) => (
+          <motion.rect
+            key={`ssd-${index}`}
+            x={block.x}
+            y={block.y}
+            width="24"
+            height="30"
+            rx="5"
+            stroke={colors.solutionAccent}
+            strokeWidth="1"
+            animate={{ fill: ssdFilled ? colors.solutionAccent : colors.surfaceElevated }}
+            transition={{ duration: 0.25, delay: beat === 3 ? block.order * 0.16 : 0 }}
+          />
+        ))}
+        <text x="524" y="218" fontSize="11" fontFamily="monospace" fill={colors.textTertiary} textAnchor="middle">
           sequential blocks
         </text>
 
-        {!shouldReduceMotion && (
-          <>
-            <motion.circle
-              key={`read-${enterCount}`}
-              r="5"
-              fill={colors.userAccent}
-              initial={{ cx: 72, cy: 140, opacity: 0 }}
-              animate={{
-                cx: [72, 112, 246, 322],
-                cy: [140, 72, 160, 160],
-                opacity: [0, 1, 1, 0],
-              }}
-              transition={packetTransition}
-            />
-            <motion.circle
-              key={`write-${enterCount}`}
-              r="6"
-              fill={colors.solutionAccent}
-              initial={{ cx: 154, cy: 216, opacity: 0 }}
-              animate={{
-                cx: [154, 246, 396, 496],
-                cy: [216, 160, 160, 160],
-                opacity: [0, 1, 1, 0],
-              }}
-              transition={{ ...packetTransition, delay: 0.85 }}
-            />
-          </>
+        {/* reader dot: descends v1 root -> acct -> slot */}
+        {showReader && (
+          <motion.circle
+            r="6"
+            fill={colors.userAccent}
+            initial={{ cx: 92, cy: 72, opacity: 0 }}
+            animate={{ cy: [72, 72, 150, 228, 228], opacity: [0, 1, 1, 1, 0] }}
+            transition={{ duration: 2.4, times: [0, 0.1, 0.45, 0.85, 1], ease: "easeInOut" }}
+          />
         )}
 
-        <text x="64" y="302" fontSize="10" fontFamily="monospace" fill={colors.userAccent}>
+        {/* writer dot: new branch -> MonadDB -> SSD */}
+        {showWriter && (
+          <motion.circle
+            r="6"
+            fill={colors.solutionAccent}
+            initial={{ cx: 196, cy: 228, opacity: 0 }}
+            animate={{ cx: [196, 196, 346, 490], cy: [228, 228, 150, 150], opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 2.4, times: [0, 0.1, 0.55, 1], ease: "easeInOut" }}
+          />
+        )}
+
+        <text x="20" y="346" fontSize="10" fontFamily="monospace" fill={colors.userAccent}>
           readers: consensus + RPC
         </text>
-        <text x="432" y="302" fontSize="10" fontFamily="monospace" fill={colors.solutionAccent}>
+        <text x="620" y="346" fontSize="10" fontFamily="monospace" fill={colors.solutionAccent} textAnchor="end">
           writer: execution
         </text>
+
+        {!shouldReduceMotion && (
+          <text x="320" y="322" fontSize="12" fontFamily="monospace" fill={colors.textSecondary} textAnchor="middle">
+            {MONADDB_CAPTIONS[beat]}
+          </text>
+        )}
       </svg>
     </div>
   );
