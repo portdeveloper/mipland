@@ -533,6 +533,8 @@ export default function Monad101Page() {
 
       <QASlide />
 
+      <CtaSection />
+
       <ReferencesList />
       </main>
       <PresenterChrome />
@@ -1387,6 +1389,85 @@ function QASlide() {
           docs.monad.xyz
         </span>
       </motion.a>
+    </section>
+  );
+}
+
+function CtaSection() {
+  const { presenterMode } = usePresenter();
+  const { ref, isVisible } = useInView(0.15);
+  if (presenterMode) return null;
+
+  const links = [
+    {
+      title: "Monad for developers",
+      body: "Chain ID 143, MON, a Monad RPC endpoint, and a quickstart for your first deploy.",
+      href: "https://docs.monad.xyz/introduction/monad-for-developers",
+    },
+    {
+      title: "What is different from Ethereum",
+      body: "Gas charged by limit, finality tags, no global mempool, and real-time infra patterns.",
+      href: "https://docs.monad.xyz/developer-essentials/differences",
+    },
+    {
+      title: "Architecture deep dives",
+      body: "MonadBFT, RaptorCast, asynchronous execution, and MonadDB in full detail.",
+      href: "https://docs.monad.xyz/monad-arch",
+    },
+  ];
+
+  return (
+    <section className="bg-surface-alt border-t border-border px-6 py-24">
+      <div
+        ref={ref}
+        className={`max-w-7xl mx-auto section-reveal ${isVisible ? "visible" : ""}`}
+      >
+        <div className="max-w-3xl mb-10">
+          <h2 className="text-3xl sm:text-4xl font-semibold leading-tight mb-4 text-balance">
+            Start building on Monad
+          </h2>
+          <p className="text-base text-text-secondary font-normal leading-relaxed">
+            Same contracts, wallets, and RPC, on a new high-throughput core. You
+            have the mental model. Here is where to go next.
+          </p>
+          <div className="mt-6">
+            <a
+              href="https://docs.monad.xyz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-solution-accent px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-solution-accent/90"
+            >
+              Read the docs
+              <span aria-hidden="true">{"->"}</span>
+            </a>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {links.map((link) => (
+            <a
+              key={link.title}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-xl border border-border bg-surface-elevated p-5 transition-colors hover:border-solution-accent"
+            >
+              <h3 className="font-semibold text-text-primary mb-2 flex items-center gap-1.5">
+                {link.title}
+                <span
+                  aria-hidden="true"
+                  className="text-text-tertiary transition-transform group-hover:translate-x-0.5 group-hover:text-solution-accent"
+                >
+                  {"->"}
+                </span>
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                {link.body}
+              </p>
+            </a>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
