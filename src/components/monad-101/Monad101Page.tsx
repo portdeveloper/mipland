@@ -2663,19 +2663,22 @@ function InterleavedBar({
   ];
 
   return (
-    <div className="grid grid-cols-[80px_minmax(0,1fr)] items-start gap-3">
-      <span
-        className="font-mono text-xs mt-0.5 leading-tight"
-        style={{ color: colors.problemAccentStrong }}
-      >
-        <span className="block text-[10px] text-text-tertiary">
-          traditional
+    <div className="rounded-xl border border-border bg-surface px-3 py-3">
+      <div className="mb-2.5 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+        <span
+          className="font-mono text-xs leading-tight"
+          style={{ color: colors.problemAccentStrong }}
+        >
+          <span className="text-[10px] text-text-tertiary">traditional</span>{" "}
+          <span>interleaved</span>
         </span>
-        <span className="block">interleaved</span>
-      </span>
+        <span className="font-mono text-[10px] text-text-tertiary">
+          ~100 ms exec budget per block
+        </span>
+      </div>
       <div className="space-y-1">
         <div
-          className="relative h-9 rounded-lg overflow-hidden border flex"
+          className="relative h-10 rounded-lg overflow-hidden border flex"
           style={{ borderColor: colors.border }}
         >
           {segments.map((seg, i) => (
@@ -2692,11 +2695,11 @@ function InterleavedBar({
                       ease: [0.16, 1, 0.3, 1],
                     }
               }
-              className="h-full flex items-center justify-center"
+              className="h-full flex items-center justify-center px-2"
               style={{ backgroundColor: seg.color }}
             >
               <span
-                className="font-mono text-[9px] whitespace-nowrap"
+                className="font-mono text-[10px] whitespace-nowrap"
                 style={{ color: colors.textPrimary }}
               >
                 {seg.w >= 18 ? seg.label : ""}
@@ -2704,9 +2707,6 @@ function InterleavedBar({
             </motion.div>
           ))}
         </div>
-        <p className="font-mono text-[10px] text-text-tertiary text-right pr-1">
-          ~100 ms exec budget per block
-        </p>
       </div>
     </div>
   );
