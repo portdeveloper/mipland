@@ -17,7 +17,10 @@ export default function MipNav() {
   const { locale, setLocale, t } = useLanguage();
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/70 backdrop-blur-md">
+    <nav
+      data-site-nav
+      className="sticky top-0 z-50 bg-background/70 backdrop-blur-md"
+    >
       <div className="max-w-6xl mx-auto px-3 sm:px-6 pt-3 pb-2">
         <div className="bg-surface-elevated/90 border border-border rounded-2xl shadow-sm flex items-center h-12 pl-3 pr-2 sm:pl-4 sm:pr-3 gap-2 sm:gap-3">
           <Link

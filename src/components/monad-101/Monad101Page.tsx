@@ -531,8 +531,6 @@ export default function Monad101Page() {
         <SameDifferentDiagram />
       </WideSection>
 
-      <QASlide />
-
       <CtaSection />
 
       <ReferencesList />
@@ -1354,67 +1352,81 @@ function TailForkPanel({
   );
 }
 
-function QASlide() {
-  const { presenterMode } = usePresenter();
-  if (!presenterMode) return null;
-  return (
-    <section className="slide min-h-screen flex flex-col items-center justify-center px-6 bg-surface text-center">
-      <motion.h2
-        className="text-6xl sm:text-7xl md:text-8xl font-normal mb-12 leading-tight tracking-tight"
-        initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: false }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      >
-        Questions?
-      </motion.h2>
-      <motion.a
-        href="https://docs.monad.xyz"
-        target="_blank"
-        rel="noopener noreferrer"
-        initial={{ opacity: 0, y: 14 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: false }}
-        transition={{ duration: 0.7, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-        className="group flex flex-col items-center gap-4"
-      >
-        <img
-          src="/qr-docs.svg"
-          alt="QR code to docs.monad.xyz"
-          width={320}
-          height={320}
-          className="block"
-        />
-        <span className="font-mono text-lg text-text-tertiary group-hover:text-solution-accent transition-colors">
-          docs.monad.xyz
-        </span>
-      </motion.a>
-    </section>
-  );
-}
+const CTA_LINKS = [
+  {
+    title: "Monad for developers",
+    body: "Chain ID 143, MON, a Monad RPC endpoint, and a quickstart for your first deploy.",
+    href: "https://docs.monad.xyz/introduction/monad-for-developers",
+    path: "/introduction/monad-for-developers",
+  },
+  {
+    title: "What is different from Ethereum",
+    body: "Gas charged by limit, finality tags, no global mempool, and real-time infra patterns.",
+    href: "https://docs.monad.xyz/developer-essentials/differences",
+    path: "/developer-essentials/differences",
+  },
+  {
+    title: "Architecture deep dives",
+    body: "MonadBFT, RaptorCast, asynchronous execution, and MonadDB in full detail.",
+    href: "https://docs.monad.xyz/monad-arch",
+    path: "/monad-arch",
+  },
+];
 
 function CtaSection() {
   const { presenterMode } = usePresenter();
   const { ref, isVisible } = useInView(0.15);
-  if (presenterMode) return null;
+  const links = CTA_LINKS;
 
-  const links = [
-    {
-      title: "Monad for developers",
-      body: "Chain ID 143, MON, a Monad RPC endpoint, and a quickstart for your first deploy.",
-      href: "https://docs.monad.xyz/introduction/monad-for-developers",
-    },
-    {
-      title: "What is different from Ethereum",
-      body: "Gas charged by limit, finality tags, no global mempool, and real-time infra patterns.",
-      href: "https://docs.monad.xyz/developer-essentials/differences",
-    },
-    {
-      title: "Architecture deep dives",
-      body: "MonadBFT, RaptorCast, asynchronous execution, and MonadDB in full detail.",
-      href: "https://docs.monad.xyz/monad-arch",
-    },
-  ];
+  if (presenterMode) {
+    const qrs = [
+      { src: "/qr-docs.svg", href: "https://docs.monad.xyz", label: "docs.monad.xyz" },
+      { src: "/qr-x-dev.svg", href: "https://x.com/monad_dev", label: "x.com/monad_dev" },
+    ];
+    return (
+      <section className="slide min-h-screen flex flex-col items-center justify-center px-6 bg-surface text-center">
+        <motion.h2
+          className="text-5xl sm:text-6xl md:text-7xl font-semibold mb-14 leading-tight tracking-tight"
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
+          Start building on Monad
+        </motion.h2>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-16 sm:gap-28">
+          {qrs.map((qr, index) => (
+            <motion.a
+              key={qr.href}
+              href={qr.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false }}
+              transition={{
+                duration: 0.7,
+                delay: 0.18 + index * 0.12,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="group flex flex-col items-center gap-4"
+            >
+              <img
+                src={qr.src}
+                alt={`QR code to ${qr.label}`}
+                width={260}
+                height={260}
+                className="block"
+              />
+              <span className="font-mono text-lg text-text-tertiary group-hover:text-solution-accent transition-colors">
+                {qr.label}
+              </span>
+            </motion.a>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="bg-surface-alt border-t border-border px-6 py-24">
