@@ -199,6 +199,11 @@ html.presenter-mode section.slide {
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
+/* The site nav is sticky and would overlap the top of each centered slide;
+   presenter mode has its own chrome (slide counter + progress), so hide it. */
+html.presenter-mode [data-site-nav] {
+  display: none;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
