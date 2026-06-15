@@ -21,6 +21,48 @@ const USDC = "0x754704Bc059F8C67012fEd69BC8A327a5aafb603";
 // The signature is generated locally and never broadcast, so this is inert.
 const DEMO_SPENDER = "0x1b81D678ffb9C0263b24A97847620C99d213eB14";
 
+// Resolved from our ERC-7730 registry descriptor for Wrapped MON via
+//   uvx erc7730 calldata --chain-id 143 registry/monad/calldata-wmon.json
+// WMON is a plain wrapper, so wallets do not decode these calls natively.
+// Every action name and field label below comes from the descriptor.
+const REGISTRY_RENDER: {
+  selector: string;
+  action: string;
+  fields: [string, string][];
+}[] = [
+  { selector: "0xd0e30db0", action: "Wrap MON", fields: [["Amount", "10 MON"]] },
+  {
+    selector: "0x2e1a7d4d",
+    action: "Unwrap WMON",
+    fields: [["Amount", "10 WMON"]],
+  },
+  {
+    selector: "0x095ea7b3",
+    action: "Approve WMON",
+    fields: [
+      ["Spender", "0x1b81…eB14"],
+      ["Amount", "1,000 WMON"],
+    ],
+  },
+  {
+    selector: "0xa9059cbb",
+    action: "Send WMON",
+    fields: [
+      ["To", "0x7547…b603"],
+      ["Amount", "5 WMON"],
+    ],
+  },
+  {
+    selector: "0x23b872dd",
+    action: "Transfer WMON",
+    fields: [
+      ["From", "0x1b81…eB14"],
+      ["To", "0x7547…b603"],
+      ["Amount", "5 WMON"],
+    ],
+  },
+];
+
 type Eth = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
 };
@@ -228,17 +270,80 @@ export default function ClearSigningPage() {
             )}
 
             <p className="mt-6 text-xs text-text-tertiary">
-              If your wallet shows a readable summary (Approve USDC, spender,
-              amount, Monad), Clear Signing is rendering on Monad. If it shows
-              generic typed data, the descriptor is not ingested for chain 143
-              yet.
+              MetaMask decodes Permit2 itself, so this readable view shows on any
+              chain, Monad included. That is real, but it is the wallet&apos;s
+              built-in decoding, not the ERC-7730 registry. To see what the
+              registry produces for a Monad contract no wallet decodes on its
+              own, look just below.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Before / after */}
+      {/* Registry render proof: WMON (non-native) */}
       <section className="px-6 py-16 bg-surface-alt">
+        <div className="mx-auto max-w-3xl">
+          <p className="font-mono text-xs font-medium uppercase tracking-wide text-solution-accent">
+            Proof, not a mock
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold">
+            What the registry produces for Monad
+          </h2>
+          <p className="mt-3 text-text-secondary">
+            Permit2 above renders because MetaMask already knows Permit2. Wrapped
+            MON is the honest test: it is a plain wrapper, so no wallet decodes{" "}
+            <code className="font-mono text-sm">deposit()</code> or{" "}
+            <code className="font-mono text-sm">withdraw()</code> on its own. The
+            action names and labels below come from our ERC-7730 descriptor in the
+            registry and nowhere else. This is the resolved output of{" "}
+            <code className="font-mono text-sm">erc7730 calldata --chain-id 143</code>{" "}
+            on the WMON descriptor, the same payload a Ledger device loads to
+            render it.
+          </p>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {REGISTRY_RENDER.map((r) => (
+              <div
+                key={r.selector}
+                className="rounded-2xl border border-solution-accent-light bg-surface-elevated p-5"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-solution-accent">
+                    {r.action}
+                  </p>
+                  <code className="font-mono text-xs text-text-tertiary">
+                    {r.selector}
+                  </code>
+                </div>
+                <dl className="mt-3 space-y-1.5 text-sm">
+                  {r.fields.map(([label, value]) => (
+                    <div key={label} className="flex justify-between gap-4">
+                      <dt className="text-text-tertiary">{label}</dt>
+                      <dd className="text-right font-medium">{value}</dd>
+                    </div>
+                  ))}
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-text-tertiary">Network</dt>
+                    <dd className="text-right font-medium">Monad</dd>
+                  </div>
+                </dl>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-4 text-xs text-text-tertiary">
+            Field values are illustrative. The action names and field labels are
+            exactly what the descriptor emits for chain 143. Reproduce it with{" "}
+            <code className="font-mono">
+              uvx erc7730 calldata --chain-id 143 calldata-wmon.json
+            </code>
+            .
+          </p>
+        </div>
+      </section>
+
+      {/* Before / after */}
+      <section className="px-6 py-16 bg-surface">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-2xl font-semibold">Hex versus readable</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -284,7 +389,7 @@ export default function ClearSigningPage() {
       </section>
 
       {/* Why a live demo */}
-      <section className="px-6 py-16 bg-surface">
+      <section className="px-6 py-16 bg-surface-alt">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-2xl font-semibold">Why a live demo</h2>
           <p className="mt-3 text-text-secondary">
@@ -297,7 +402,7 @@ export default function ClearSigningPage() {
       </section>
 
       {/* For builders */}
-      <section className="px-6 py-16 bg-surface-alt">
+      <section className="px-6 py-16 bg-surface">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-2xl font-semibold">For builders</h2>
           <p className="mt-3 text-text-secondary">
