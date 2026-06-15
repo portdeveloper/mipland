@@ -63,6 +63,14 @@ const REGISTRY_RENDER: {
   },
 ];
 
+// Wrapped MON is a plain wrapper, so no wallet decodes its calls natively. The
+// litmus test below sends a real deposit() ("Wrap MON") so you can watch whether
+// your wallet, or a Ledger connected through it, clear-signs it from the
+// registry or falls back to raw hex.
+const WMON = "0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A";
+const WMON_DEPOSIT = "0xd0e30db0"; // deposit()
+const WRAP_VALUE_HEX = "0x38d7ea4c68000"; // 0.001 MON, shown only on the review screen
+
 type Eth = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
 };
@@ -111,6 +119,8 @@ export default function ClearSigningPage() {
   const [account, setAccount] = useState<string | null>(null);
   const [signature, setSignature] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("");
+  const [testStatus, setTestStatus] = useState<Status>("idle");
+  const [testMessage, setTestMessage] = useState<string>("");
 
   async function runDemo() {
     const eth = getEthereum();
@@ -166,6 +176,70 @@ export default function ClearSigningPage() {
       setStatus("error");
       const m = (err as { message?: string })?.message ?? String(err);
       setMessage(m.includes("User rejected") ? "Request cancelled." : m);
+    }
+  }
+
+  async function runWalletTest() {
+    const eth = getEthereum();
+    if (!eth) {
+      setTestStatus("error");
+      setTestMessage(
+        "No EVM wallet detected. Connect a wallet (a Ledger through MetaMask works) and try again.",
+      );
+      return;
+    }
+    try {
+      setTestStatus("working");
+      setTestMessage("Requesting account access…");
+      const accounts = (await eth.request({
+        method: "eth_requestAccounts",
+      })) as string[];
+      const from = accounts?.[0];
+      if (!from) throw new Error("No account returned by the wallet.");
+      setAccount(from);
+
+      setTestMessage("Switching to Monad mainnet…");
+      try {
+        await eth.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: MONAD_CHAIN_ID_HEX }],
+        });
+      } catch (switchErr: unknown) {
+        if ((switchErr as { code?: number })?.code === 4902) {
+          await eth.request({
+            method: "wallet_addEthereumChain",
+            params: [MONAD_PARAMS],
+          });
+        } else {
+          throw switchErr;
+        }
+      }
+
+      setTestMessage(
+        "Read the confirmation screen now (on your Ledger device if it is connected through MetaMask), then reject it. Nothing needs to be sent.",
+      );
+      await eth.request({
+        method: "eth_sendTransaction",
+        params: [{ from, to: WMON, value: WRAP_VALUE_HEX, data: WMON_DEPOSIT }],
+      });
+
+      setTestStatus("signed");
+      setTestMessage(
+        'You approved it, so a tiny wrap may go through (harmless, just unwrap it later). Either way the screen you saw is the answer: "Wrap MON" with an amount means a registry descriptor is rendering on Monad; raw hex means it is not ingested for chain 143 yet.',
+      );
+    } catch (err: unknown) {
+      const e = err as { code?: number; message?: string };
+      const rejected =
+        e?.code === 4001 || (e?.message ?? "").includes("User rejected");
+      if (rejected) {
+        setTestStatus("signed");
+        setTestMessage(
+          'Rejected, nothing was sent. That confirmation screen was the test: "Wrap MON" with an amount means a registry descriptor is rendering on Monad; raw hex means it is not ingested for chain 143 yet.',
+        );
+      } else {
+        setTestStatus("error");
+        setTestMessage(e?.message ?? String(err));
+      }
     }
   }
 
@@ -339,6 +413,56 @@ export default function ClearSigningPage() {
             </code>
             .
           </p>
+
+          {/* Live litmus test: trigger a non-native render */}
+          <div className="mt-8 rounded-2xl border border-border bg-surface-elevated p-5 sm:p-6">
+            <p className="text-sm font-semibold">Got a Ledger?</p>
+            <p className="mt-2 text-sm text-text-secondary">
+              This is the cleanest way to settle it. Connect through MetaMask and
+              confirm a real Wrap MON transaction on Monad, then reject it:
+              nothing needs to be sent. Any wallet works, but Ledger is the one
+              that reads the registry. If the device shows{" "}
+              <span className="font-medium text-text-primary">Wrap MON</span>{" "}
+              with an amount, a descriptor is rendering on Monad. If it shows raw
+              hex or a generic contract interaction, nothing has ingested it for
+              chain 143 yet.
+            </p>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Button
+                onClick={runWalletTest}
+                disabled={testStatus === "working"}
+              >
+                {testStatus === "working"
+                  ? "Check your wallet…"
+                  : "Review a WMON wrap on Monad"}
+              </Button>
+              {account && (
+                <span className="font-mono text-xs text-text-tertiary">
+                  {account.slice(0, 6)}…{account.slice(-4)}
+                </span>
+              )}
+            </div>
+
+            {testMessage && (
+              <p
+                className={
+                  "mt-4 text-sm " +
+                  (testStatus === "error"
+                    ? "text-problem-accent-strong"
+                    : "text-text-secondary")
+                }
+              >
+                {testMessage}
+              </p>
+            )}
+
+            <p className="mt-4 text-xs text-text-tertiary">
+              The page cannot see your device screen, so eyeball it or grab a
+              screenshot. That screenshot is exactly the proof the registry
+              render needs.
+            </p>
+          </div>
         </div>
       </section>
 
