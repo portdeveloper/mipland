@@ -1,6 +1,8 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import type { Chain } from "viem";
+import * as viemChains from "viem/chains";
 import { useState, useCallback, useRef, useEffect } from "react";
 import CodeBlock from "./CodeBlock";
 import { useCopyToClipboard } from "./useCopyToClipboard";
@@ -22,6 +24,15 @@ interface QuoteResult {
 }
 
 type Step = "idle" | "authing" | "quoting" | "done";
+
+interface ChainOption {
+  id: number;
+  name: string;
+  symbol: string;
+  testnet: boolean;
+  rpcCount: number;
+  explorerUrl?: string;
+}
 
 /* ─── Tokens on Monad mainnet ────────────────────────────────────────── */
 
@@ -45,6 +56,55 @@ const AGGREGATORS = [
   { id: "squid", name: "Squid", ready: false },
   { id: "bungee", name: "Bungee", ready: false },
 ];
+
+/* ─── Chains from viem/chains ────────────────────────────────────────── */
+
+function isViemChain(value: unknown): value is Chain {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    "name" in value &&
+    "nativeCurrency" in value &&
+    typeof (value as { id?: unknown }).id === "number" &&
+    typeof (value as { name?: unknown }).name === "string"
+  );
+}
+
+const ALL_CHAINS: ChainOption[] = Array.from(
+  new Map(
+    Object.values(viemChains)
+      .filter(isViemChain)
+      .map((chain) => [
+        chain.id,
+        {
+          id: chain.id,
+          name: chain.name,
+          symbol: chain.nativeCurrency.symbol,
+          testnet: !!chain.testnet,
+          rpcCount: chain.rpcUrls.default.http.length,
+          explorerUrl: chain.blockExplorers?.default?.url,
+        },
+      ])
+  ).values()
+).sort((a, b) => a.name.localeCompare(b.name));
+
+const FEATURED_CHAIN_IDS = [
+  143, // Monad
+  1, // Ethereum
+  8453, // Base
+  42161, // Arbitrum One
+  10, // Optimism
+  137, // Polygon
+  43114, // Avalanche
+  56, // BNB Smart Chain
+  11155111, // Sepolia
+  10143, // Monad Testnet
+];
+
+const FEATURED_CHAINS = FEATURED_CHAIN_IDS.map((id) =>
+  ALL_CHAINS.find((chain) => chain.id === id)
+).filter((chain): chain is ChainOption => !!chain);
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
@@ -221,11 +281,197 @@ ${getSwapComponentSnippet(tokenIn, tokenOut)}
 Integrate this into my project following my existing code patterns.`;
 }
 
+function ChainCoveragePanel({
+  chains,
+  featuredChains,
+  selectedChain,
+  query,
+  totalChains,
+  onQueryChange,
+  onSelectChain,
+}: {
+  chains: ChainOption[];
+  featuredChains: ChainOption[];
+  selectedChain: ChainOption;
+  query: string;
+  totalChains: number;
+  onQueryChange: (value: string) => void;
+  onSelectChain: (chain: ChainOption) => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface-elevated p-5 sm:p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] gap-5">
+        <div>
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="font-mono text-[11px] font-medium uppercase tracking-wide text-solution-accent">
+                Chain coverage
+              </p>
+              <h3 className="mt-1 text-2xl font-semibold leading-tight text-text-primary">
+                Search every chain viem ships
+              </h3>
+            </div>
+            <p className="font-mono text-[11px] text-text-tertiary">
+              {totalChains.toLocaleString()} chain definitions
+            </p>
+          </div>
+
+          <div className="relative">
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => onQueryChange(event.target.value)}
+              placeholder="Search by chain, symbol, or chain ID..."
+              className="w-full rounded-xl border border-border bg-surface px-4 py-3 pr-12 font-mono text-sm text-text-primary outline-none transition-colors placeholder:text-text-tertiary/50 focus:border-solution-accent"
+            />
+            <svg
+              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="m21 21-4.35-4.35m1.1-5.15a6.25 6.25 0 1 1-12.5 0 6.25 6.25 0 0 1 12.5 0Z"
+              />
+            </svg>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {featuredChains.slice(0, 7).map((chain) => (
+              <button
+                key={chain.id}
+                type="button"
+                onClick={() => onSelectChain(chain)}
+                className={`rounded-full border px-3 py-1.5 font-mono text-[11px] transition-colors ${
+                  selectedChain.id === chain.id
+                    ? "border-solution-accent bg-solution-bg text-solution-accent"
+                    : "border-border bg-surface text-text-secondary hover:border-text-tertiary hover:text-text-primary"
+                }`}
+              >
+                {chain.name}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-4 grid max-h-[280px] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+            {chains.length > 0 ? (
+              chains.map((chain) => (
+                <button
+                  key={chain.id}
+                  type="button"
+                  onClick={() => onSelectChain(chain)}
+                  className={`group rounded-xl border p-3 text-left transition-colors ${
+                    selectedChain.id === chain.id
+                      ? "border-solution-accent bg-solution-bg"
+                      : "border-border bg-surface hover:border-text-tertiary"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-text-primary">
+                        {chain.name}
+                      </p>
+                      <p className="mt-1 font-mono text-[11px] text-text-tertiary">
+                        id {chain.id} · {chain.symbol}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[10px] ${
+                        chain.testnet
+                          ? "bg-problem-bg text-problem-accent"
+                          : "bg-solution-bg text-solution-accent"
+                      }`}
+                    >
+                      {chain.testnet ? "testnet" : "mainnet"}
+                    </span>
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div className="rounded-xl border border-border bg-surface px-4 py-5 text-sm text-text-tertiary">
+                No chains match this search.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border bg-surface p-4">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
+            Selected chain
+          </p>
+          <div className="mt-3 rounded-xl border border-solution-accent-light bg-solution-bg p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h4 className="text-xl font-semibold leading-tight text-text-primary">
+                  {selectedChain.name}
+                </h4>
+                <p className="mt-1 font-mono text-xs text-solution-accent">
+                  chainId {selectedChain.id}
+                </p>
+              </div>
+              <span className="rounded-md bg-surface px-2 py-1 font-mono text-[10px] text-text-tertiary">
+                {selectedChain.testnet ? "testnet" : "mainnet"}
+              </span>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="rounded-lg border border-border bg-surface px-3 py-2">
+                <p className="font-mono text-[10px] text-text-tertiary">
+                  native token
+                </p>
+                <p className="mt-1 font-mono text-sm text-text-primary">
+                  {selectedChain.symbol}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border bg-surface px-3 py-2">
+                <p className="font-mono text-[10px] text-text-tertiary">
+                  RPC URLs
+                </p>
+                <p className="mt-1 font-mono text-sm text-text-primary">
+                  {selectedChain.rpcCount}
+                </p>
+              </div>
+            </div>
+
+            {selectedChain.explorerUrl && (
+              <a
+                href={selectedChain.explorerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex max-w-full items-center gap-1.5 truncate font-mono text-[11px] text-text-tertiary underline-offset-2 hover:text-text-primary hover:underline"
+              >
+                Explorer
+                <span aria-hidden="true">{"->"}</span>
+              </a>
+            )}
+          </div>
+
+          <div className="mt-3 rounded-xl border border-border bg-surface-elevated p-4">
+            <p className="font-mono text-[11px] font-medium text-solution-accent">
+              Live demo network
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+              The catalog proves broad frontend coverage. The quote widget below
+              stays on Monad because Kuru Flow routes Monad DEX liquidity and
+              uses Monad token addresses.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main component ─────────────────────────────────────────────────── */
 
 export default function SwapPlayground() {
   const [tokenInIdx, setTokenInIdx] = useState(0); // MON
   const [tokenOutIdx, setTokenOutIdx] = useState(1); // USDC
+  const [chainQuery, setChainQuery] = useState("");
+  const [selectedChainId, setSelectedChainId] = useState(143); // Monad
   const [amount, setAmount] = useState("1");
   const [step, setStep] = useState<Step>("idle");
   const [quote, setQuote] = useState<QuoteResult | null>(null);
@@ -239,6 +485,19 @@ export default function SwapPlayground() {
 
   const tokenIn = TOKENS[tokenInIdx];
   const tokenOut = TOKENS[tokenOutIdx];
+  const selectedChain =
+    ALL_CHAINS.find((chain) => chain.id === selectedChainId) ??
+    FEATURED_CHAINS[0] ??
+    ALL_CHAINS[0];
+  const chainResults = ALL_CHAINS.filter((chain) => {
+    const query = chainQuery.trim().toLowerCase();
+    if (!query) return FEATURED_CHAIN_IDS.includes(chain.id);
+    return (
+      chain.name.toLowerCase().includes(query) ||
+      chain.symbol.toLowerCase().includes(query) ||
+      String(chain.id).includes(query)
+    );
+  }).slice(0, chainQuery.trim() ? 12 : 10);
 
   // Get JWT on mount (no wallet needed for read-only quotes)
   useEffect(() => {
@@ -345,6 +604,19 @@ export default function SwapPlayground() {
 
   return (
     <div className="space-y-6">
+      <ChainCoveragePanel
+        chains={chainResults}
+        featuredChains={FEATURED_CHAINS}
+        selectedChain={selectedChain}
+        query={chainQuery}
+        totalChains={ALL_CHAINS.length}
+        onQueryChange={setChainQuery}
+        onSelectChain={(chain) => {
+          setSelectedChainId(chain.id);
+          setChainQuery("");
+        }}
+      />
+
       {/* Aggregator tabs */}
       <div>
         <p className="font-mono text-[11px] text-text-tertiary mb-3">
@@ -381,7 +653,7 @@ export default function SwapPlayground() {
             <p className="font-mono text-[11px] text-text-tertiary mb-2">
               You pay
             </p>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-[minmax(0,1fr)_72px] gap-2">
               <input
                 type="text"
                 inputMode="decimal"
@@ -392,7 +664,7 @@ export default function SwapPlayground() {
                   setQuote(null);
                   setStep("idle");
                 }}
-                className="flex-1 font-mono text-2xl font-semibold bg-surface rounded-lg border border-border px-3 py-2 text-text-primary placeholder:text-text-tertiary/30 focus:outline-none focus:border-text-tertiary tabular-nums"
+                className="min-w-0 font-mono text-2xl font-semibold bg-surface rounded-lg border border-border px-3 py-2 text-text-primary placeholder:text-text-tertiary/30 focus:outline-none focus:border-text-tertiary tabular-nums"
                 placeholder="0"
               />
               <select
@@ -405,7 +677,7 @@ export default function SwapPlayground() {
                   setQuote(null);
                   setStep("idle");
                 }}
-                className="font-mono text-sm bg-surface rounded-lg border border-border px-3 py-2 text-text-primary focus:outline-none focus:border-text-tertiary appearance-none cursor-pointer"
+                className="w-full font-mono text-sm bg-surface rounded-lg border border-border px-3 py-2 text-text-primary focus:outline-none focus:border-text-tertiary appearance-none cursor-pointer"
               >
                 {TOKENS.map((t, i) => (
                   <option key={t.symbol} value={i}>
@@ -434,8 +706,8 @@ export default function SwapPlayground() {
             <p className="font-mono text-[11px] text-text-tertiary mb-2">
               You receive
             </p>
-            <div className="flex gap-2">
-              <div className="flex-1 font-mono text-2xl font-semibold bg-surface rounded-lg border border-border px-3 py-2 tabular-nums min-h-[52px] flex items-center">
+            <div className="grid grid-cols-[minmax(0,1fr)_72px] gap-2">
+              <div className="min-w-0 font-mono text-2xl font-semibold bg-surface rounded-lg border border-border px-3 py-2 tabular-nums min-h-[52px] flex items-center">
                 <AnimatePresence mode="wait">
                   {step === "done" && quote ? (
                     <motion.span
@@ -465,7 +737,7 @@ export default function SwapPlayground() {
                   setQuote(null);
                   setStep("idle");
                 }}
-                className="font-mono text-sm bg-surface rounded-lg border border-border px-3 py-2 text-text-primary focus:outline-none focus:border-text-tertiary appearance-none cursor-pointer"
+                className="w-full font-mono text-sm bg-surface rounded-lg border border-border px-3 py-2 text-text-primary focus:outline-none focus:border-text-tertiary appearance-none cursor-pointer"
               >
                 {TOKENS.map((t, i) => (
                   <option key={t.symbol} value={i}>

@@ -21,8 +21,8 @@ export default function MipNav() {
       data-site-nav
       className="sticky top-0 z-50 bg-background/70 backdrop-blur-md"
     >
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 pt-3 pb-2">
-        <div className="bg-surface-elevated/90 border border-border rounded-2xl shadow-sm flex items-center h-12 pl-3 pr-2 sm:pl-4 sm:pr-3 gap-2 sm:gap-3">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 pt-3 pb-2 overflow-hidden">
+        <div className="bg-surface-elevated/90 border border-border rounded-2xl shadow-sm flex min-w-0 items-center h-12 pl-3 pr-2 sm:pl-4 sm:pr-3 gap-2 sm:gap-3 overflow-hidden">
           <Link
             href="/"
             className="font-mono text-xs text-text-tertiary hover:text-text-primary transition-colors whitespace-nowrap flex-shrink-0 inline-flex items-center"

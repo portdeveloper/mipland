@@ -1,14 +1,30 @@
 "use client";
 
+import Image from "next/image";
 import {
   AnimatePresence,
   motion,
   useReducedMotion,
 } from "framer-motion";
 import type { ReactNode, RefObject } from "react";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useInView } from "@/components/useInView";
 import { colors } from "@/lib/colors";
+
+// A Stepper lets an animated slide intercept presenter next/prev navigation:
+// next()/prev() return true if the slide consumed the key (advanced its own
+// internal step), or false to let the deck scroll to the adjacent section.
+type Stepper = {
+  next: () => boolean;
+  prev: () => boolean;
+};
 
 type PresenterCtx = {
   presenterMode: boolean;
@@ -16,6 +32,7 @@ type PresenterCtx = {
   totalSlides: number;
   helpOpen: boolean;
   closeHelp: () => void;
+  setStepper: (stepper: Stepper | null) => void;
 };
 
 const PresenterContext = createContext<PresenterCtx>({
@@ -24,6 +41,7 @@ const PresenterContext = createContext<PresenterCtx>({
   totalSlides: 0,
   helpOpen: false,
   closeHelp: () => {},
+  setStepper: () => {},
 });
 
 function usePresenter() {
@@ -174,11 +192,12 @@ function DocsQRBadge({
       className="group inline-flex flex-col items-center gap-1.5 select-none"
       aria-label={label}
     >
-      <img
+      <Image
         src={src}
         alt={label}
         width={size}
         height={size}
+        unoptimized
         className="block opacity-80 group-hover:opacity-100 transition-opacity"
       />
       <span className="font-mono text-[9px] font-medium text-text-tertiary group-hover:text-text-primary transition-colors uppercase tracking-wide">
@@ -292,6 +311,12 @@ export default function Monad101Page() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [totalSlides, setTotalSlides] = useState(6);
   const [helpOpen, setHelpOpen] = useState(false);
+  // The currently-visible animated slide registers a stepper here so presenter
+  // navigation advances its internal steps before scrolling to the next slide.
+  const stepperRef = useRef<Stepper | null>(null);
+  const setStepper = useCallback((stepper: Stepper | null) => {
+    stepperRef.current = stepper;
+  }, []);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("monad101-present") === "1";
@@ -346,6 +371,7 @@ export default function Monad101Page() {
       ) {
         return;
       }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === "Escape") {
         if (helpOpen) {
           e.preventDefault();
@@ -381,6 +407,10 @@ export default function Monad101Page() {
         e.key === "PageUp";
       if (!isNext && !isPrev) return;
       e.preventDefault();
+      // Let an animated slide step through its own stages first; only scroll to
+      // the adjacent section once it has nothing left to reveal.
+      if (isNext && stepperRef.current?.next()) return;
+      if (isPrev && stepperRef.current?.prev()) return;
       const sections = document.querySelectorAll<HTMLElement>("section.slide");
       const next = isNext
         ? Math.min(currentSlide + 1, sections.length - 1)
@@ -399,6 +429,7 @@ export default function Monad101Page() {
         totalSlides,
         helpOpen,
         closeHelp: () => setHelpOpen(false),
+        setStepper,
       }}
     >
       <main className="bg-surface text-text-primary [text-rendering:optimizeLegibility]">
@@ -484,14 +515,66 @@ export default function Monad101Page() {
               locally and deterministically<Cite n={4} />.
             </p>
             <p className="mt-3">
-              Inside that execution lane, transactions can run optimistically in
-              parallel, then commit in the original block order so smart
-              contracts see serial EVM semantics<Cite n={5} />.
+              Execution gets the full block time instead of a sliver of it, and
+              each proposal carries a state root from three blocks back, so any
+              node that diverges is caught within about 1.2 seconds<Cite n={4} />.
             </p>
           </>
         }
       >
         <EngineDiagram />
+      </VisualSection>
+
+      <VisualSection
+        tone="alt"
+        title="Run transactions in parallel. Commit them in order."
+        qr={{
+          src: "/qr-parallel.svg",
+          href: "https://docs.monad.xyz/monad-arch/execution/parallel-execution",
+        }}
+        copy={
+          <>
+            <p>
+              Execution does not crawl through the block one transaction at a
+              time. Many executors run transactions optimistically in parallel,
+              and the results commit one by one in the original block order
+              <Cite n={5} />.
+            </p>
+            <p className="mt-3">
+              If a commit changes state that a later transaction already read,
+              that transaction re-executes with most of its inputs cached.
+              Contracts always see serial EVM semantics<Cite n={5} />.
+            </p>
+          </>
+        }
+      >
+        <ParallelExecutionDiagram />
+      </VisualSection>
+
+      <VisualSection
+        tone="surface"
+        title="Compile hot contracts without changing EVM behavior"
+        qr={{
+          src: "/qr-jit.svg",
+          href: "https://docs.monad.xyz/monad-arch/execution/native-compilation",
+        }}
+        copy={
+          <>
+            <p>
+              Monad executes EVM bytecode with an optimized interpreter and a
+              native-code compiler. Frequently used contracts are compiled once,
+              cached, and reused by later calls while preserving exact EVM gas
+              and error semantics<Cite n={11} />.
+            </p>
+            <p className="mt-3">
+              The compiler removes redundant per-instruction work, folds simple
+              constants, and specializes code for where stack values live on the
+              machine<Cite n={11} />.
+            </p>
+          </>
+        }
+      >
+        <JitCompilationDiagram />
       </VisualSection>
 
       <VisualSection
@@ -511,6 +594,59 @@ export default function Monad101Page() {
         }
       >
         <MonadDbFeatureDiagram />
+      </VisualSection>
+
+      <VisualSection
+        tone="surface"
+        title="From user click to verified state"
+        qr={{
+          src: "/qr-lifecycle.svg",
+          href: "https://docs.monad.xyz/monad-arch/transaction-lifecycle",
+        }}
+        copy={
+          <>
+            <p>
+              A Monad transaction starts like an Ethereum transaction, then
+              moves through leader forwarding, fast ordered consensus, local
+              execution, parallel commit, and delayed state-root verification
+              <Cite n={[17, 8, 6]} />.
+            </p>
+            <p className="mt-3">
+              The practical app question is not just &quot;did it land?&quot; It is which
+              confidence level your product needs: submitted, proposed,
+              finalized, or verified<Cite n={[4, 5, 9]} />.
+            </p>
+          </>
+        }
+      >
+        <TransactionLifecycleDiagram />
+      </VisualSection>
+
+      <VisualSection
+        tone="alt"
+        title="Reserve balance keeps async execution safe"
+        qr={{
+          src: "/qr-reserve.svg",
+          href: "https://docs.monad.xyz/developer-essentials/reserve-balance",
+        }}
+        copy={
+          <>
+            <p>
+              Consensus validates new blocks against a delayed state view, so it
+              needs a lightweight way to know included transactions can still pay
+              for gas. Monad uses a 10 MON reserve budget for EOA gas spend
+              across inflight transactions<Cite n={10} />.
+            </p>
+            <p className="mt-3">
+              At execution time, value-spending transactions can revert if an
+              account&apos;s ending balance dips below the reserve. Undelegated
+              accounts get an emptying exception for normal low-balance usage
+              <Cite n={10} />.
+            </p>
+          </>
+        }
+      >
+        <ReserveBalanceDiagram />
       </VisualSection>
 
       <WideSection
@@ -588,8 +724,8 @@ function HelpOverlay({ open, onClose }: { open: boolean; onClose: () => void }) 
   const rows: [string, string][] = [
     ["P", "toggle presenter mode"],
     ["F", "toggle fullscreen"],
-    ["→ · Space · PageDown", "next slide"],
-    ["← · PageUp", "previous slide"],
+    ["→ · Space · PageDown", "next slide / step animation"],
+    ["← · PageUp", "previous slide / step back"],
     ["?", "show this help"],
     ["Esc", "close help"],
   ];
@@ -639,14 +775,14 @@ function EvmCompatibilityDiagram() {
     "typed transactions",
     "wallets",
     "JSON-RPC",
-    "Foundry",
+    "Monad Foundry",
     "Hardhat",
   ];
   const networkFacts = [
     { label: "Chain ID", value: "143" },
     { label: "Currency", value: "MON" },
     { label: "RPC", value: "https://rpc.monad.xyz" },
-    { label: "Explorer", value: "monadscan.com" },
+    { label: "Explorer", value: "monadvision.com · monadscan.com" },
   ];
 
   return (
@@ -787,7 +923,7 @@ function RaptorCastFeatureDiagram() {
   const shouldReduceMotion = !!useReducedMotion();
   const facts = [
     "Block proposals become erasure-coded chunks.",
-    "Each chunk range gets a two-hop broadcast tree.",
+    "Each chunk range fans out through a two-hop tree to every validator.",
     "Validators share upload work by stake weight.",
   ];
 
@@ -810,6 +946,191 @@ function RaptorCastFeatureDiagram() {
             </p>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+const JIT_STEPS = [
+  "Cold or rarely used contracts run on the optimized interpreter immediately.",
+  "The client tracks cumulative gas. A frequently used contract becomes hot.",
+  "Compilation runs asynchronously, so block execution does not wait on compiler latency.",
+  "Native code is cached for that exact contract version.",
+  "Later calls reuse cached native code while preserving EVM gas and error behavior.",
+];
+
+const JIT_MAX_STEP = JIT_STEPS.length - 1;
+const JIT_STEP_MS = 2500;
+
+function JitCompilationDiagram() {
+  const shouldReduceMotion = !!useReducedMotion();
+  const { presenterMode, setStepper } = usePresenter();
+  const { ref, isVisible } = useInView(0.18);
+  const initialStep = shouldReduceMotion && !presenterMode ? JIT_MAX_STEP : 0;
+  const [step, setStep] = useState(initialStep);
+  const [paused, setPaused] = useState(false);
+  const stepRef = useRef(initialStep);
+
+  const setStepBoth = useCallback((next: number) => {
+    stepRef.current = next;
+    setStep(next);
+  }, []);
+
+  const goNext = useCallback(() => {
+    if (stepRef.current < JIT_MAX_STEP) {
+      setStepBoth(stepRef.current + 1);
+      return true;
+    }
+    return false;
+  }, [setStepBoth]);
+
+  const goPrev = useCallback(() => {
+    if (stepRef.current > 0) {
+      setStepBoth(stepRef.current - 1);
+      return true;
+    }
+    return false;
+  }, [setStepBoth]);
+
+  useEffect(() => {
+    if (!presenterMode || !isVisible) return;
+    setStepper({ next: goNext, prev: goPrev });
+    return () => setStepper(null);
+  }, [presenterMode, isVisible, goNext, goPrev, setStepper]);
+
+  useEffect(() => {
+    if (presenterMode || shouldReduceMotion || !isVisible || paused) return;
+    const id = setInterval(() => {
+      setStepBoth((stepRef.current + 1) % (JIT_MAX_STEP + 2));
+    }, JIT_STEP_MS);
+    return () => clearInterval(id);
+  }, [presenterMode, shouldReduceMotion, isVisible, paused, setStepBoth]);
+
+  const renderStep = Math.min(step, JIT_MAX_STEP);
+  const stages = [
+    { label: "bytecode", body: "EVM contract version", active: renderStep >= 0 },
+    { label: "interpreter", body: "runs immediately", active: renderStep >= 0 },
+    { label: "hotness", body: "cumulative gas crosses threshold", active: renderStep >= 1 },
+    { label: "compiler", body: "async native-code generation", active: renderStep >= 2 },
+    { label: "cache", body: "native code reused later", active: renderStep >= 3 },
+  ];
+  const optimizations = [
+    {
+      label: "single gas check",
+      before: "JUMPDEST · PUSH1 · ADD · PUSH0 · JUMP",
+      after: "one straight-line block check",
+      active: renderStep >= 2,
+    },
+    {
+      label: "constant folding",
+      before: "PUSH1 0x2 · PUSH1 0x3 · ADD",
+      after: "internal value: PUSH1 0x5",
+      active: renderStep >= 2,
+    },
+    {
+      label: "operand locations",
+      before: "stack word in memory/register/vector",
+      after: "specialized native sequence",
+      active: renderStep >= 3,
+    },
+  ];
+
+  return (
+    <div
+      ref={ref}
+      className="rounded-2xl border border-border bg-surface-elevated p-5 sm:p-6"
+    >
+      <div className="rounded-xl border border-border bg-surface p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+          {stages.map((stage, index) => (
+            <div key={stage.label} className="relative">
+              {index < stages.length - 1 && (
+                <span
+                  aria-hidden="true"
+                  className="hidden sm:block absolute -right-1.5 top-1/2 z-10 -translate-y-1/2 font-mono text-[10px] text-text-tertiary"
+                >
+                  {"->"}
+                </span>
+              )}
+              <motion.div
+                initial={false}
+                animate={{
+                  opacity: stage.active ? 1 : 0.38,
+                  y: stage.active ? 0 : 4,
+                }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
+                className="h-full rounded-lg border px-3 py-3"
+                style={{
+                  backgroundColor: stage.active
+                    ? colors.solutionBg
+                    : colors.surfaceElevated,
+                  borderColor: stage.active
+                    ? colors.solutionAccent
+                    : colors.border,
+                }}
+              >
+                <p className="font-mono text-[10px] font-medium text-solution-accent">
+                  {stage.label}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-text-secondary">
+                  {stage.body}
+                </p>
+              </motion.div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-2">
+          {optimizations.map((item) => (
+            <motion.div
+              key={item.label}
+              initial={false}
+              animate={{ opacity: item.active ? 1 : 0.42 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
+              className="rounded-lg border border-border bg-surface-elevated px-3 py-2"
+            >
+              <p className="font-mono text-[10px] font-medium text-text-primary">
+                {item.label}
+              </p>
+              <p className="mt-2 font-mono text-[10px] leading-relaxed text-text-tertiary">
+                {item.before}
+              </p>
+              <p className="mt-1 font-mono text-[10px] leading-relaxed text-solution-accent">
+                {"=>"} {item.after}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="mt-4 flex min-h-[40px] flex-col items-start gap-3 sm:flex-row">
+          <StepControls
+            label="JIT compilation"
+            step={renderStep}
+            maxStep={JIT_MAX_STEP}
+            paused={paused}
+            onPrev={goPrev}
+            onNext={goNext}
+            onTogglePause={() => setPaused((p) => !p)}
+          />
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.p
+              key={renderStep}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={
+                shouldReduceMotion
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: -4 }
+              }
+              transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
+              className={`text-text-secondary font-normal leading-relaxed ${
+                presenterMode ? "text-base" : "text-sm"
+              } sm:min-h-[40px]`}
+            >
+              {JIT_STEPS[renderStep]}
+            </motion.p>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
@@ -881,9 +1202,9 @@ function MonadDbFeatureDiagram() {
 
 const MONADDB_CAPTIONS = [
   "A read walks the trie top down: root, account, slot.",
-  "Execution updates a slot. Every node on the path changes.",
+  "A write targets the slot. Every node on that path needs a new version.",
   "Copy on write: a new branch appears, the old version stays.",
-  "New nodes append to SSD in order. Nothing is overwritten.",
+  "New nodes append to SSD in order while readers stay on the old version.",
 ];
 
 function MonadDbAnimatedDiagram({
@@ -905,7 +1226,7 @@ function MonadDbAnimatedDiagram({
   const showCopy = !shouldReduceMotion && beat === 2;
   const highlightPath = !shouldReduceMotion && beat === 1;
   const ssdFilled = shouldReduceMotion || beat === 3;
-  const showReader = !shouldReduceMotion && beat === 0;
+  const showReader = !shouldReduceMotion && (beat === 0 || beat === 3);
   const showWriter = !shouldReduceMotion && beat === 3;
 
   const v1 = [
@@ -1139,12 +1460,515 @@ function MonadDbAnimatedDiagram({
   );
 }
 
+const LIFECYCLE_STAGES = [
+  {
+    id: "01",
+    lane: "User + RPC",
+    title: "Submit",
+    lines: [
+      "Wallet signs tx",
+      "RPC accepts the transaction",
+      "RPC forwards to next 3 leaders",
+    ],
+    tone: "user",
+  },
+  {
+    id: "02",
+    lane: "Leader + BFT",
+    title: "Order",
+    lines: [
+      "Leader proposes block N",
+      "Validators vote on one order",
+      "Block moves toward finality",
+    ],
+    tone: "solution",
+  },
+  {
+    id: "03",
+    lane: "Full nodes",
+    title: "Execute",
+    lines: [
+      "Order is fixed first",
+      "Nodes execute locally",
+      "Parallel results commit serially",
+    ],
+    tone: "dark",
+  },
+  {
+    id: "04",
+    lane: "State",
+    title: "Verify",
+    lines: [
+      "MonadDB writes a new version",
+      "Delayed root checks state",
+      "Block N becomes Verified",
+    ],
+    tone: "problem",
+  },
+];
+
+const CONFIDENCE_STATES = [
+  { label: "Submitted", note: "RPC accepted" },
+  { label: "Proposed", note: "fast feedback" },
+  { label: "Voted", note: "higher confidence" },
+  { label: "Finalized", note: "app logic" },
+  { label: "Verified", note: "root assurance" },
+];
+
+function TransactionLifecycleDiagram() {
+  const shouldReduceMotion = !!useReducedMotion();
+  const { presenterMode } = usePresenter();
+  const { ref, isVisible } = useInView(0.18);
+  const textSize = presenterMode ? "text-base" : "text-sm";
+  const ease = [0.16, 1, 0.3, 1] as const;
+
+  return (
+    <div
+      ref={ref}
+      className="rounded-2xl border border-border bg-surface-elevated p-5 sm:p-6"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        {LIFECYCLE_STAGES.map((stage, index) => {
+          const tone = lifecycleTone(stage.tone);
+          return (
+            <motion.div
+              key={stage.id}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={isVisible ? { opacity: 1, y: 0 } : undefined}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.45,
+                delay: shouldReduceMotion ? 0 : index * 0.1,
+                ease,
+              }}
+              className="relative rounded-xl border border-border bg-surface p-4"
+            >
+              {index < LIFECYCLE_STAGES.length - 1 && (
+                <span
+                  aria-hidden="true"
+                  className="hidden md:block absolute -right-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-border bg-surface-elevated px-1.5 py-0.5 font-mono text-[10px] text-text-tertiary"
+                >
+                  {"->"}
+                </span>
+              )}
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <span
+                  className="font-mono text-[10px] font-medium uppercase tracking-wide"
+                  style={{ color: tone.accent }}
+                >
+                  {stage.lane}
+                </span>
+                <span
+                  className="rounded-md border px-1.5 py-0.5 font-mono text-[10px] tabular-nums"
+                  style={{
+                    backgroundColor: tone.bg,
+                    borderColor: tone.border,
+                    color: tone.accent,
+                  }}
+                >
+                  {stage.id}
+                </span>
+              </div>
+              <h3 className="mb-3 text-lg font-semibold leading-tight text-text-primary">
+                {stage.title}
+              </h3>
+              <ul className="space-y-2">
+                {stage.lines.map((line) => (
+                  <li
+                    key={line}
+                    className={`grid grid-cols-[10px_minmax(0,1fr)] gap-2 ${textSize} leading-relaxed text-text-secondary`}
+                  >
+                    <span
+                      className="mt-2 h-1.5 w-1.5 rounded-full"
+                      style={{ backgroundColor: tone.accent }}
+                    />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_250px] gap-3">
+        <div className="rounded-xl border border-border bg-surface p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="font-mono text-[10px] font-medium uppercase tracking-wide text-text-tertiary">
+              App confidence rail
+            </p>
+            <p className="font-mono text-[10px] text-text-tertiary">
+              choose per workflow
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+            {CONFIDENCE_STATES.map((state, index) => (
+              <div
+                key={state.label}
+                className="relative rounded-lg border border-border bg-surface-elevated px-3 py-2"
+              >
+                {index < CONFIDENCE_STATES.length - 1 && (
+                  <span
+                    aria-hidden="true"
+                    className="hidden sm:block absolute -right-1.5 top-1/2 z-10 -translate-y-1/2 font-mono text-[10px] text-text-tertiary"
+                  >
+                    {"->"}
+                  </span>
+                )}
+                <p className="font-mono text-[10px] font-medium text-solution-accent">
+                  {state.label}
+                </p>
+                <p className="mt-1 text-xs leading-snug text-text-tertiary">
+                  {state.note}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border bg-surface p-4">
+          <p className="font-mono text-[10px] font-medium uppercase tracking-wide text-text-tertiary">
+            Inside execution
+          </p>
+          <div className="mt-3 space-y-2">
+            {["tx 1", "tx 2", "tx 3", "tx 4"].map((tx, index) => (
+              <div
+                key={tx}
+                className="grid grid-cols-[36px_minmax(0,1fr)_22px] items-center gap-2"
+              >
+                <span className="font-mono text-[10px] text-text-tertiary">
+                  {tx}
+                </span>
+                <motion.span
+                  initial={shouldReduceMotion ? false : { scaleX: 0 }}
+                  animate={isVisible ? { scaleX: 1 } : undefined}
+                  transition={{
+                    duration: shouldReduceMotion ? 0 : 0.65,
+                    delay: shouldReduceMotion ? 0 : 0.35 + index * 0.08,
+                    ease,
+                  }}
+                  className="h-2.5 origin-left rounded-full bg-solution-accent"
+                />
+                <span className="rounded border border-solution-accent-light bg-solution-bg text-center font-mono text-[10px] text-solution-accent">
+                  {index + 1}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-text-tertiary">
+            Parallel work, serial commit: 1 → 2 → 3 → 4.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function lifecycleTone(tone: string) {
+  if (tone === "user") {
+    return {
+      accent: colors.userAccent,
+      bg: colors.userBg,
+      border: colors.userAccent,
+    };
+  }
+  if (tone === "solution") {
+    return {
+      accent: colors.solutionAccent,
+      bg: colors.solutionBg,
+      border: colors.solutionAccent,
+    };
+  }
+  if (tone === "problem") {
+    return {
+      accent: colors.problemAccentStrong,
+      bg: colors.problemBg,
+      border: colors.problemAccentStrong,
+    };
+  }
+  return {
+    accent: colors.textPrimary,
+    bg: colors.surface,
+    border: colors.textTertiary,
+  };
+}
+
+const RESERVE_STEPS = [
+  "Consensus validates block N using the state from N-3, because execution intentionally lags.",
+  "That lag means consensus may not know whether Alice already spent MON in recent inflight blocks.",
+  "Consensus gives each EOA a gas-spend budget: min(10 MON reserve, lagged balance).",
+  "Execution then prevents value spend from dipping below the reserve, except for allowed emptying transactions.",
+  "Most normal undelegated accounts can still empty once per k blocks; delegated accounts should avoid dipping below 10 MON.",
+];
+
+const RESERVE_MAX_STEP = RESERVE_STEPS.length - 1;
+const RESERVE_STEP_MS = 2700;
+
+function ReserveBalanceDiagram() {
+  const shouldReduceMotion = !!useReducedMotion();
+  const { presenterMode, setStepper } = usePresenter();
+  const { ref, isVisible } = useInView(0.18);
+  const initialStep =
+    shouldReduceMotion && !presenterMode ? RESERVE_MAX_STEP : 0;
+  const [step, setStep] = useState(initialStep);
+  const [paused, setPaused] = useState(false);
+  const stepRef = useRef(initialStep);
+
+  const setStepBoth = useCallback((next: number) => {
+    stepRef.current = next;
+    setStep(next);
+  }, []);
+
+  const goNext = useCallback(() => {
+    if (stepRef.current < RESERVE_MAX_STEP) {
+      setStepBoth(stepRef.current + 1);
+      return true;
+    }
+    return false;
+  }, [setStepBoth]);
+
+  const goPrev = useCallback(() => {
+    if (stepRef.current > 0) {
+      setStepBoth(stepRef.current - 1);
+      return true;
+    }
+    return false;
+  }, [setStepBoth]);
+
+  useEffect(() => {
+    if (!presenterMode || !isVisible) return;
+    setStepper({ next: goNext, prev: goPrev });
+    return () => setStepper(null);
+  }, [presenterMode, isVisible, goNext, goPrev, setStepper]);
+
+  useEffect(() => {
+    if (presenterMode || shouldReduceMotion || !isVisible || paused) return;
+    const id = setInterval(() => {
+      setStepBoth((stepRef.current + 1) % (RESERVE_MAX_STEP + 2));
+    }, RESERVE_STEP_MS);
+    return () => clearInterval(id);
+  }, [presenterMode, shouldReduceMotion, isVisible, paused, setStepBoth]);
+
+  const renderStep = Math.min(step, RESERVE_MAX_STEP);
+  const blocks = [
+    { label: "N-3", state: "known state", active: renderStep >= 0 },
+    { label: "N-2", state: "inflight", active: renderStep >= 1 },
+    { label: "N-1", state: "inflight", active: renderStep >= 1 },
+    { label: "N", state: "validating", active: renderStep >= 0 },
+  ];
+
+  return (
+    <div
+      ref={ref}
+      className="rounded-2xl border border-border bg-surface-elevated p-5 sm:p-6"
+    >
+      <div className="rounded-xl border border-border bg-surface p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-4">
+          <div>
+            <div className="grid grid-cols-4 gap-2">
+              {blocks.map((block, index) => (
+                <div key={block.label} className="relative">
+                  {index < blocks.length - 1 && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute -right-1.5 top-8 z-10 hidden sm:block font-mono text-[10px] text-text-tertiary"
+                    >
+                      {"->"}
+                    </span>
+                  )}
+                  <motion.div
+                    initial={false}
+                    animate={{
+                      opacity: block.active ? 1 : 0.42,
+                      y: block.active ? 0 : 4,
+                    }}
+                    transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
+                    className="rounded-lg border px-3 py-3"
+                    style={{
+                      backgroundColor:
+                        block.label === "N"
+                          ? colors.solutionBg
+                          : colors.surfaceElevated,
+                      borderColor:
+                        block.label === "N"
+                          ? colors.solutionAccent
+                          : colors.border,
+                    }}
+                  >
+                    <p className="font-mono text-[10px] font-medium text-text-primary">
+                      block {block.label}
+                    </p>
+                    <p className="mt-1 text-xs leading-snug text-text-tertiary">
+                      {block.state}
+                    </p>
+                  </motion.div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <ReserveCard
+                title="Lagged balance"
+                value="Alice: 110 MON"
+                note="consensus knows N-3"
+                active={renderStep >= 0}
+              />
+              <ReserveCard
+                title="Unknown recent spend"
+                value="blocks N-2 / N-1"
+                note="execution may not be caught up"
+                active={renderStep >= 1}
+                tone="problem"
+              />
+              <ReserveCard
+                title="Gas budget"
+                value="min(10, 110) = 10 MON"
+                note="inflight gas spend must fit"
+                active={renderStep >= 2}
+              />
+            </div>
+
+            <div className="mt-4 rounded-lg border border-border bg-surface-elevated p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <p className="font-mono text-[10px] font-medium text-text-tertiary">
+                    consensus-time check
+                  </p>
+                  <p
+                    className={`mt-2 text-sm leading-relaxed ${
+                      renderStep >= 2
+                        ? "text-text-secondary"
+                        : "text-text-tertiary"
+                    }`}
+                  >
+                    Include transactions only while Alice&apos;s inflight gas
+                    spend stays within the reserve budget.
+                  </p>
+                </div>
+                <div>
+                  <p className="font-mono text-[10px] font-medium text-text-tertiary">
+                    execution-time check
+                  </p>
+                  <p
+                    className={`mt-2 text-sm leading-relaxed ${
+                      renderStep >= 3
+                        ? "text-text-secondary"
+                        : "text-text-tertiary"
+                    }`}
+                  >
+                    Revert value spend that leaves the ending balance below the
+                    reserve, unless the emptying exception applies.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-surface-elevated p-4">
+            <p className="font-mono text-[10px] font-medium uppercase tracking-wide text-text-tertiary">
+              Builder meaning
+            </p>
+            <div className="mt-3 space-y-2">
+              {[
+                ["10 MON", "default reserve"],
+                ["D = 3", "same async delay window"],
+                ["gas limit", "gas spend budget"],
+                ["included", "can still revert"],
+              ].map(([label, note], index) => (
+                <motion.div
+                  key={label}
+                  initial={false}
+                  animate={{ opacity: renderStep >= Math.min(index, 3) ? 1 : 0.4 }}
+                  transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
+                  className="rounded-md border border-border bg-surface px-3 py-2"
+                >
+                  <p className="font-mono text-xs text-solution-accent">
+                    {label}
+                  </p>
+                  <p className="mt-1 text-xs text-text-tertiary">{note}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex min-h-[40px] flex-col items-start gap-3 sm:flex-row">
+          <StepControls
+            label="reserve balance"
+            step={renderStep}
+            maxStep={RESERVE_MAX_STEP}
+            paused={paused}
+            onPrev={goPrev}
+            onNext={goNext}
+            onTogglePause={() => setPaused((p) => !p)}
+          />
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.p
+              key={renderStep}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={
+                shouldReduceMotion
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: -4 }
+              }
+              transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
+              className={`text-text-secondary font-normal leading-relaxed ${
+                presenterMode ? "text-base" : "text-sm"
+              } sm:min-h-[40px]`}
+            >
+              {RESERVE_STEPS[renderStep]}
+            </motion.p>
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReserveCard({
+  title,
+  value,
+  note,
+  active,
+  tone = "solution",
+}: {
+  title: string;
+  value: string;
+  note: string;
+  active: boolean;
+  tone?: "solution" | "problem";
+}) {
+  const accent =
+    tone === "problem" ? colors.problemAccentStrong : colors.solutionAccent;
+  const bg = tone === "problem" ? colors.problemBg : colors.solutionBg;
+  return (
+    <motion.div
+      initial={false}
+      animate={{ opacity: active ? 1 : 0.4, y: active ? 0 : 4 }}
+      transition={{ duration: 0.25 }}
+      className="rounded-lg border px-3 py-3"
+      style={{
+        backgroundColor: active ? bg : colors.surfaceElevated,
+        borderColor: active ? accent : colors.border,
+      }}
+    >
+      <p className="font-mono text-[10px] font-medium text-text-tertiary">
+        {title}
+      </p>
+      <p className="mt-1 font-mono text-sm" style={{ color: accent }}>
+        {value}
+      </p>
+      <p className="mt-1 text-xs leading-snug text-text-tertiary">{note}</p>
+    </motion.div>
+  );
+}
+
 function SameDifferentDiagram() {
   const sameItems: ReactNode[] = [
     <>Solidity contracts and EVM bytecode stay familiar<Cite n={1} /></>,
     <>Wallets, accounts, signatures, and addresses look like Ethereum<Cite n={1} /></>,
     <>Standard JSON-RPC remains the main app interface<Cite n={[1, 15]} /></>,
-    <>Foundry and Hardhat workflows use Monad network settings<Cite n={16} /></>,
+    <>Hardhat works with Monad settings; for Foundry, use the Monad Foundry fork<Cite n={16} /></>,
   ];
   const differentItems: ReactNode[] = [
     <>Treat block states as confidence levels: Proposed, Voted, Finalized, Verified<Cite n={6} /></>,
@@ -1152,6 +1976,7 @@ function SameDifferentDiagram() {
     <><span className="font-mono">latest</span> reads can include proposed state; pick tags deliberately<Cite n={15} /></>,
     <>There is no global mempool; RPC nodes forward to upcoming leaders<Cite n={8} /></>,
     <>Reserve balance rules matter for edge cases like delegated EOAs<Cite n={10} /></>,
+    <>Blob transactions are unsupported, and max contract size is 128 KB<Cite n={[8, 14]} /></>,
     <>Indexers and explorers may use WebSockets or execution events instead of polling<Cite n={[12, 14]} /></>,
   ];
 
@@ -1367,7 +2192,7 @@ const CTA_LINKS = [
   },
   {
     title: "Architecture deep dives",
-    body: "MonadBFT, RaptorCast, asynchronous execution, and MonadDB in full detail.",
+    body: "MonadBFT, RaptorCast, async and parallel execution, and MonadDB in full detail.",
     href: "https://docs.monad.xyz/monad-arch",
     path: "/monad-arch",
   },
@@ -1411,11 +2236,12 @@ function CtaSection() {
               }}
               className="group flex flex-col items-center gap-4"
             >
-              <img
+              <Image
                 src={qr.src}
                 alt={`QR code to ${qr.label}`}
                 width={260}
                 height={260}
+                unoptimized
                 className="block"
               />
               <span className="font-mono text-lg text-text-tertiary group-hover:text-solution-accent transition-colors">
@@ -1429,7 +2255,7 @@ function CtaSection() {
   }
 
   return (
-    <section className="bg-surface-alt border-t border-border px-6 py-24">
+    <section className="bg-surface border-t border-border px-6 py-24">
       <div
         ref={ref}
         className={`max-w-7xl mx-auto section-reveal ${isVisible ? "visible" : ""}`}
@@ -1556,7 +2382,7 @@ function Hero() {
         {!presenterMode && (
           <p className="text-lg sm:text-xl text-text-secondary font-normal max-w-xl mx-auto leading-relaxed">
             Same contracts, wallets, and RPC. Underneath: MonadBFT, RaptorCast,
-            async execution, and MonadDB.
+            async and parallel execution, and MonadDB.
           </p>
         )}
       </motion.div>
@@ -1930,77 +2756,67 @@ function MonadBftSlide({ shouldReduceMotion }: SlideProps) {
 function RaptorCastSlide({ shouldReduceMotion }: SlideProps) {
   const originator = { x: 96, y: 180 };
   const firstHopNodes = [
-    { id: "V2", label: "validator 2", x: 300, y: 88, range: "c0-c2" },
-    { id: "V5", label: "validator 5", x: 300, y: 180, range: "c3-c5" },
-    { id: "V7", label: "validator 7", x: 300, y: 272, range: "c6-c8" },
-  ];
-  const secondHopGroups = [
     {
-      parent: firstHopNodes[0],
-      recipients: [
-        { id: "V1", label: "validator 1", x: 512, y: 70 },
-        { id: "V3", label: "validator 3", x: 540, y: 132 },
-      ],
+      id: "V2",
+      x: 300,
+      y: 88,
+      range: "c0-c2",
+      tone: colors.userAccent,
+      bg: colors.userBg,
     },
     {
-      parent: firstHopNodes[1],
-      recipients: [
-        { id: "V4", label: "validator 4", x: 530, y: 162 },
-        { id: "V6", label: "validator 6", x: 530, y: 214 },
-      ],
+      id: "V5",
+      x: 300,
+      y: 180,
+      range: "c3-c5",
+      tone: colors.solutionAccent,
+      bg: colors.solutionBg,
     },
     {
-      parent: firstHopNodes[2],
-      recipients: [
-        { id: "V8", label: "validator 8", x: 540, y: 262 },
-        { id: "V9", label: "validator 9", x: 512, y: 326 },
-      ],
+      id: "V7",
+      x: 300,
+      y: 272,
+      range: "c6-c8",
+      tone: colors.problemAccentStrong,
+      bg: colors.problemBg,
     },
   ];
-  const makeEdge = (
-    key: string,
-    from: { x: number; y: number },
-    to: { x: number; y: number },
-    delay: number,
-    tone: string
-  ) => ({
-    key,
-    from,
-    to,
-    dx: to.x - from.x,
-    dy: to.y - from.y,
-    delay,
-    tone,
+  const secondHopNodes = [
+    { id: "V1", x: 540, y: 72 },
+    { id: "V3", x: 540, y: 144 },
+    { id: "V4", x: 540, y: 216 },
+    { id: "V6", x: 540, y: 288 },
+  ];
+
+  const chunkPeriod = 1.4;
+  const hopTravel = chunkPeriod * 0.9;
+  const edges = firstHopNodes.flatMap((node, i) => {
+    const leaderDelay = 0.2 + i * 0.15;
+    // every first-hop validator relays its chunk range to all other validators
+    return [
+      { key: `leader-${node.id}`, from: originator, to: node, delay: leaderDelay, tone: node.tone },
+      ...secondHopNodes.map((recipient, j) => ({
+        key: `${node.id}-${recipient.id}`,
+        from: node,
+        to: recipient,
+        delay: leaderDelay + hopTravel + 0.12 * j,
+        tone: node.tone,
+      })),
+    ].map((edge) => ({
+      ...edge,
+      dx: edge.to.x - edge.from.x,
+      dy: edge.to.y - edge.from.y,
+    }));
   });
-  const secondHopNodes = secondHopGroups.flatMap((group) => group.recipients);
-  const edges = secondHopGroups.flatMap((group) => [
-    makeEdge(
-      `leader-${group.parent.id}`,
-      originator,
-      group.parent,
-      group.parent.y / SLIDE_H,
-      colors.userAccent
-    ),
-    ...group.recipients.map((recipient, i) =>
-      makeEdge(
-        `${group.parent.id}-${recipient.id}`,
-        group.parent,
-        recipient,
-        0.55 + i * 0.18 + group.parent.y / SLIDE_H,
-        colors.solutionAccent
-      )
-    ),
-  ]);
 
   const blockW = 84;
   const blockH = 50;
-  const chunkPeriod = 1.7;
   const chunkSize = 5;
 
   return (
     <svg
       role="img"
-      aria-label="A leader sends erasure-coded chunk ranges to first-hop validators, and those first-hop validators forward chunks to second-hop recipients."
+      aria-label="A leader splits a block into erasure-coded chunk ranges and sends each range to a first-hop validator. Every first-hop validator relays its range to all other validators, so each validator collects every range and can decode the block."
       viewBox={`0 0 ${SLIDE_W} ${SLIDE_H}`}
       className="w-full h-full"
     >
@@ -2025,7 +2841,7 @@ function RaptorCastSlide({ shouldReduceMotion }: SlideProps) {
         first-hop
       </text>
       <text
-        x={526}
+        x={540}
         y={42}
         fontSize="11"
         fontFamily="monospace"
@@ -2055,8 +2871,8 @@ function RaptorCastSlide({ shouldReduceMotion }: SlideProps) {
             cx={recipient.x}
             cy={recipient.y}
             r={15}
-            fill={colors.solutionBg}
-            stroke={colors.solutionAccent}
+            fill={colors.surfaceElevated}
+            stroke={colors.textTertiary}
             strokeWidth="1.3"
           />
           <text
@@ -2064,21 +2880,10 @@ function RaptorCastSlide({ shouldReduceMotion }: SlideProps) {
             y={recipient.y + 4}
             fontSize="10"
             fontFamily="monospace"
-            fill={colors.solutionAccent}
+            fill={colors.textPrimary}
             textAnchor="middle"
           >
             {recipient.id}
-          </text>
-          <text
-            x={recipient.x + 24}
-            y={recipient.y + 1}
-            fontSize="8.5"
-            fontFamily="monospace"
-            fill={colors.textTertiary}
-            textAnchor="start"
-            dominantBaseline="middle"
-          >
-            {recipient.label}
           </text>
         </g>
       ))}
@@ -2101,7 +2906,7 @@ function RaptorCastSlide({ shouldReduceMotion }: SlideProps) {
             }}
             transition={{
               duration: chunkPeriod,
-              delay: edge.delay % chunkPeriod,
+              delay: edge.delay,
               repeat: Infinity,
               ease: "linear",
               times: [0, 0.06, 0.9, 1],
@@ -2115,8 +2920,8 @@ function RaptorCastSlide({ shouldReduceMotion }: SlideProps) {
             cx={node.x}
             cy={node.y}
             r={19}
-            fill={colors.userBg}
-            stroke={colors.userAccent}
+            fill={node.bg}
+            stroke={node.tone}
             strokeWidth="1.5"
           />
           <text
@@ -2124,7 +2929,7 @@ function RaptorCastSlide({ shouldReduceMotion }: SlideProps) {
             y={node.y + 4}
             fontSize="11"
             fontFamily="monospace"
-            fill={colors.userAccent}
+            fill={node.tone}
             textAnchor="middle"
           >
             {node.id}
@@ -2134,23 +2939,24 @@ function RaptorCastSlide({ shouldReduceMotion }: SlideProps) {
             y={node.y + 33}
             fontSize="9"
             fontFamily="monospace"
-            fill={colors.textTertiary}
-            textAnchor="middle"
-          >
-            {node.label}
-          </text>
-          <text
-            x={node.x}
-            y={node.y + 45}
-            fontSize="9"
-            fontFamily="monospace"
-            fill={colors.textTertiary}
+            fill={node.tone}
             textAnchor="middle"
           >
             {node.range}
           </text>
         </g>
       ))}
+
+      <text
+        x={SLIDE_W / 2}
+        y={346}
+        fontSize="11"
+        fontFamily="monospace"
+        fill={colors.textSecondary}
+        textAnchor="middle"
+      >
+        every validator collects chunks from every range, enough to decode
+      </text>
 
       <motion.g
         initial={{ opacity: 0, scale: 0.92 }}
@@ -2546,7 +3352,7 @@ function useDiagramHover() {
 const ENGINE_HINTS: Record<string, LayerMapHint> = {
   interleaved: {
     title: "Ethereum-style interleave",
-    body: "Shown for contrast. On Ethereum-style chains, leader execution, proposal, validator execution, and voting share one ~12 s slot, so only a fraction is real CPU. Monad's pipeline below skips this trade-off.",
+    body: "Shown for contrast. On Ethereum-style chains, leader execution, proposal, validator re-execution, and voting share one ~12 s slot. Real CPU time is the thin red slivers (~100 ms). Monad's pipeline below skips this trade-off.",
   },
   consensus: {
     title: "Consensus pipeline",
@@ -2554,15 +3360,11 @@ const ENGINE_HINTS: Record<string, LayerMapHint> = {
   },
   execution: {
     title: "Execution pipeline",
-    body: "Execution runs the previous block while consensus orders the next one. Each block gets the full ~400 ms of CPU instead of a sliced budget.",
+    body: "Execution runs a block once it finalizes, two slots after proposal, while consensus keeps ordering newer blocks. Each block gets the full ~400 ms of CPU instead of a sliced budget.",
   },
   verify: {
     title: "Delayed verification",
     body: "State-root verification lands after the D=3 delayed Merkle root. Some apps can act on finalized blocks; higher-assurance workflows may wait for Verified.",
-  },
-  "parallel-block": {
-    title: "Parallel inside one slot",
-    body: "Transactions run concurrently inside one execution slot. Conflicts (tx 2) replay; the recorded order is still 1 → 2 → 3 → 4.",
   },
 };
 
@@ -2633,32 +3435,152 @@ function DiagramExplainer({
   );
 }
 
-const ENGINE_CYCLE_MS = 13000;
+function StepControls({
+  label,
+  step,
+  maxStep,
+  paused,
+  onPrev,
+  onNext,
+  onTogglePause,
+}: {
+  label: string;
+  step: number;
+  maxStep: number;
+  paused?: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+  onTogglePause?: () => void;
+}) {
+  return (
+    <div className="flex shrink-0 flex-wrap items-center gap-1">
+      <button
+        type="button"
+        aria-label={`Previous ${label} step`}
+        onClick={onPrev}
+        disabled={step === 0}
+        className="flex h-7 w-7 items-center justify-center rounded-md border border-border font-mono text-xs text-text-secondary transition-colors hover:border-solution-accent hover:text-solution-accent disabled:cursor-not-allowed disabled:opacity-30"
+      >
+        {"<-"}
+      </button>
+      <button
+        type="button"
+        aria-label={`Next ${label} step`}
+        onClick={onNext}
+        disabled={step === maxStep}
+        className="flex h-7 w-7 items-center justify-center rounded-md border border-border font-mono text-xs text-text-secondary transition-colors hover:border-solution-accent hover:text-solution-accent disabled:cursor-not-allowed disabled:opacity-30"
+      >
+        {"->"}
+      </button>
+      {onTogglePause && (
+        <button
+          type="button"
+          aria-label={paused ? `Play ${label}` : `Pause ${label}`}
+          onClick={onTogglePause}
+          className="flex h-7 min-w-14 items-center justify-center rounded-md border border-border px-2 font-mono text-[10px] text-text-secondary transition-colors hover:border-solution-accent hover:text-solution-accent"
+        >
+          {paused ? "play" : "pause"}
+        </button>
+      )}
+      <span className="ml-1 font-mono text-[10px] tabular-nums text-text-tertiary">
+        {step + 1}/{maxStep + 1}
+      </span>
+    </div>
+  );
+}
+
+const ENGINE_CAPTIONS = [
+  "Traditional interleaving squeezes execution into the slot before the next proposal.",
+  "Monad consensus keeps accepting and ordering blocks on its own lane.",
+  "Execution runs after order is fixed, with the full block time available locally.",
+  "State roots are verified after a three-block delay, catching divergence quickly.",
+];
+
+const ENGINE_MAX_STEP = ENGINE_CAPTIONS.length - 1;
+const ENGINE_CYCLE_MS = 9000;
 
 function EngineDiagram() {
   const shouldReduceMotion = !!useReducedMotion();
+  const { presenterMode, setStepper } = usePresenter();
   const { ref, isVisible } = useInView(0.18);
+
+  return (
+    <div
+      ref={ref}
+      className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6"
+    >
+      {/* Remounting on mode change resets the presenter reveal sequence. */}
+      <EngineDeck
+        key={presenterMode ? "present" : "auto"}
+        presenterMode={presenterMode}
+        isVisible={isVisible}
+        shouldReduceMotion={shouldReduceMotion}
+        setStepper={setStepper}
+      />
+    </div>
+  );
+}
+
+function EngineDeck({
+  presenterMode,
+  isVisible,
+  shouldReduceMotion,
+  setStepper,
+}: {
+  presenterMode: boolean;
+  isVisible: boolean;
+  shouldReduceMotion: boolean;
+  setStepper: (stepper: Stepper | null) => void;
+}) {
   const [cycle, setCycle] = useState(0);
+  const [step, setStep] = useState(presenterMode ? 0 : ENGINE_MAX_STEP);
+  const stepRef = useRef(presenterMode ? 0 : ENGINE_MAX_STEP);
   const [activeId, setActiveId] = useState<string | null>(null);
   const paused = activeId !== null;
 
+  const setStepBoth = useCallback((next: number) => {
+    stepRef.current = next;
+    setStep(next);
+  }, []);
+
+  const goNext = useCallback(() => {
+    if (stepRef.current < ENGINE_MAX_STEP) {
+      setStepBoth(stepRef.current + 1);
+      return true;
+    }
+    return false;
+  }, [setStepBoth]);
+
+  const goPrev = useCallback(() => {
+    if (stepRef.current > 0) {
+      setStepBoth(stepRef.current - 1);
+      return true;
+    }
+    return false;
+  }, [setStepBoth]);
+
   useEffect(() => {
-    if (!isVisible || shouldReduceMotion || paused) return;
+    if (!presenterMode || !isVisible) return;
+    setStepper({ next: goNext, prev: goPrev });
+    return () => setStepper(null);
+  }, [presenterMode, isVisible, goNext, goPrev, setStepper]);
+
+  useEffect(() => {
+    if (presenterMode || !isVisible || shouldReduceMotion || paused) return;
     const id = setInterval(() => setCycle((c) => c + 1), ENGINE_CYCLE_MS);
     return () => clearInterval(id);
-  }, [isVisible, shouldReduceMotion, paused]);
+  }, [presenterMode, isVisible, shouldReduceMotion, paused]);
 
   const slots = [0, 1, 2, 3];
   const consensusBlocks = ["N−1", "N", "N+1", "N+2"];
-  const executionBlocks = [null, "N−1", "N", "N+1"] as const;
+  const emptyBlocks: (string | null)[] = [null, null, null, null];
+  // a block executes in the slot it finalizes, two slots after proposal
+  const executionBlocks = [null, null, "N−1", "N"] as const;
   const verifyBlocks = [null, null, null, "N−3"] as const;
-
-  const txs = [
-    { label: "tx 1", retry: false },
-    { label: "tx 2", retry: true },
-    { label: "tx 3", retry: false },
-    { label: "tx 4", retry: false },
-  ];
+  const renderStep = presenterMode ? step : ENGINE_MAX_STEP;
+  const showConsensus = renderStep >= 1;
+  const showExecution = renderStep >= 2;
+  const showVerify = renderStep >= 3;
 
   return (
     <DiagramHoverContext.Provider
@@ -2666,8 +3588,7 @@ function EngineDiagram() {
     >
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_220px] gap-3 lg:gap-5 items-start">
         <div
-          ref={ref}
-          className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6"
+          className="min-w-0"
           onMouseLeave={() => setActiveId(null)}
         >
           <HoverExplain id="interleaved">
@@ -2688,7 +3609,7 @@ function EngineDiagram() {
                 label="consensus"
                 tone="user"
                 slots={slots}
-                values={consensusBlocks}
+                values={showConsensus ? consensusBlocks : emptyBlocks}
                 cycle={cycle}
                 shouldReduceMotion={shouldReduceMotion}
                 delayBase={0}
@@ -2699,11 +3620,11 @@ function EngineDiagram() {
                 label="execution"
                 tone="solution"
                 slots={slots}
-                values={[...executionBlocks]}
+                values={showExecution ? [...executionBlocks] : emptyBlocks}
                 cycle={cycle}
                 shouldReduceMotion={shouldReduceMotion}
                 delayBase={0.7}
-                highlightSlot={2}
+                highlightSlot={3}
               />
             </HoverExplain>
             <HoverExplain id="verify" className="px-1.5 py-1">
@@ -2711,11 +3632,11 @@ function EngineDiagram() {
                 label="verify"
                 tone="dark"
                 slots={slots}
-                values={[...verifyBlocks]}
+                values={showVerify ? [...verifyBlocks] : emptyBlocks}
                 cycle={cycle}
                 shouldReduceMotion={shouldReduceMotion}
                 delayBase={1.4}
-                trailingNote="3-block delay · ~1.2 s"
+                trailingNote={showVerify ? "3-block delay · ~1.2 s" : undefined}
               />
             </HoverExplain>
             <div className="pl-[92px] flex items-center justify-between pt-1">
@@ -2728,46 +3649,51 @@ function EngineDiagram() {
             </div>
           </div>
 
-          <div className="my-5 flex items-center gap-3">
-            <div className="flex-1 h-px bg-border" />
-            <span className="font-mono text-[10px] text-text-tertiary">
-              ↓ inside execution of block N
-            </span>
-            <div className="flex-1 h-px bg-border" />
+          <div className="mt-4 flex min-h-[40px] flex-col items-start gap-3 sm:flex-row">
+            {presenterMode && (
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  aria-label="Previous step"
+                  onClick={goPrev}
+                  disabled={renderStep === 0}
+                  className="flex h-7 w-7 items-center justify-center rounded-md border border-border font-mono text-xs text-text-secondary transition-colors hover:border-solution-accent hover:text-solution-accent disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  {"<-"}
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next step"
+                  onClick={goNext}
+                  disabled={renderStep === ENGINE_MAX_STEP}
+                  className="flex h-7 w-7 items-center justify-center rounded-md border border-border font-mono text-xs text-text-secondary transition-colors hover:border-solution-accent hover:text-solution-accent disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  {"->"}
+                </button>
+                <span className="ml-1 font-mono text-[10px] tabular-nums text-text-tertiary">
+                  {renderStep + 1}/{ENGINE_MAX_STEP + 1}
+                </span>
+              </div>
+            )}
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={renderStep}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={
+                  shouldReduceMotion
+                    ? { opacity: 1, y: 0 }
+                    : { opacity: 0, y: -4 }
+                }
+                transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
+                className={`text-text-secondary font-normal leading-relaxed ${
+                  presenterMode ? "text-base" : "text-sm"
+                }`}
+              >
+                {ENGINE_CAPTIONS[renderStep]}
+              </motion.p>
+            </AnimatePresence>
           </div>
-
-          <HoverExplain id="parallel-block">
-            <div className="rounded-xl bg-surface border border-border p-4">
-              <div className="grid grid-cols-[56px_minmax(0,1fr)_72px] gap-3 mb-3">
-                <span className="font-mono text-[10px] text-text-tertiary">
-                  block N
-                </span>
-                <span className="font-mono text-[10px] text-text-tertiary">
-                  parallel
-                </span>
-                <span className="font-mono text-[10px] text-text-tertiary text-center">
-                  serial commit
-                </span>
-              </div>
-              <div className="space-y-2.5">
-                {txs.map((tx, i) => (
-                  <ParallelRow
-                    key={tx.label}
-                    label={tx.label}
-                    retry={tx.retry}
-                    commitLabel={String(i + 1)}
-                    cycle={cycle}
-                    shouldReduceMotion={shouldReduceMotion}
-                    delay={4 + i * 0.4}
-                  />
-                ))}
-              </div>
-              <p className="mt-4 text-xs text-text-tertiary font-normal leading-relaxed">
-                Transactions run in parallel; state conflicts re-execute. The
-                block&apos;s recorded order is still 1 → 2 → 3 → 4.
-              </p>
-            </div>
-          </HoverExplain>
         </div>
         <div className="space-y-3">
           <DiagramExplainer />
@@ -2785,10 +3711,10 @@ function InterleavedBar({
   shouldReduceMotion: boolean;
 }) {
   const segments: { label: string; w: number; color: string }[] = [
-    { label: "exec", w: 12, color: colors.problemAccentLight },
-    { label: "propose", w: 24, color: colors.userBg },
-    { label: "exec", w: 12, color: colors.problemAccentLight },
-    { label: "vote", w: 28, color: colors.problemCell },
+    { label: "exec", w: 2, color: colors.problemAccentStrong },
+    { label: "propose", w: 40, color: colors.userBg },
+    { label: "exec", w: 2, color: colors.problemAccentStrong },
+    { label: "vote", w: 56, color: colors.problemCell },
   ];
 
   return (
@@ -2802,7 +3728,7 @@ function InterleavedBar({
           <span>interleaved</span>
         </span>
         <span className="font-mono text-[10px] text-text-tertiary">
-          ~100 ms exec budget per block
+          exec ≈ 1% of the 12 s slot (~100 ms)
         </span>
       </div>
       <div className="space-y-1">
@@ -2835,6 +3761,15 @@ function InterleavedBar({
               </span>
             </motion.div>
           ))}
+        </div>
+        <div className="flex items-center gap-1.5 pt-0.5">
+          <span
+            className="inline-block h-2 w-2 rounded-[2px]"
+            style={{ backgroundColor: colors.problemAccentStrong }}
+          />
+          <span className="font-mono text-[9px] text-text-tertiary">
+            exec slivers drawn at 2% for visibility
+          </span>
         </div>
       </div>
     </div>
@@ -2939,99 +3874,452 @@ function PipelineRow({
   );
 }
 
-function ParallelRow({
-  label,
-  retry,
-  commitLabel,
-  cycle,
-  shouldReduceMotion,
-  delay,
+const PARALLEL_EXAMPLE_TXS = [
+  {
+    id: "tx 1",
+    action: "Alice -> Bob: 5 USDC",
+    inputs: ["Alice: 100", "Bob: 100"],
+    outputs: ["Alice: 95", "Bob: 105"],
+    commitStep: 2,
+  },
+  {
+    id: "tx 2",
+    action: "unrelated tx",
+    inputs: ["slot X"],
+    outputs: ["slot X*"],
+    commitStep: 3,
+  },
+  {
+    id: "tx 3",
+    action: "Bob -> Charlie: 10 USDC",
+    inputs: ["Bob: 100", "Charlie: 100"],
+    outputs: ["Bob: 90", "Charlie: 110"],
+    rerunInputs: ["Bob: 105", "Charlie: 100"],
+    rerunOutputs: ["Bob: 95", "Charlie: 110"],
+    conflictStep: 4,
+    commitStep: 5,
+  },
+  {
+    id: "tx 4",
+    action: "unrelated tx",
+    inputs: ["slot Y"],
+    outputs: ["slot Y*"],
+    commitStep: 6,
+  },
+];
+
+function ParallelPendingResultExample({
+  step,
+  reduced,
 }: {
-  label: string;
-  retry: boolean;
-  commitLabel: string;
-  cycle: number;
-  shouldReduceMotion: boolean;
-  delay: number;
+  step: number;
+  reduced: boolean;
 }) {
-  const ease = [0.16, 1, 0.3, 1] as const;
-  const reduced = shouldReduceMotion;
+  const committed = [
+    {
+      label: "Alice",
+      value: step >= 2 ? "95" : "100",
+      changed: step === 2,
+    },
+    {
+      label: "Bob",
+      value: step >= 5 ? "95" : step >= 2 ? "105" : "100",
+      changed: step === 2 || step === 5,
+    },
+    {
+      label: "Charlie",
+      value: step >= 5 ? "110" : "100",
+      changed: step === 5,
+    },
+  ];
 
   return (
-    <div className="grid grid-cols-[56px_minmax(0,1fr)_72px] items-center gap-3">
-      <span className="font-mono text-xs text-text-primary">{label}</span>
-      <div className="relative h-6 rounded-full bg-border/50 overflow-hidden">
-        {retry && (
-          <motion.div
-            key={`retry-${cycle}`}
-            initial={reduced ? false : { width: 0 }}
-            animate={{ width: reduced ? "100%" : "44%" }}
-            transition={
-              reduced ? { duration: 0 } : { duration: 1.7, delay, ease }
-            }
-            className="absolute inset-y-0 left-0 origin-left rounded-full"
-            style={{ backgroundColor: colors.problemAccentLight }}
-          />
-        )}
-        <motion.div
-          key={`main-${cycle}`}
-          initial={reduced ? false : { width: 0 }}
-          animate={{ width: "100%" }}
-          transition={
-            reduced
-              ? { duration: 0 }
-              : {
-                  duration: 2.3,
-                  delay: retry ? delay + 1.2 : delay,
-                  ease,
-                }
-          }
-          className="absolute inset-y-0 left-0 origin-left rounded-full"
-          style={{ backgroundColor: colors.solutionAccent }}
-        />
-        {retry && !reduced && (
-          <motion.span
-            key={`label-${cycle}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 1, 0] }}
-            transition={{
-              duration: 1.4,
-              delay: delay + 0.85,
-              times: [0, 0.2, 0.75, 1],
-            }}
-            className="absolute top-1/2 left-[42%] -translate-y-1/2 font-mono text-[9px] text-surface px-1.5 py-0.5 rounded whitespace-nowrap"
-            style={{ backgroundColor: colors.problemAccentStrong }}
-          >
-            conflict → re-run
-          </motion.span>
-        )}
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 lg:grid-cols-[145px_minmax(0,1fr)_145px] gap-3">
+        <div className="rounded-lg border border-border bg-surface-elevated p-3 lg:min-h-[244px]">
+          <p className="font-mono text-[10px] font-medium text-text-tertiary">
+            before block N
+          </p>
+          <div className="mt-3 space-y-1 font-mono text-xs text-text-primary">
+            <p>Alice: 100 USDC</p>
+            <p>Bob: 100 USDC</p>
+            <p>Charlie: 100 USDC</p>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-lg border border-border bg-surface-elevated">
+          <div className="grid grid-cols-[42px_minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)] gap-3 border-b border-border px-3 py-2 font-mono text-[10px] text-text-tertiary">
+            <span>order</span>
+            <span>tx</span>
+            <span>inputs</span>
+            <span>outputs</span>
+          </div>
+          <div className="divide-y divide-border">
+            {PARALLEL_EXAMPLE_TXS.map((tx) => {
+              const conflict =
+                "conflictStep" in tx && step >= (tx.conflictStep ?? 99);
+              const rerun =
+                "rerunOutputs" in tx && step >= tx.commitStep;
+              const pendingVisible = step >= 1;
+              const committedVisible = step >= tx.commitStep;
+              const commitChanged = step === tx.commitStep;
+              const conflictChanged =
+                "conflictStep" in tx && step === (tx.conflictStep ?? -1);
+              const rerunChanged =
+                "rerunOutputs" in tx && step === tx.commitStep;
+              const dependencyFocus =
+                step === 0 && (tx.id === "tx 1" || tx.id === "tx 3");
+              const unrelatedFocus = step === 0 && tx.id === "tx 2";
+              const pendingResultFocus = step === 1;
+              const rowProblemFocus = dependencyFocus || (conflictChanged && !rerun);
+              const rowSolutionFocus =
+                unrelatedFocus || commitChanged || rerunChanged || step === 6;
+              const rowFocusColor = rowProblemFocus
+                ? colors.problemBg
+                : rowSolutionFocus
+                  ? colors.solutionBg
+                  : "transparent";
+              const inputFocusColor =
+                conflictChanged && !rerun
+                  ? colors.problemBg
+                  : rerunChanged || pendingResultFocus || unrelatedFocus
+                    ? colors.solutionBg
+                    : dependencyFocus || (conflict && !rerun)
+                      ? colors.problemBg
+                      : "transparent";
+              const outputFocusColor =
+                conflictChanged && !rerun
+                  ? colors.problemBg
+                  : rerunChanged || commitChanged || pendingResultFocus
+                    ? colors.solutionBg
+                    : conflict && !rerun
+                      ? colors.problemBg
+                      : "transparent";
+              const inputs = rerun && tx.rerunInputs ? tx.rerunInputs : tx.inputs;
+              const outputs =
+                rerun && tx.rerunOutputs ? tx.rerunOutputs : tx.outputs;
+              return (
+                <motion.div
+                  key={tx.id}
+                  initial={false}
+                  animate={{
+                    backgroundColor:
+                      rowFocusColor !== "transparent" && !reduced
+                        ? ["transparent", rowFocusColor, "transparent", rowFocusColor]
+                        : rowFocusColor,
+                  }}
+                  transition={{ duration: reduced ? 0 : 0.7 }}
+                  className="grid min-h-[86px] grid-cols-[42px_minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)] items-start gap-3 overflow-hidden px-3 py-2 sm:h-[86px]"
+                >
+                  <div className="flex items-center gap-2">
+                    <motion.span
+                      initial={false}
+                      animate={{
+                        backgroundColor:
+                          commitChanged && !reduced
+                            ? [
+                                colors.surface,
+                                colors.solutionBg,
+                                colors.surface,
+                                colors.solutionBg,
+                              ]
+                            : committedVisible
+                              ? colors.solutionBg
+                              : colors.surface,
+                      }}
+                      transition={{ duration: reduced ? 0 : 0.7 }}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border font-mono text-[10px]"
+                      style={{
+                        borderColor: committedVisible
+                          ? colors.solutionAccent
+                          : colors.border,
+                        color: committedVisible
+                          ? colors.solutionAccent
+                          : colors.textTertiary,
+                      }}
+                    >
+                      {tx.id.replace("tx ", "")}
+                    </motion.span>
+                  </div>
+                  <p className="min-h-[44px] text-sm leading-relaxed text-text-primary">
+                    {tx.action}
+                  </p>
+                  <motion.div
+                    initial={false}
+                    animate={{
+                      opacity: pendingVisible ? 1 : 0.25,
+                      backgroundColor:
+                        inputFocusColor !== "transparent" && !reduced
+                          ? [
+                              "transparent",
+                              inputFocusColor,
+                              "transparent",
+                              inputFocusColor,
+                            ]
+                          : inputFocusColor,
+                    }}
+                    transition={{ duration: reduced ? 0 : 0.7 }}
+                    className="min-h-[54px] rounded-md px-2 py-1 font-mono text-[10px] leading-relaxed text-text-secondary"
+                  >
+                    {inputs.map((input) => (
+                      <p key={input}>{input}</p>
+                    ))}
+                    <p
+                      className="mt-1 min-h-[14px] overflow-hidden text-ellipsis whitespace-nowrap text-[9px] leading-[14px]"
+                      style={{
+                        color:
+                          conflict && !rerun
+                            ? colors.problemAccentStrong
+                            : "transparent",
+                        overflow: "hidden",
+                        textOverflow: "clip",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {conflict && !rerun ? "now 105" : "reserved"}
+                    </p>
+                  </motion.div>
+                  <motion.div
+                    initial={false}
+                    animate={{
+                      opacity: pendingVisible ? 1 : 0.25,
+                      backgroundColor:
+                        outputFocusColor !== "transparent" && !reduced
+                          ? [
+                              "transparent",
+                              outputFocusColor,
+                              "transparent",
+                              outputFocusColor,
+                            ]
+                          : outputFocusColor,
+                    }}
+                    transition={{ duration: reduced ? 0 : 0.7 }}
+                    className="min-h-[62px] rounded-md px-2 py-1 font-mono text-[10px] leading-relaxed text-text-secondary"
+                  >
+                    {outputs.map((output) => (
+                      <p key={output}>{output}</p>
+                    ))}
+                    <p
+                      className="mt-1 min-h-[14px] overflow-hidden text-ellipsis whitespace-nowrap text-[9px] leading-[14px]"
+                      style={{
+                        color:
+                          conflict && !rerun
+                            ? colors.problemAccentStrong
+                            : rerun && tx.rerunOutputs
+                              ? colors.solutionAccent
+                              : "transparent",
+                        overflow: "hidden",
+                        textOverflow: "clip",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {conflict && !rerun
+                        ? "stale"
+                        : rerun && tx.rerunOutputs
+                          ? "ok"
+                          : "reserved"}
+                    </p>
+                  </motion.div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-surface-elevated p-3 lg:min-h-[244px]">
+          <p className="font-mono text-[10px] font-medium text-text-tertiary">
+            committed state
+          </p>
+          <div className="mt-3 space-y-1 font-mono text-xs text-text-primary">
+            {committed.map((line) => (
+              <motion.p
+                key={line.label}
+                initial={false}
+                animate={{
+                  opacity: 1,
+                  backgroundColor:
+                    (line.changed || step === 6) && !reduced
+                      ? [
+                          "transparent",
+                          colors.solutionBg,
+                          "transparent",
+                          colors.solutionBg,
+                        ]
+                      : "transparent",
+                }}
+                transition={{ duration: reduced ? 0 : 0.7 }}
+                className="-mx-1 min-h-[20px] rounded px-1 leading-5"
+              >
+                {line.label}: {line.value} USDC
+              </motion.p>
+            ))}
+          </div>
+          <p className="mt-3 font-mono text-[10px] leading-relaxed text-text-tertiary">
+            {"commit order: 1 -> 2 -> 3 -> 4"}
+          </p>
+        </div>
       </div>
-      <motion.div
-        key={`commit-${cycle}`}
-        initial={reduced ? false : { opacity: 0, scale: 0.92 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={
-          reduced
-            ? { duration: 0 }
-            : {
-                duration: 1.2,
-                delay: retry ? delay + 3.7 : delay + 2.4,
-                ease,
-              }
-        }
-        className="h-7 rounded-md flex items-center justify-center"
-        style={{
-          backgroundColor: colors.solutionBg,
-          border: `1px solid ${colors.solutionAccent}`,
-        }}
-      >
-        <span
-          className="font-mono text-xs"
-          style={{ color: colors.solutionAccent }}
-        >
-          {commitLabel}
-        </span>
-      </motion.div>
     </div>
+  );
+}
+
+const PARALLEL_CAPTIONS = [
+  "Block N has a fixed order. tx 1 and tx 3 both touch Bob's USDC balance; tx 2 is unrelated.",
+  "Executors produce pending results in parallel, recording each transaction's inputs and outputs.",
+  "Commit is serial. tx 1 commits first, changing Bob from 100 to 105.",
+  "tx 2 is unrelated, so it commits cleanly before the stale Bob-dependent result is checked.",
+  "tx 3 expected Bob to be 100, but committed state now has Bob at 105. That pending result is stale.",
+  "tx 3 re-executes with cached inputs, then commits with the corrected Bob balance.",
+  "The final committed state matches serial EVM execution, even though computation ran in parallel.",
+];
+
+const PARALLEL_MAX_STEP = PARALLEL_CAPTIONS.length - 1;
+const PARALLEL_STEP_MS = 2300;
+
+function ParallelExecutionDiagram() {
+  const shouldReduceMotion = !!useReducedMotion();
+  const { presenterMode, setStepper } = usePresenter();
+  const { ref, isVisible } = useInView(0.18);
+
+  return (
+    <div
+      ref={ref}
+      className="bg-surface-elevated border border-border rounded-2xl p-5 sm:p-6 space-y-5"
+    >
+      {/* Remounting on mode change resets the step cleanly (no setState-in-effect). */}
+      <ParallelDeck
+        key={presenterMode ? "present" : "auto"}
+        presenterMode={presenterMode}
+        isVisible={isVisible}
+        shouldReduceMotion={shouldReduceMotion}
+        setStepper={setStepper}
+      />
+    </div>
+  );
+}
+
+function ParallelDeck({
+  presenterMode,
+  isVisible,
+  shouldReduceMotion,
+  setStepper,
+}: {
+  presenterMode: boolean;
+  isVisible: boolean;
+  shouldReduceMotion: boolean;
+  setStepper: (stepper: Stepper | null) => void;
+}) {
+  // Reduced motion outside presenter jumps straight to the finished state.
+  const initialStep =
+    shouldReduceMotion && !presenterMode ? PARALLEL_MAX_STEP : 0;
+  const [step, setStep] = useState(initialStep);
+  const [paused, setPaused] = useState(false);
+  const stepRef = useRef(initialStep);
+
+  const setStepBoth = useCallback((next: number) => {
+    stepRef.current = next;
+    setStep(next);
+  }, []);
+
+  const goNext = useCallback(() => {
+    if (stepRef.current < PARALLEL_MAX_STEP) {
+      setStepBoth(stepRef.current + 1);
+      return true;
+    }
+    return false;
+  }, [setStepBoth]);
+
+  const goPrev = useCallback(() => {
+    if (stepRef.current > 0) {
+      setStepBoth(stepRef.current - 1);
+      return true;
+    }
+    return false;
+  }, [setStepBoth]);
+
+  // Presenter mode: register as the active stepper for this slide.
+  useEffect(() => {
+    if (!presenterMode || !isVisible) return;
+    setStepper({ next: goNext, prev: goPrev });
+    return () => setStepper(null);
+  }, [presenterMode, isVisible, goNext, goPrev, setStepper]);
+
+  // Auto-play (slow) when scrolled into view and not presenting.
+  useEffect(() => {
+    if (presenterMode || shouldReduceMotion || !isVisible || paused) return;
+    const id = setInterval(() => {
+      // one extra tick past the last step holds the finished state before looping
+      setStepBoth((stepRef.current + 1) % (PARALLEL_MAX_STEP + 2));
+    }, PARALLEL_STEP_MS);
+    return () => clearInterval(id);
+  }, [presenterMode, shouldReduceMotion, isVisible, paused, setStepBoth]);
+
+  const renderStep = Math.min(step, PARALLEL_MAX_STEP);
+
+  const facts = [
+    "Optimistic: every executor starts immediately instead of waiting for earlier transactions.",
+    "At commit time a result's inputs must still match state; stale results re-execute.",
+    "Re-runs are cheap because inputs are mostly cached, and block order never changes.",
+  ];
+
+  return (
+    <>
+      <div className="rounded-xl bg-surface border border-border p-4">
+        <ParallelPendingResultExample
+          step={renderStep}
+          reduced={shouldReduceMotion}
+        />
+
+        <div className="mt-4 flex h-[112px] flex-col items-start gap-3 overflow-hidden sm:h-16 sm:flex-row">
+          <StepControls
+            label="parallel execution"
+            step={renderStep}
+            maxStep={PARALLEL_MAX_STEP}
+            paused={paused}
+            onPrev={goPrev}
+            onNext={goNext}
+            onTogglePause={() => setPaused((p) => !p)}
+          />
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.p
+              key={renderStep}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={
+                shouldReduceMotion
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: -4 }
+              }
+              transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
+              className={`text-text-secondary font-normal leading-relaxed ${
+                presenterMode ? "text-base" : "text-sm"
+              } sm:min-h-[40px]`}
+            >
+              {PARALLEL_CAPTIONS[renderStep]}
+            </motion.p>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        {facts.map((fact, index) => (
+          <div
+            key={fact}
+            className="rounded-lg border border-border bg-surface px-3 py-2"
+          >
+            <p className="font-mono text-[10px] font-medium text-solution-accent mb-1 tabular-nums">
+              0{index + 1}
+            </p>
+            <p
+              className={`text-text-secondary leading-relaxed ${
+                presenterMode ? "text-base" : "text-sm"
+              }`}
+            >
+              {fact}
+            </p>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

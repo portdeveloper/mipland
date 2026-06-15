@@ -4,7 +4,7 @@ import Monad101Page from "@/components/monad-101/Monad101Page";
 export const metadata: Metadata = {
   title: "Monad 101",
   description:
-    "A visual primer for EVM developers on Monad's compatibility surface, MonadBFT, RaptorCast, async execution, and MonadDB.",
+    "A visual primer for EVM developers on Monad's compatibility surface, MonadBFT, RaptorCast, async and parallel execution, and MonadDB.",
   openGraph: {
     title: "Monad 101 | MIP Land",
     description:
