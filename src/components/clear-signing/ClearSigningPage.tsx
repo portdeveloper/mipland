@@ -41,7 +41,7 @@ const REGISTRY_RENDER: {
     action: "Approve WMON",
     fields: [
       ["Spender", "0x1b81…eB14"],
-      ["Amount", "1,000 WMON"],
+      ["Amount", "1 WMON"],
     ],
   },
   {
@@ -105,7 +105,7 @@ function buildPermitSingle(spender: string) {
     primaryType: "PermitSingle",
     domain: { name: "Permit2", chainId: 143, verifyingContract: PERMIT2 },
     message: {
-      details: { token: USDC, amount: "1000000000", expiration, nonce: 0 },
+      details: { token: USDC, amount: "1000000", expiration, nonce: 0 }, // 1 USDC (6 decimals)
       spender, // connected account: harmless even if broadcast
       sigDeadline,
     },
@@ -497,7 +497,7 @@ export default function ClearSigningPage() {
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-text-tertiary">Amount</dt>
-                  <dd className="font-medium">1,000 USDC</dd>
+                  <dd className="font-medium">1 USDC</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-text-tertiary">Network</dt>
