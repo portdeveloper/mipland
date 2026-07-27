@@ -5,6 +5,7 @@ import MipChat from "@/components/MipChat";
 import SelectionTooltip from "@/components/SelectionTooltip";
 import LanguageBanner from "@/components/LanguageBanner";
 import GlobalFooter from "@/components/GlobalFooter";
+import MotionProvider from "@/components/MotionProvider";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import "./globals.css";
 
@@ -49,14 +50,16 @@ export default function RootLayout({
       className={`${plexSans.variable} ${plexMono.variable} antialiased`}
     >
       <body className="min-h-screen">
-        <LanguageProvider>
-          <LanguageBanner />
-          <MipNav />
-          {children}
-          <GlobalFooter />
-          <MipChat />
-          <SelectionTooltip />
-        </LanguageProvider>
+        <MotionProvider>
+          <LanguageProvider>
+            <LanguageBanner />
+            <MipNav />
+            {children}
+            <GlobalFooter />
+            <MipChat />
+            <SelectionTooltip />
+          </LanguageProvider>
+        </MotionProvider>
       </body>
     </html>
   );
