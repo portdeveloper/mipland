@@ -1,8 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useInView } from "../useInView";
+import { useUrlState, intParam, oneOfParam } from "../useUrlState";
+import type { UrlParamCodec } from "../useUrlState";
 import { useExplainMode } from "./ExplainModeContext";
 import Hint from "./Hint";
 import {
@@ -14,6 +16,21 @@ import {
 import type { ModelParams } from "./model";
 
 const MAX_BMAX = 2000;
+
+// "bmax" belongs to the equilibrium slider above, so this section's
+// capacity lever gets its own key
+const LEVER_BMAX_PARAM = intParam(200, MAX_BMAX);
+const GMIN_PARAM = intParam(1, 80);
+const ORDERING_PARAM = oneOfParam(["random", "pfo"] as const);
+
+// v lives in state as a 0-1 fraction but travels as a whole percent (v=50)
+const V_PARAM: UrlParamCodec<number> = {
+  parse: (raw) => {
+    const pct = intParam(0, 100).parse(raw);
+    return pct === null ? null : pct / 100;
+  },
+  serialize: (v) => String(Math.round(v * 100)),
+};
 
 function MarginalCapacityChart({
   params,
@@ -173,10 +190,14 @@ export default function DesignLeversSection() {
   const { ref, isVisible } = useInView(0.1);
   const { mode } = useExplainMode();
   const simple = mode === "simple";
-  const [Bmax, setBmax] = useState(1000);
-  const [gmin, setGmin] = useState(DEFAULTS.gmin);
-  const [ordering, setOrdering] = useState<"random" | "pfo">("random");
-  const [v, setV] = useState(0.5);
+  const [Bmax, setBmax] = useUrlState("cap", 1000, LEVER_BMAX_PARAM);
+  const [gmin, setGmin] = useUrlState("gmin", DEFAULTS.gmin, GMIN_PARAM);
+  const [ordering, setOrdering] = useUrlState<"random" | "pfo">(
+    "ordering",
+    "random",
+    ORDERING_PARAM
+  );
+  const [v, setV] = useUrlState("v", 0.5, V_PARAM);
 
   const params: ModelParams = useMemo(
     () => ({ ...DEFAULTS, gmin: Math.max(1, gmin) }),

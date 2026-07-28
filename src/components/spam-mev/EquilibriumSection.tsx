@@ -1,8 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useInView } from "../useInView";
+import { useUrlState, intParam } from "../useUrlState";
+import type { UrlParamCodec } from "../useUrlState";
 import { useExplainMode } from "./ExplainModeContext";
 import Hint from "./Hint";
 import { computeEquilibrium, computeSweep, DEFAULTS } from "./model";
@@ -10,6 +12,18 @@ import type { ModelParams } from "./model";
 
 const MAX_BMAX = 2000;
 const SLIDER_STEPS = 200;
+
+// The URL carries the Bmax the slider maps to, not the raw slider position
+const BMAX_PARAM: UrlParamCodec<number> = {
+  parse: (raw) => {
+    const bmax = intParam(0, MAX_BMAX).parse(raw);
+    return bmax === null
+      ? null
+      : Math.round((bmax / MAX_BMAX) * SLIDER_STEPS);
+  },
+  serialize: (sliderValue) =>
+    String(Math.round((sliderValue / SLIDER_STEPS) * MAX_BMAX)),
+};
 
 const REGIME_PRESETS_TECHNICAL = [
   { label: "No spam", Bmax: 350 },
@@ -378,7 +392,11 @@ export default function EquilibriumSection() {
   const { ref, isVisible } = useInView(0.1);
   const { mode } = useExplainMode();
   const simple = mode === "simple";
-  const [sliderValue, setSliderValue] = useState(120); // ~1200
+  const [sliderValue, setSliderValue] = useUrlState(
+    "bmax",
+    120, // ~1200
+    BMAX_PARAM
+  );
   const params = DEFAULTS;
 
   const Bmax = Math.round((sliderValue / SLIDER_STEPS) * MAX_BMAX);
