@@ -344,7 +344,17 @@ function CommitteeAnimation() {
   useEffect(() => {
     const el = svgRef.current;
     if (!el) return;
-    if (reduced) return;
+    if (reduced) {
+      // The initializers above ran during hydration, when the media query
+      // isn't known yet (reduced=false) — force the final frame here.
+      clearTimers();
+      playingRef.current = false;
+      setCtVisible(new Array(BATCH).fill(true));
+      setServerOn(new Array(COMMITTEE_N).fill(true));
+      setPtVisible(new Array(BATCH).fill(true));
+      setDots([]);
+      return;
+    }
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -587,6 +597,8 @@ function FftComparison() {
           el.style.opacity = "0.95";
         }
       });
+      setNaiveCount(64);
+      setBtxCount(btxActiveOrder.length);
       return;
     }
 
