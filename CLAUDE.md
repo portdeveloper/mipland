@@ -1,5 +1,7 @@
 # MIP chat widget
 
+> MOST contributors: read https://most.devnads.com/agents.md before opening an issue or a PR here.
+
 Floating chat button on the site, with full control over knowledge and replies.
 Code is in place; infra wiring is documented in [`SETUP.md`](./SETUP.md).
 
