@@ -205,9 +205,10 @@ export default function CollisionProbabilitySection() {
         </div>
 
         {/* Mode toggle */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4" role="group" aria-label="Collision probability mode">
           <button
             onClick={() => setMode("without")}
+            aria-pressed={mode === "without"}
             className={`font-mono text-xs px-4 py-2.5 rounded-lg border transition-all cursor-pointer ${
               mode === "without"
                 ? "bg-problem-accent text-white border-problem-accent"
@@ -218,6 +219,7 @@ export default function CollisionProbabilitySection() {
           </button>
           <button
             onClick={() => setMode("with")}
+            aria-pressed={mode === "with"}
             className={`font-mono text-xs px-4 py-2.5 rounded-lg border transition-all cursor-pointer ${
               mode === "with"
                 ? "bg-solution-accent text-white border-solution-accent"
@@ -238,6 +240,7 @@ export default function CollisionProbabilitySection() {
               <button
                 key={v}
                 onClick={() => setN(v)}
+                aria-pressed={n === v}
                 className={`font-mono text-xs px-3 py-2 rounded-md border transition-all cursor-pointer tabular-nums ${
                   n === v
                     ? "bg-text-primary text-surface border-text-primary"
@@ -309,6 +312,7 @@ export default function CollisionProbabilitySection() {
                 value={strength}
                 onChange={(e) => setStrength(Number(e.target.value))}
                 aria-label={t("mip7.collisionProb.sliderPrompt")}
+                aria-valuetext={`${fmtPctConfidence(1 - pUpholdFail)} confidence`}
                 className="w-full accent-solution-accent cursor-pointer"
               />
               <div className="flex justify-between mt-2 font-mono text-[10px] text-text-tertiary">

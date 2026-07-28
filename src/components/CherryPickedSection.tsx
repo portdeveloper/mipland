@@ -183,6 +183,8 @@ export default function CherryPickedSection() {
             max={64}
             value={batchSize}
             onChange={(e) => setBatchSize(Number(e.target.value))}
+            aria-label={t("cherryPicked.batchSize")}
+            aria-valuetext={`${batchSize} ${t("cherryPicked.tokens")}`}
             className="w-full accent-solution-accent cursor-pointer"
           />
           <div className="flex justify-between font-mono text-xs text-text-tertiary mt-1">

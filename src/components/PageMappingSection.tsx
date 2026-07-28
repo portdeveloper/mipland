@@ -49,6 +49,7 @@ export default function PageMappingSection() {
                 max={511}
                 value={slotInput}
                 onChange={(e) => setSlotInput(Number(e.target.value))}
+                aria-valuetext={`slot ${slotInput}, page ${pageIndex}, offset ${offset}`}
                 className="w-full accent-solution-accent cursor-pointer"
               />
               <div className="flex justify-between font-mono text-xs text-text-tertiary mt-1">
@@ -70,6 +71,7 @@ export default function PageMappingSection() {
                     Math.max(0, Math.min(511, Number(e.target.value)))
                   )
                 }
+                aria-label={t("mip8.pageMapping.storageSlot")}
                 className="w-24 px-3 py-2 rounded-md border border-border bg-surface text-right font-mono text-lg tabular-nums focus:outline-none focus:border-solution-accent"
               />
             </div>

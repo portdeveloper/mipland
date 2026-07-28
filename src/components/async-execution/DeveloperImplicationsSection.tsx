@@ -70,6 +70,7 @@ export default function DeveloperImplicationsSection() {
                 <button
                   key={scenario.id}
                   onClick={() => setActiveId(scenario.id)}
+                  aria-pressed={activeScenario}
                   className={`w-full text-left rounded-xl px-4 py-3 min-h-11 transition-all ${
                     activeScenario
                       ? "bg-text-primary text-surface"

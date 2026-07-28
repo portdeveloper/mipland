@@ -81,6 +81,7 @@ export default function DeterminismSection() {
                   <button
                     key={tx.id}
                     onClick={() => setSelected(index)}
+                    aria-pressed={active}
                     className={`w-full text-left rounded-xl border p-4 transition-all min-h-11 ${
                       active
                         ? "bg-solution-bg border-solution-accent-light"

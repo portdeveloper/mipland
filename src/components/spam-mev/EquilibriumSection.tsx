@@ -95,6 +95,8 @@ function SweepChart({
       viewBox={`0 0 ${W} ${H}`}
       className="w-full"
       style={{ maxHeight: 280 }}
+      role="img"
+      aria-label={`Chart of user gas and spam gas across block capacities from 0 to ${MAX_BMAX}. At the current capacity of ${currentBmax}, user gas is ${Math.round(eq.Qu)} and spam gas is ${Math.round(eq.spamGas)}. Spam appears once capacity exceeds ${Math.round(BnoSpam)} and both curves level off near the plateau at ${Math.round(Bplat)}.`}
     >
       {/* Regime background bands */}
       <rect
@@ -461,6 +463,7 @@ export default function EquilibriumSection() {
             max={SLIDER_STEPS}
             value={sliderValue}
             onChange={(e) => setSliderValue(Number(e.target.value))}
+            aria-valuetext={`${Bmax.toLocaleString()} gas units, ${regimeLabel}`}
             className="w-full accent-text-primary cursor-pointer"
           />
           <div className="flex justify-between font-mono text-xs text-text-tertiary mt-1">
@@ -469,7 +472,7 @@ export default function EquilibriumSection() {
           </div>
 
           {/* Preset buttons */}
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-4" role="group" aria-label="Block capacity presets">
             {presets.map((preset) => {
               const sv = Math.round(
                 (preset.Bmax / MAX_BMAX) * SLIDER_STEPS
@@ -479,6 +482,7 @@ export default function EquilibriumSection() {
                 <button
                   key={preset.label}
                   onClick={() => setSliderValue(sv)}
+                  aria-pressed={isActive}
                   className={`font-mono text-xs px-2.5 py-1.5 rounded-md border transition-all cursor-pointer ${
                     isActive
                       ? "bg-text-primary text-surface border-text-primary"
@@ -513,7 +517,10 @@ export default function EquilibriumSection() {
           </div>
 
           {/* Stacked bar */}
-          <div className="relative h-10 bg-border/30 rounded-lg overflow-hidden">
+          <p className="sr-only" aria-live="polite">
+            At block capacity {Bmax.toLocaleString()}: users {Math.round(eq.Qu)} gas, spam {Math.round(eq.spamGas)} gas, {Math.round(idle)} idle. Regime: {regimeLabel}.
+          </p>
+          <div className="relative h-10 bg-border/30 rounded-lg overflow-hidden" aria-hidden="true">
             {/* Capacity boundary */}
             <div
               className="absolute top-0 bottom-0 left-0 bg-border/10 rounded-lg"

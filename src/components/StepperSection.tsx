@@ -322,11 +322,12 @@ export default function StepperSection() {
         </p>
 
         {/* Example picker */}
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div className="flex flex-wrap gap-2 mb-8" role="group" aria-label="Contract example">
           {EXAMPLES.map((ex, i) => (
             <button
               key={ex.name}
               onClick={() => handleSelectExample(i)}
+              aria-pressed={i === exampleIdx}
               className={`font-mono text-xs px-3 py-2 rounded-md border transition-all cursor-pointer ${
                 i === exampleIdx
                   ? "bg-text-primary text-surface border-text-primary"
@@ -343,11 +344,12 @@ export default function StepperSection() {
         </p>
 
         {/* Mobile tab switcher */}
-        <div className="flex gap-1 mb-4 lg:hidden">
+        <div className="flex gap-1 mb-4 lg:hidden" role="group" aria-label="Panel view">
           {(["code", "pages", "log"] as MobileTab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setMobileTab(tab)}
+              aria-pressed={mobileTab === tab}
               className={`font-mono text-xs px-3 py-1.5 rounded-md transition-all cursor-pointer ${
                 mobileTab === tab
                   ? "bg-text-primary text-surface"

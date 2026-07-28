@@ -101,6 +101,7 @@ export default function ComparisonSection() {
             ))}
             <button
               onClick={reset}
+              disabled={loadedSlots.length === 0}
               className={`font-mono text-xs px-3 py-2 transition-colors cursor-pointer ${
                 loadedSlots.length > 0
                   ? "text-text-tertiary hover:text-text-primary"

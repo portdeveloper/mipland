@@ -106,6 +106,7 @@ export default function CostCurveSection() {
             max={SLIDER_STEPS}
             value={sliderValue}
             onChange={(e) => setSliderValue(Number(e.target.value))}
+            aria-valuetext={`${formatBytes(currentBytes)}, ETH gas: ${ethImpossible ? "exceeds block limit" : formatGas(ethGas)}, MIP-3 gas: ${mip3Gas === 0 ? "free" : formatGas(mip3Gas)}`}
             className="w-full accent-solution-accent cursor-pointer"
           />
           <div className="flex justify-between font-mono text-xs text-text-tertiary mt-1">
@@ -114,7 +115,7 @@ export default function CostCurveSection() {
           </div>
 
           {/* Threshold markers */}
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-4" role="group" aria-label="Memory size presets">
             {THRESHOLDS.map((th) => {
               const isActive = Math.abs(currentBytes - th.bytes) / th.bytes < 0.15;
               return (
@@ -126,6 +127,7 @@ export default function CostCurveSection() {
                       Math.round(((exp - MIN_EXP) / (MAX_EXP - MIN_EXP)) * SLIDER_STEPS)
                     );
                   }}
+                  aria-pressed={isActive}
                   className={`font-mono text-xs px-2.5 py-1.5 rounded-md border transition-all cursor-pointer ${
                     isActive
                       ? "bg-text-primary text-surface border-text-primary"
@@ -209,7 +211,10 @@ export default function CostCurveSection() {
           <p className="font-mono text-xs text-text-tertiary mb-4">
             {t("mip3.costCurve.gasChart")}
           </p>
-          <div className="space-y-1.5">
+          <p className="sr-only">
+            Bar chart comparing gas cost as memory grows from 32 bytes to 8 MB. Ethereum&apos;s quadratic cost exceeds the 30M block limit near 4 MB and reaches about {formatGas(ethMemoryCost(8 * 1024 * 1024))} at 8 MB. MIP-3&apos;s linear cost stays at about {formatGas(mip3MemoryCost(8 * 1024 * 1024))} at 8 MB.
+          </p>
+          <div className="space-y-1.5" aria-hidden="true">
             {chartPoints.map((point, i) => {
               const ethWidth = Math.min(100, (point.eth / maxGasForChart) * 100);
               const mip3Width = Math.min(100, (point.mip3 / maxGasForChart) * 100);

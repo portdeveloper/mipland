@@ -87,9 +87,10 @@ export default function EncodingSection() {
         </p>
 
         {/* Mode toggle */}
-        <div className="flex gap-2 mb-8">
+        <div className="flex gap-2 mb-8" role="group" aria-label="Encoding mode">
           <button
             onClick={() => setMode("A")}
+            aria-pressed={mode === "A"}
             className={`font-mono text-xs px-4 py-2.5 rounded-lg border transition-all cursor-pointer ${
               mode === "A"
                 ? "bg-text-primary text-surface border-text-primary"
@@ -100,6 +101,7 @@ export default function EncodingSection() {
           </button>
           <button
             onClick={() => setMode("B")}
+            aria-pressed={mode === "B"}
             className={`font-mono text-xs px-4 py-2.5 rounded-lg border transition-all cursor-pointer ${
               mode === "B"
                 ? "bg-text-primary text-surface border-text-primary"

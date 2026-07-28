@@ -604,7 +604,8 @@ function FastViz() {
         step={16}
         value={B}
         onChange={(e) => setB(Number(e.target.value))}
-        aria-label={`Actual batch size ${B} of ${Bmax}`}
+        aria-label="Actual batch size"
+        aria-valuetext={`${B} of ${Bmax}`}
         className="w-full accent-solution-accent cursor-pointer"
       />
       <div className="flex justify-between font-mono text-[9.5px] text-text-tertiary mt-0.5 mb-4">

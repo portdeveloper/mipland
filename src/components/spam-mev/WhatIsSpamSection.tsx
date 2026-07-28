@@ -30,7 +30,7 @@ function FlowDiagram({
             {step.label}
           </div>
           {i < steps.length - 1 && (
-            <svg width="12" height="16" viewBox="0 0 12 16">
+            <svg width="12" height="16" viewBox="0 0 12 16" aria-hidden="true">
               <path
                 d="M6 0 L6 12 M2 8 L6 12 L10 8"
                 fill="none"

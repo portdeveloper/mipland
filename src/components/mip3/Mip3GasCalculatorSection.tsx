@@ -70,11 +70,12 @@ export default function Mip3GasCalculatorSection() {
         </p>
 
         {/* Scenario picker */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6" role="group" aria-label="Gas scenario">
           {scenarios.map((s, i) => (
             <button
               key={s.name}
               onClick={() => setSelectedIdx(i)}
+              aria-pressed={i === selectedIdx}
               className={`font-mono text-xs px-3 py-2 rounded-md border transition-all cursor-pointer ${
                 i === selectedIdx
                   ? "bg-text-primary text-surface border-text-primary"

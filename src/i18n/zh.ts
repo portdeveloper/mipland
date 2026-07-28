@@ -194,6 +194,7 @@ const zh = {
       note: "适合中小型仓库。大型仓库（如 Aave、Chainlink）可能会超时。",
       tryLabel: "试试：",
       analyze: "分析",
+      inputLabel: "GitHub 仓库 URL 或 Solidity 源码",
     },
   },
   cherryPicked: {

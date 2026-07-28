@@ -263,11 +263,12 @@ export default function JumpdestSection() {
         </p>
 
         {/* Example picker */}
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div className="flex flex-wrap gap-2 mb-8" role="group" aria-label="Jumpdest example">
           {EXAMPLES.map((ex, i) => (
             <button
               key={ex.name}
               onClick={() => handleSelectExample(i)}
+              aria-pressed={i === exampleIdx}
               className={`font-mono text-xs px-3 py-2 rounded-md border transition-all cursor-pointer ${
                 i === exampleIdx
                   ? "bg-text-primary text-surface border-text-primary"

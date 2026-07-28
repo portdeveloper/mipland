@@ -56,6 +56,7 @@ export default function AnalyzerSection() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
             placeholder="https://github.com/Uniswap/v2-core"
+            aria-label={t("mip8.analyzer.inputLabel")}
             className="flex-1 font-mono text-xs bg-surface border border-border rounded-lg px-4 py-3 focus:outline-none focus:border-text-secondary"
           />
           <button

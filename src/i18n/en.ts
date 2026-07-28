@@ -204,6 +204,7 @@ const en = {
       note: "Works best with small-to-medium repos. Large repos with many dependencies (e.g. Aave, Chainlink) may time out.",
       tryLabel: "Try:",
       analyze: "Analyze",
+      inputLabel: "GitHub repo URL or Solidity source",
     },
   },
   cherryPicked: {

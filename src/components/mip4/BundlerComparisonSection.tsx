@@ -159,9 +159,10 @@ export default function BundlerComparisonSection() {
         </p>
 
         {/* Mode switcher */}
-        <div className="flex gap-2 mb-8">
+        <div className="flex gap-2 mb-8" role="group" aria-label="Bundler mode">
           <button
             onClick={() => handleModeSwitch("without")}
+            aria-pressed={mode === "without"}
             className={`font-mono text-xs px-4 py-2 rounded-md border transition-all cursor-pointer ${
               mode === "without"
                 ? "bg-problem-accent text-white border-problem-accent"
@@ -172,6 +173,7 @@ export default function BundlerComparisonSection() {
           </button>
           <button
             onClick={() => handleModeSwitch("with")}
+            aria-pressed={mode === "with"}
             className={`font-mono text-xs px-4 py-2 rounded-md border transition-all cursor-pointer ${
               mode === "with"
                 ? "bg-solution-accent text-white border-solution-accent"

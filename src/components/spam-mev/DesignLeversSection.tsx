@@ -69,6 +69,8 @@ function MarginalCapacityChart({
       viewBox={`0 0 ${W} ${H}`}
       className="w-full"
       style={{ maxHeight: 240 }}
+      role="img"
+      aria-label={`Chart of the user share of marginal block capacity as B_max grows. The share falls from 100% toward zero near the plateau at ${Math.round(Bplat)}. At the current capacity of ${Bmax}, ${(currentM * 100).toFixed(0)}% of each additional unit goes to users.`}
     >
       {/* Area under curve */}
       <path d={areaPath} fill="#3b7dd8" opacity={0.1} />
@@ -239,6 +241,7 @@ export default function DesignLeversSection() {
                 max={MAX_BMAX}
                 value={Bmax}
                 onChange={(e) => setBmax(Number(e.target.value))}
+                aria-valuetext={`${Bmax} gas units`}
                 className="w-full accent-text-primary cursor-pointer"
               />
             </div>
@@ -263,6 +266,7 @@ export default function DesignLeversSection() {
                 max={80}
                 value={gmin}
                 onChange={(e) => setGmin(Number(e.target.value))}
+                aria-valuetext={`${gmin} minimum gas price`}
                 className="w-full accent-text-primary cursor-pointer"
               />
               <div className="flex justify-between font-mono text-xs text-text-tertiary mt-1">
@@ -279,6 +283,7 @@ export default function DesignLeversSection() {
               <div className="flex gap-2 mb-3">
                 <button
                   onClick={() => setOrdering("random")}
+                  aria-pressed={ordering === "random"}
                   className={`font-mono text-xs px-3 py-2 rounded-md border transition-all cursor-pointer flex-1 ${
                     ordering === "random"
                       ? "bg-text-primary text-surface border-text-primary"
@@ -289,6 +294,7 @@ export default function DesignLeversSection() {
                 </button>
                 <button
                   onClick={() => setOrdering("pfo")}
+                  aria-pressed={ordering === "pfo"}
                   className={`font-mono text-xs px-3 py-2 rounded-md border transition-all cursor-pointer flex-1 ${
                     ordering === "pfo"
                       ? "bg-text-primary text-surface border-text-primary"
@@ -319,6 +325,7 @@ export default function DesignLeversSection() {
                     max={100}
                     value={v * 100}
                     onChange={(e) => setV(Number(e.target.value) / 100)}
+                    aria-valuetext={`${(v * 100).toFixed(0)}% of users bidding for priority`}
                     className="w-full accent-text-primary cursor-pointer"
                   />
                 </div>
@@ -333,7 +340,10 @@ export default function DesignLeversSection() {
               <p className="font-mono text-xs text-text-tertiary mb-3">
                 Block composition with current settings
               </p>
-              <div className="relative h-10 bg-border/30 rounded-lg overflow-hidden mb-3">
+              <p className="sr-only" aria-live="polite">
+                With current settings: users {Math.round(eqCurrent.Qu)} gas, spam {Math.round(eqCurrent.spamGas)} gas, spam share {Math.round(eqCurrent.spamShare * 100)}%{spamReduction > 0 ? `, spam down ${Math.round(spamReduction)}% versus the no-floor baseline` : ""}.
+              </p>
+              <div className="relative h-10 bg-border/30 rounded-lg overflow-hidden mb-3" aria-hidden="true">
                 <motion.div
                   className="absolute top-0 bottom-0 left-0 rounded-l-lg"
                   style={{ backgroundColor: "#3b7dd8" }}

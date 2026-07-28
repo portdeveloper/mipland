@@ -52,7 +52,11 @@ export default function Hint({ term, children }: HintProps) {
   return (
     <span className="relative inline">
       {children ?? term}
+      {/* Hover-only definition badge. Hidden from the accessibility tree:
+          Hint renders inside labels and buttons, so a focusable badge would
+          nest interactive controls and pollute their accessible names. */}
       <span
+        aria-hidden="true"
         className="absolute -top-1.5 -right-3.5 inline-flex items-center justify-center w-3 h-3 rounded-full bg-border text-text-tertiary text-[8px] font-mono font-semibold leading-none cursor-help"
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}

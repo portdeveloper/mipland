@@ -49,11 +49,12 @@ export default function CollisionSection() {
         </p>
 
         {/* Step buttons */}
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div className="flex flex-wrap gap-2 mb-8" role="group" aria-label="Collision scenario steps">
           {STEPS.map((s, i) => (
             <button
               key={s.id}
               onClick={() => setStepIdx(i)}
+              aria-pressed={i === stepIdx}
               className={`font-mono text-xs px-3 py-2 rounded-md border transition-all cursor-pointer ${
                 i === stepIdx
                   ? "bg-text-primary text-surface border-text-primary"
