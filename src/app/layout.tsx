@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import MipNav from "@/components/MipNav";
+import MotionProvider from "@/components/MotionProvider";
 import MipChat from "@/components/MipChat";
 import SelectionTooltip from "@/components/SelectionTooltip";
 import LanguageBanner from "@/components/LanguageBanner";
@@ -50,12 +51,14 @@ export default function RootLayout({
     >
       <body className="min-h-screen">
         <LanguageProvider>
-          <LanguageBanner />
-          <MipNav />
-          {children}
-          <GlobalFooter />
-          <MipChat />
-          <SelectionTooltip />
+          <MotionProvider>
+            <LanguageBanner />
+            <MipNav />
+            {children}
+            <GlobalFooter />
+            <MipChat />
+            <SelectionTooltip />
+          </MotionProvider>
         </LanguageProvider>
       </body>
     </html>
