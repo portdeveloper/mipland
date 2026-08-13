@@ -151,14 +151,9 @@ export default function Mip8CollectionsSection() {
           isVisible ? "visible" : ""
         }`}
       >
-        <div className="flex flex-wrap items-center gap-3 mb-4">
-          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            Reference data structures
-          </h2>
-          <span className="font-mono text-[11px] uppercase tracking-wider px-2.5 py-1 rounded-full border border-problem-accent-light bg-problem-bg text-problem-accent-strong">
-            Experimental · unaudited
-          </span>
-        </div>
+        <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-4">
+          Reference data structures
+        </h2>
 
         <p className="text-lg text-text-secondary font-light max-w-3xl leading-relaxed mb-2">
           Reusable Solidity primitives that make MIP-8 page boundaries explicit
@@ -177,9 +172,6 @@ export default function Mip8CollectionsSection() {
               className="rounded-2xl border border-solution-accent-light bg-surface-elevated p-5 sm:p-6 flex flex-col"
             >
               <div className="mb-5">
-                <p className="font-mono text-xs uppercase tracking-wider text-solution-muted mb-2">
-                  Page-aware primitive
-                </p>
                 <h3 className="text-xl font-semibold tracking-tight mb-1.5">
                   {collection.title}
                 </h3>
