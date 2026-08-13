@@ -127,9 +127,9 @@ const en = {
         "Measured on mainnet: scattered layout (fields 128 slots apart, guaranteed different pages) cost 49,267 gas; reordered layout (fields adjacent) cost 49,292 gas. The reordered version was actually 25 gas more expensive, essentially identical. As with pattern 8a, the page-locality benefit the spec describes doesn't yet materialize at the measured-gas level. The pattern is still good hygiene (cleaner code, better cache behavior off-chain) but isn't currently delivering a measurable on-chain saving.",
       s8cTitle: "Batch fresh-state writes into the same page",
       s8cSummary:
-        "Growing storage charges STATE_GROWTH_COST per page, not per slot. Writing 10 new entries across 10 different pages costs 10× more than writing them into one page.",
+        "MIP-8 charges page load and write I/O once per page. Keeping a batch contiguous amortizes those I/O costs, while state-growth cost still applies to every net-new slot.",
       s8cExplanation:
-        "Spec prediction: 10 new entries spread across 10 different pages should pay 10 × state-growth (~170k); 10 entries packed into one page should pay 1 × state-growth + 9 × warm-write (~18k). Measured on mainnet: scattered cost 400,500 gas, packed cost 400,017 gas, a 0.1% difference. State growth appears to currently be charged per-slot rather than per-page on Monad mainnet, so the packed layout doesn't yet win. Same recommendation as 8a / 8b: keep this in mind as a forward-compatible improvement, but don't expect today's gas drop.",
+        "Under the finalized spec, 10 scattered writes pay 10 cold page loads and 10 page-write charges; 10 packed writes amortize that I/O across one page. Both layouts pay state-growth cost for all 10 new slots. Measured on current mainnet: scattered cost 400,500 gas and packed cost 400,017 gas, a 0.1% difference, so the proposed page-local I/O discount is not yet visible in these transactions. Treat this as a forward-compatible layout improvement, not a way to avoid state-growth fees.",
     },
     compatibility: {
       title: "Execution stays compatible",

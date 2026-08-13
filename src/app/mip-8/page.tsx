@@ -9,6 +9,7 @@ import AnalyzerSection from "@/components/AnalyzerSection";
 import TakeawaysSection from "@/components/TakeawaysSection";
 import CompatibilitySection from "@/components/CompatibilitySection";
 import SuggestionsSection from "@/components/SuggestionsSection";
+import Mip8CollectionsSection from "@/components/Mip8CollectionsSection";
 import DiscussionCtaSection from "@/components/DiscussionCtaSection";
 import FooterSection from "@/components/FooterSection";
 
@@ -30,6 +31,7 @@ export default function Mip8Page() {
       <ComparisonSection />
       <GasCalculatorSection />
       <SuggestionsSection mip="mip-8" />
+      <Mip8CollectionsSection />
       <StepperSection />
       <CherryPickedSection />
       <PageMappingSection />

@@ -16,6 +16,21 @@ the card.
 | 8c | `src/Mip8Batched.sol` | 10 fresh writes scattered across pages vs into one page |
 | 4a | `src/Mip4Bundler.sol` | Bundler that uses MIP-4 precompile to surface offending UserOp vs naive bundler |
 
+## Reusable MIP-8 primitives
+
+`src/mip8/` contains experimental, unaudited reference data structures built
+around explicit 128-slot page alignment:
+
+- `Mip8DenseBitmap` — consecutive bitmap words instead of mapping-hashed buckets
+- `Mip8Uint256Vector` — sequential values with batch append/read operations
+- `Mip8RingBuffer` — a bounded 126-value FIFO contained in one page
+- `Mip8KeyedPage` — a separate aligned 128-word record for each logical key
+- `Mip8Slab` — bitmap allocation and 126 reusable records in one page
+- `Mip8Uint64Vector` — four packed values per slot and 508 in the first page
+- `Mip8SmallBlob` — a length-prefixed payload of up to 4,064 bytes in one page
+
+See [`src/mip8/README.md`](src/mip8/README.md) for usage and limitations.
+
 ## Local checks (vanilla revm — does NOT verify MIP gas math)
 
 ```sh

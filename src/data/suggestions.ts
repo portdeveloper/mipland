@@ -175,16 +175,16 @@ mapping(uint256 => uint256) private entries;
 
 function allocate(uint256 count, uint256 base) external {
     for (uint i = 0; i < count; i++) {
-        entries[i] = base + i;   // each on a new page
-    }                            // → count × STATE_GROWTH_COST
+        entries[i] = base + i;   // each pays cold page I/O
+    }                            // + growth cost for every new slot
 }`,
     afterCode: `// Adjacent storage slots — one page covers many entries.
 uint256[1024] private entries;
 
 function allocate(uint256 count, uint256 base) external {
     for (uint i = 0; i < count; i++) {
-        entries[i] = base + i;   // same page after the first
-    }                            // → 1 × STATE_GROWTH_COST
+        entries[i] = base + i;   // page is warm after the first
+    }                            // growth cost still applies per new slot
 }`,
     proof: proofFor("8c"),
     contractPath: "benchmarks/src/Mip8Batched.sol",

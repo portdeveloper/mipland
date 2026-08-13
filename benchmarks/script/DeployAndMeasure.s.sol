@@ -51,7 +51,7 @@ contract DeployAndMeasure is Script {
         structOrdering.readPairScattered();
         structOrdering.readPairReordered();
 
-        // -------- 8c: Batched state growth --------
+        // -------- 8c: Batched page writes --------
         Mip8Batched batched = new Mip8Batched();
         batched.writeScattered(10, 1000);
         batched.writePacked(10, 2000);
