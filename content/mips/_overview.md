@@ -15,6 +15,9 @@ notes, and a path to activation.
   new opcodes can be added safely without colliding with future EIPs.
 - **MIP-8 — Page-ified Storage.** Aligns EVM storage layout with the underlying
   hardware page boundary, reducing I/O amplification on commits.
+- **MIP-12 — Decrease Vote Pace.** Shortens the consensus vote pace from 400ms
+  to 300ms, with the per-block limits and the block reward scaled down
+  proportionally. A draft consensus-layer change, not yet live on mainnet.
 
 > TODO(author): paste the canonical one-paragraph summary for each MIP here.
 > Anything below this line in this file is treated as authoritative context by
