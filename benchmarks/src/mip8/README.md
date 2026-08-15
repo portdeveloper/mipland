@@ -12,6 +12,7 @@ MIP-8's 128-word (4 KB) storage pages.
 | `Mip8Slab` | Occupancy + count + 126 reusable records in one page | Orders, jobs, game entities, bounded allocators |
 | `Mip8Uint64Vector` | Length plus 508 packed values in page zero, then 512 per page | Timestamps, counters, compact prices and IDs |
 | `Mip8SmallBlob` | Length plus up to 4,064 bytes in one page | Metadata, encoded configs, bounded payloads |
+| [`page-bit-tree/`](page-bit-tree/) | A dense bitmap spanning many pages, with and without a summary level | Sparse sets larger than one page; ordered id search |
 
 `Mip8Pages` derives a namespaced storage base whose lower seven bits are zero.
 This makes page boundaries explicit and prevents a primitive from accidentally
@@ -55,6 +56,17 @@ on cryptographic collision resistance rather than checking collisions on-chain.
   values. Values 0 through 507 share the page containing the length field.
 - `Mip8SmallBlob` supports at most 4,064 bytes so its length and all 127 data
   words remain within one page. Shorter rewrites clear obsolete trailing words.
+
+## When a structure outgrows one page
+
+[`page-bit-tree/`](page-bit-tree/) is a controlled experiment rather than a single primitive:
+two bitmaps over the full `uint24` id space that differ in exactly one decision, whether to
+keep a summary level over the pages. It answers a question that comes up as soon as
+`Mip8DenseBitmap` runs out of room at 32,768 bits.
+
+The short version is that a summary level costs gas on **every** write and only repays it in a
+tail, so it is usually not worth keeping. That folder's README carries the numbers, and its
+harness and measurement notes are reusable for benchmarking any page-aware layout.
 
 ## What MIP-8 improves
 
