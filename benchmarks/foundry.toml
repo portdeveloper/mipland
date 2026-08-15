@@ -4,8 +4,8 @@ out = "out"
 libs = ["lib"]
 test = "test"
 script = "script"
-solc = "0.8.26"
-evm_version = "cancun"
+solc = "0.8.31"
+evm_version = "osaka"
 optimizer = true
 optimizer_runs = 200
 ffi = true
@@ -21,3 +21,9 @@ wrap_comments = false
 
 [rpc_endpoints]
 monad_mainnet = "${MONAD_RPC_URL}"
+
+# Opt-in profile for the MIP-8 gas benchmark in src/mip8/page-bit-tree.
+# `monad_hardfork` is understood only by Monad's Foundry build; vanilla Foundry
+# ignores it, so this profile is harmless to everything else in the repo.
+[profile.mip8]
+monad_hardfork = "MonadNext"

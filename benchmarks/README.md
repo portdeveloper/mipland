@@ -28,6 +28,7 @@ around explicit 128-slot page alignment:
 - `Mip8Slab` — bitmap allocation and 126 reusable records in one page
 - `Mip8Uint64Vector` — four packed values per slot and 508 in the first page
 - `Mip8SmallBlob` — a length-prefixed payload of up to 4,064 bytes in one page
+- `page-bit-tree/` — a bitmap spanning many pages, measured with and without a summary level
 
 See [`src/mip8/README.md`](src/mip8/README.md) for usage and limitations.
 
@@ -36,6 +37,14 @@ See [`src/mip8/README.md`](src/mip8/README.md) for usage and limitations.
 ```sh
 forge build
 forge test -vv
+```
+
+`src/mip8/page-bit-tree` additionally ships a gas benchmark that DOES model the MIP-8
+schedule, using Monad's Foundry build. It skips under vanilla `forge test`, so the command
+above stays green:
+
+```sh
+FOUNDRY_PROFILE=mip8 forge test --match-path "test/PageBitTreeGas.t.sol" -vv
 ```
 
 The Foundry test suite only verifies that each before/after pair produces the
