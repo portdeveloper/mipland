@@ -280,7 +280,7 @@ function PageBitTreeExperiment() {
       </div>
 
       <div className="grid lg:grid-cols-[0.8fr_1.2fr]">
-        <div className="p-5 sm:p-7 bg-solution-bg border-b lg:border-b-0 lg:border-r border-solution-accent-light">
+        <div className="p-5 sm:p-7 bg-problem-bg border-b lg:border-b-0 lg:border-r border-problem-accent-light">
           <p className="text-2xl font-semibold tracking-tight mb-3">
             Flat wins or ties every write
           </p>
