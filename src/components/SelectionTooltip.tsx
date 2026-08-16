@@ -2,7 +2,6 @@
 
 import { Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
-import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 
 const MAX_SNIPPET = 500;
@@ -82,10 +81,6 @@ export default function SelectionTooltip() {
       onClick={() => {
         const text = textRef.current;
         if (!text) return;
-        posthog.capture("chat_ask_ai_clicked", {
-          path: pathname,
-          selection_length: text.length,
-        });
         const prompt = `Explain: "${text}"`;
         window.dispatchEvent(
           new CustomEvent("mip-chat:ask", { detail: { text: prompt } }),
