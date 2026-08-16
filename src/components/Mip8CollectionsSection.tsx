@@ -218,9 +218,6 @@ function PageBitTreeExperiment() {
       <div className="p-5 sm:p-7 border-b border-border-soft">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-7">
           <div className="max-w-2xl">
-            <p className="font-mono text-xs uppercase tracking-wider text-solution-accent mb-2">
-              Controlled experiment
-            </p>
             <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-3">
               When a bitmap outgrows one page
             </h3>
@@ -284,9 +281,6 @@ function PageBitTreeExperiment() {
 
       <div className="grid lg:grid-cols-[0.8fr_1.2fr]">
         <div className="p-5 sm:p-7 bg-solution-bg border-b lg:border-b-0 lg:border-r border-solution-accent-light">
-          <p className="font-mono text-xs uppercase tracking-wider text-solution-accent mb-3">
-            Write result
-          </p>
           <p className="text-2xl font-semibold tracking-tight mb-3">
             Flat wins or ties every write
           </p>
@@ -305,14 +299,9 @@ function PageBitTreeExperiment() {
 
         <div className="p-5 sm:p-7">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-5">
-            <div>
-              <p className="font-mono text-xs uppercase tracking-wider text-solution-accent mb-2">
-                Search result
-              </p>
-              <h4 className="text-xl font-semibold tracking-tight">
-                The root pays back on wide gaps
-              </h4>
-            </div>
+            <h4 className="text-xl font-semibold tracking-tight">
+              The root pays back on wide gaps
+            </h4>
             <span className="font-mono text-xs text-text-tertiary">
               measured under MIP-8
             </span>
