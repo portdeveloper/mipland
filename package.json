@@ -17,6 +17,7 @@
     "@streamdown/code": "^1.1.1",
     "@streamdown/math": "^1.0.2",
     "@streamdown/mermaid": "^1.0.2",
+    "@vercel/analytics": "^2.0.1",
     "@vercel/edge-config": "^1.4.3",
     "ai": "^6.0.184",
     "botid": "^1.5.11",

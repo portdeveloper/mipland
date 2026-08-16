@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import MipNav from "@/components/MipNav";
 import MotionProvider from "@/components/MotionProvider";
 import MipChat from "@/components/MipChat";
@@ -57,6 +58,7 @@ export default function RootLayout({
             <GlobalFooter />
             <MipChat />
             <SelectionTooltip />
+            <Analytics />
           </MotionProvider>
         </LanguageProvider>
       </body>
