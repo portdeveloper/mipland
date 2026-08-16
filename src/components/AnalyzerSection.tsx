@@ -31,7 +31,11 @@ export default function AnalyzerSection() {
           {t("mip8.analyzer.note")}
         </p>
 
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div
+          className="flex flex-wrap items-center gap-2 mb-4"
+          role="group"
+          aria-label="Example repositories"
+        >
           <span className="font-mono text-xs text-text-tertiary">{t("mip8.analyzer.tryLabel")}</span>
           {[
             { name: "Uniswap V2", url: "https://github.com/Uniswap/v2-core" },
@@ -42,6 +46,8 @@ export default function AnalyzerSection() {
             <button
               key={repo.url}
               onClick={() => router.push(`/analyzer?q=${encodeURIComponent(repo.url)}`)}
+              type="button"
+              aria-label={`Analyze ${repo.name}`}
               className="font-mono text-xs px-2.5 py-1 rounded-md border border-border bg-surface hover:border-text-secondary hover:bg-surface-elevated transition-all cursor-pointer"
             >
               {repo.name}
@@ -51,6 +57,7 @@ export default function AnalyzerSection() {
 
         <div className="flex gap-2">
           <input
+            aria-label="Repository URL to analyze"
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}

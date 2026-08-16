@@ -248,6 +248,10 @@ export default function StepperSection() {
     currentGas > 0
       ? Math.round(((currentGas - mip8Gas) / currentGas) * 100)
       : 0;
+  const stepStatus =
+    currentStep < 0
+      ? `${example.name} is ready. ${totalOps} storage operations are available.`
+      : `${example.name}, step ${currentStep + 1} of ${totalOps}. Current Monad gas is ${currentGas.toLocaleString()}; MIP-8 gas is ${mip8Gas.toLocaleString()}.`;
 
   const handleNext = useCallback(() => {
     if (currentStep < totalOps - 1) {
@@ -322,11 +326,17 @@ export default function StepperSection() {
         </p>
 
         {/* Example picker */}
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div
+          className="flex flex-wrap gap-2 mb-8"
+          role="group"
+          aria-label="Code example picker"
+        >
           {EXAMPLES.map((ex, i) => (
             <button
               key={ex.name}
               onClick={() => handleSelectExample(i)}
+              type="button"
+              aria-pressed={i === exampleIdx}
               className={`font-mono text-xs px-3 py-2 rounded-md border transition-all cursor-pointer ${
                 i === exampleIdx
                   ? "bg-text-primary text-surface border-text-primary"
@@ -343,11 +353,17 @@ export default function StepperSection() {
         </p>
 
         {/* Mobile tab switcher */}
-        <div className="flex gap-1 mb-4 lg:hidden">
+        <div
+          className="flex gap-1 mb-4 lg:hidden"
+          role="group"
+          aria-label="Stepper mobile view"
+        >
           {(["code", "pages", "log"] as MobileTab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setMobileTab(tab)}
+              type="button"
+              aria-pressed={mobileTab === tab}
               className={`font-mono text-xs px-3 py-1.5 rounded-md transition-all cursor-pointer ${
                 mobileTab === tab
                   ? "bg-text-primary text-surface"
@@ -449,6 +465,8 @@ export default function StepperSection() {
                   className={`bg-surface-elevated rounded-xl p-4 border-2 border-dashed transition-all duration-500 ${
                     isWarmed ? "border-solution-accent" : "border-border"
                   }`}
+                  role="img"
+                  aria-label={`Page ${pageNum}, slots ${pageBase} to ${pageBase + 127}. ${pageSlots?.size ?? 0} touched slot${(pageSlots?.size ?? 0) === 1 ? "" : "s"} so far.${isWarmed ? " This page is warm." : ""}`}
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <p className="font-mono text-xs text-text-tertiary">
@@ -546,6 +564,8 @@ export default function StepperSection() {
           <button
             onClick={handlePrev}
             disabled={currentStep <= 0}
+            type="button"
+            aria-label="Previous storage operation"
             className={`font-mono text-xs px-4 py-2.5 rounded-lg border transition-all ${
               currentStep <= 0
                 ? "bg-surface-elevated border-border text-text-tertiary cursor-default"
@@ -557,6 +577,8 @@ export default function StepperSection() {
           <button
             onClick={handleNext}
             disabled={finished}
+            type="button"
+            aria-label={currentStep < 0 ? "Start stepping through storage operations" : "Next storage operation"}
             className={`font-mono text-xs px-4 py-2.5 rounded-lg border transition-all ${
               finished
                 ? "bg-surface-elevated border-border text-text-tertiary cursor-default"
@@ -568,6 +590,8 @@ export default function StepperSection() {
           {currentStep >= 0 && (
             <button
               onClick={handleReset}
+              type="button"
+              aria-label="Reset storage operation stepper"
               className="font-mono text-xs px-3 py-2.5 rounded-lg text-text-tertiary hover:text-text-primary transition-colors cursor-pointer"
             >
               {t("mip8.stepper.reset")}
@@ -577,6 +601,9 @@ export default function StepperSection() {
             {t("mip8.stepper.keys")}
           </p>
           <div className="w-full sm:w-auto sm:ml-auto flex items-center justify-start sm:justify-end gap-4">
+            <p className="sr-only" aria-live="polite">
+              {stepStatus}
+            </p>
             <AnimatePresence mode="wait">
               {currentStep >= 0 && (
                 <motion.div

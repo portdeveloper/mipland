@@ -45,6 +45,11 @@ export default function ComparisonSection() {
   const savings = currentGas > 0
     ? Math.round(((currentGas - mip8Gas) / currentGas) * 100)
     : 0;
+  const loadedFieldNames = loadedSlots.map((i) => FIELD_NAMES[i]).join(", ");
+  const comparisonSummary =
+    loadedSlots.length === 0
+      ? "No fields loaded yet. Load fields to compare current Monad cold reads with MIP-8 page warming."
+      : `${loadedSlots.length} field${loadedSlots.length === 1 ? "" : "s"} loaded: ${loadedFieldNames}. Current Monad gas is ${currentGas.toLocaleString()}; MIP-8 gas is ${mip8Gas.toLocaleString()}.`;
 
   return (
     <section ref={ref} className="py-24 px-6 bg-surface-alt relative">
@@ -84,12 +89,19 @@ export default function ComparisonSection() {
             ))}
             <span className="text-text-tertiary"> {"}"}</span>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="flex flex-wrap items-center gap-2"
+            role="group"
+            aria-label="Storage field load controls"
+            aria-describedby="comparison-status"
+          >
             {FIELD_NAMES.map((name, i) => (
               <button
                 key={name}
                 onClick={() => handleLoad(i)}
-                disabled={loadedSlots.includes(i)}
+                type="button"
+                aria-pressed={loadedSlots.includes(i)}
+                aria-label={`${loadedSlots.includes(i) ? "Loaded" : "Load"} ${name} field`}
                 className={`font-mono text-xs px-3 py-2 rounded-md border transition-all ${
                   loadedSlots.includes(i)
                     ? "bg-text-primary text-surface border-text-primary cursor-default"
@@ -101,6 +113,9 @@ export default function ComparisonSection() {
             ))}
             <button
               onClick={reset}
+              type="button"
+              disabled={loadedSlots.length === 0}
+              aria-label="Reset loaded fields"
               className={`font-mono text-xs px-3 py-2 transition-colors cursor-pointer ${
                 loadedSlots.length > 0
                   ? "text-text-tertiary hover:text-text-primary"
@@ -110,6 +125,9 @@ export default function ComparisonSection() {
               {t("mip8.comparison.reset")}
             </button>
           </div>
+          <p id="comparison-status" className="sr-only" aria-live="polite">
+            {comparisonSummary}
+          </p>
         </div>
 
         {/* Side by side */}
@@ -126,7 +144,11 @@ export default function ComparisonSection() {
             </div>
 
             {/* 4 mini page grids */}
-            <div className="grid grid-cols-2 gap-2 mb-4">
+            <div
+              className="grid grid-cols-2 gap-2 mb-4"
+              role="img"
+              aria-label={`Current Monad layout. ${loadedSlots.length} of 4 fields loaded across separate pages for ${currentGas.toLocaleString()} gas.`}
+            >
               {PAGES.map((page, pageIndex) => {
                 const isLoaded = loadedSlots.includes(pageIndex);
                 return (
@@ -198,6 +220,8 @@ export default function ComparisonSection() {
               className={`rounded-md p-2 border-2 border-dashed transition-all duration-500 mb-4 ${
                 pageWarmed ? "border-solution-accent" : "border-solution-cell"
               }`}
+              role="img"
+              aria-label={`MIP-8 layout. ${loadedSlots.length} of 4 contiguous fields loaded on one page for ${mip8Gas.toLocaleString()} gas. ${pageWarmed ? "The page is warm after the first access." : "No page has been warmed yet."}`}
             >
               <div className="flex items-center gap-2 mb-1">
                 <p className="font-mono text-xs text-text-tertiary">
@@ -275,6 +299,8 @@ export default function ComparisonSection() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="bg-surface-elevated rounded-lg border border-border p-4"
+              role="img"
+              aria-label={`Four fields loaded. MIP-8 costs ${mip8Gas.toLocaleString()} gas versus ${currentGas.toLocaleString()} gas on current Monad, ${savings}% cheaper with MIP-8.`}
             >
               <div className="flex items-center justify-between mb-2">
                 <p className="font-mono text-xs text-text-tertiary">

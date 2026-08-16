@@ -82,6 +82,12 @@ export default function GasCalculatorSection() {
     mip8Gas !== null
       ? mip8Gas.toLocaleString()
       : scenario.mip8Label ?? "variable";
+  const savingsSummary =
+    savings !== null
+      ? `${scenario.name}: current Monad uses ${currentDisplay} gas and MIP-8 uses ${mip8Display} gas. ${
+          savings > 0 ? `MIP-8 is ${savings}% cheaper.` : "There is no MIP-8 gas change."
+        }`
+      : `${scenario.name}: gas comparison is variable because the specification is still open.`;
 
   return (
     <section ref={ref} className="py-24 px-6 bg-surface relative">
@@ -102,11 +108,17 @@ export default function GasCalculatorSection() {
         </p>
 
         {/* Scenario picker */}
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div
+          className="flex flex-wrap gap-2 mb-8"
+          role="group"
+          aria-label="Gas scenario picker"
+        >
           {scenarios.map((s, i) => (
             <button
               key={s.name}
               onClick={() => setSelectedIdx(i)}
+              type="button"
+              aria-pressed={i === selectedIdx}
               className={`font-mono text-xs px-3 py-2 rounded-md border transition-all cursor-pointer ${
                 i === selectedIdx
                   ? "bg-text-primary text-surface border-text-primary"
@@ -169,7 +181,11 @@ export default function GasCalculatorSection() {
         </div>
 
         {/* Savings bar */}
-        <div className="bg-surface-elevated rounded-lg border border-border p-4">
+        <div
+          className="bg-surface-elevated rounded-lg border border-border p-4"
+          role="img"
+          aria-label={`Gas savings comparison. ${savingsSummary}`}
+        >
           <div className="flex items-center justify-between mb-2">
             <p className="font-mono text-xs text-text-tertiary">{t("mip8.gasCalc.gasSavings")}</p>
             {savings !== null ? (
