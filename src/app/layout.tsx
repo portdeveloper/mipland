@@ -7,6 +7,7 @@ import SelectionTooltip from "@/components/SelectionTooltip";
 import LanguageBanner from "@/components/LanguageBanner";
 import GlobalFooter from "@/components/GlobalFooter";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const plexSans = IBM_Plex_Sans({
@@ -22,9 +23,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://mipland.com"
-  ),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "MIP Land",
     template: "%s | MIP Land",

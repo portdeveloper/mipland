@@ -29,6 +29,13 @@ export default function GlobalFooter() {
             </Link>
           </div>
           <p className="font-mono text-[11px] text-surface/25">
+            <Link
+              href="/about"
+              className="inline-flex items-center text-surface/40 hover:text-surface transition-colors underline underline-offset-2 px-1 py-2 min-h-11"
+            >
+              About
+            </Link>
+            <span className="mx-1">·</span>
             made by{" "}
             <a
               href="https://x.com/port_dev"

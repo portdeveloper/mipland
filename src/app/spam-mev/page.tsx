@@ -12,10 +12,12 @@ export const metadata: Metadata = {
   title: "Spam MEV: Blockspace Under Pressure",
   description:
     "An interactive explainer for the Spam MEV equilibrium model. Explore how block capacity, gas price floors, and transaction ordering shape spam volumes on high-throughput blockchains.",
+  alternates: { canonical: "/spam-mev" },
   openGraph: {
     title: "Spam MEV: Blockspace Under Pressure",
     description:
       "An interactive explainer for the Spam MEV equilibrium model. Explore how block capacity, gas price floors, and transaction ordering shape spam volumes.",
+    url: "/spam-mev",
   },
 };
 

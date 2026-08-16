@@ -12,10 +12,12 @@ export const metadata: Metadata = {
   title: "BTX: Batched Threshold Encryption",
   description:
     "An interactive overview of BTX, Category Labs' new Batched Threshold Encryption scheme. Shortest ciphertext, collision-free, epochless, and fast enough for encrypted mempools.",
+  alternates: { canonical: "/btx" },
   openGraph: {
     title: "BTX: Batched Threshold Encryption",
     description:
       "Category Labs' new BTE scheme: shortest ciphertext, collision-free, epochless, and fast enough for encrypted mempools.",
+    url: "/btx",
   },
 };
 

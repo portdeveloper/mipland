@@ -10,10 +10,13 @@ export const metadata: Metadata = {
   title: "Asynchronous Execution",
   description:
     "An interactive explainer for Monad asynchronous execution: consensus decides transaction order while execution runs in a separate, slightly lagged lane.",
+  alternates: { canonical: "/async-execution" },
+  robots: { index: false, follow: true },
   openGraph: {
     title: "Asynchronous Execution | MIP Land",
     description:
       "Consensus decides transaction order while execution runs in a separate, slightly lagged lane.",
+    url: "/async-execution",
   },
 };
 

@@ -9,10 +9,12 @@ export const metadata: Metadata = {
   title: "MIP-12: Decrease Vote Pace",
   description:
     "A plain-language look at MIP-12: shortening block vote pace from 400ms to 300ms, and what each parameter change actually means.",
+  alternates: { canonical: "/mip-12" },
   openGraph: {
     title: "MIP-12: Decrease Vote Pace",
     description:
       "A plain-language look at MIP-12: shortening block vote pace from 400ms to 300ms, and what each parameter change actually means.",
+    url: "/mip-12",
   },
 };
 

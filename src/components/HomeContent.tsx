@@ -359,9 +359,9 @@ function MipCard({
               </span>
             )}
           </div>
-          <h2 className="text-lg font-semibold mb-1 transition-colors duration-300 group-hover:text-solution-accent">
+          <h3 className="text-lg font-semibold mb-1 transition-colors duration-300 group-hover:text-solution-accent">
             {title}
-          </h2>
+          </h3>
           <p className="font-mono text-[11px] text-text-tertiary mb-2">
             {subtitle}
           </p>
@@ -498,12 +498,7 @@ export default function HomeContent() {
   return (
     <main className="min-h-screen flex flex-col items-center px-6">
       {/* Hero */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        className="max-w-3xl w-full text-center mt-28 sm:mt-36 mb-2"
-      >
+      <div className="max-w-4xl w-full text-center mt-28 sm:mt-36 mb-2">
         <h1 className="text-5xl sm:text-6xl md:text-7xl font-light leading-[1.05] tracking-tight mb-5">
           {t("home.title")}
         </h1>
@@ -512,18 +507,41 @@ export default function HomeContent() {
           <br className="hidden sm:block" />
           {t("home.subtitleBreak")}
         </p>
-      </motion.div>
+      </div>
+
+      <section
+        aria-labelledby="about-mips"
+        className="w-full max-w-4xl mt-16 rounded-2xl border border-border bg-surface-elevated px-6 py-7 sm:px-8"
+      >
+        <h2 id="about-mips" className="text-2xl font-semibold tracking-tight mb-3">
+          {t("home.aboutTitle")}
+        </h2>
+        <p className="text-text-secondary leading-relaxed max-w-3xl">
+          {t("home.aboutBody")}
+        </p>
+        <p className="text-sm text-text-tertiary leading-relaxed max-w-3xl mt-3">
+          {t("home.aboutNote")}
+        </p>
+        <a
+          href="https://github.com/monad-crypto/MIPs/tree/main/MIPS"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex mt-5 font-mono text-xs text-solution-accent hover:underline underline-offset-4"
+        >
+          {t("home.browseSpecs")} →
+        </a>
+      </section>
 
       {/* Section label */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.3 }}
-        className="w-full max-w-4xl mb-5 mt-10"
+        className="w-full max-w-4xl mb-5 mt-16"
       >
-        <p className="font-mono text-[11px] text-text-tertiary tracking-widest uppercase">
+        <h2 className="font-mono text-[11px] text-text-tertiary tracking-widest uppercase">
           {t("home.proposals")}
-        </p>
+        </h2>
       </motion.div>
 
       {/* Bento grid: MIP-8 featured, MIP-3 + MIP-4 side-by-side */}
@@ -561,9 +579,9 @@ export default function HomeContent() {
                     MIP-8
                   </span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-semibold mb-2 group-hover:text-solution-accent transition-colors duration-300">
+                <h3 className="text-2xl sm:text-3xl font-semibold mb-2 group-hover:text-solution-accent transition-colors duration-300">
                   {t("home.mip8.title")}
-                </h2>
+                </h3>
                 <p className="font-mono text-[11px] text-text-tertiary mb-3">
                   {t("home.mip8.subtitle")}
                 </p>
@@ -647,9 +665,9 @@ export default function HomeContent() {
         transition={{ duration: 0.6, delay: 0.9 }}
         className="w-full max-w-4xl mb-5 mt-2"
       >
-        <p className="font-mono text-[11px] text-text-tertiary tracking-widest uppercase">
-          Research
-        </p>
+        <h2 className="font-mono text-[11px] text-text-tertiary tracking-widest uppercase">
+          {t("home.research")}
+        </h2>
       </motion.div>
 
       <div className="w-full max-w-4xl mb-28 space-y-4">
@@ -680,9 +698,9 @@ export default function HomeContent() {
                     Category Labs
                   </span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-semibold mb-2 group-hover:text-problem-accent transition-colors duration-300">
+                <h3 className="text-2xl sm:text-3xl font-semibold mb-2 group-hover:text-problem-accent transition-colors duration-300">
                   Spam MEV
-                </h2>
+                </h3>
                 <p className="font-mono text-[11px] text-text-tertiary mb-3">
                   Blockspace under pressure
                 </p>
@@ -739,9 +757,9 @@ export default function HomeContent() {
                     Category Labs
                   </span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-semibold mb-2 group-hover:text-solution-accent transition-colors duration-300">
+                <h3 className="text-2xl sm:text-3xl font-semibold mb-2 group-hover:text-solution-accent transition-colors duration-300">
                   BTX
-                </h2>
+                </h3>
                 <p className="font-mono text-[11px] text-text-tertiary mb-3">
                   Batched threshold encryption, finally practical
                 </p>

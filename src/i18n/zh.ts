@@ -5,10 +5,17 @@ const zh = {
     beta: "beta",
   },
   home: {
-    title: "MIP Land",
-    subtitle: "交互式理解 Monad MIP。",
-    subtitleBreak: "切身体会，而非只看不做。",
+    title: "用可视化方式理解 Monad 改进提案",
+    subtitle: "面向 Monad 开发者的交互式通俗指南。",
+    subtitleBreak: "通过可视化理解 MIP，而不只是阅读规范。",
+    aboutTitle: "什么是 Monad 改进提案？",
+    aboutBody:
+      "Monad 改进提案（MIP）描述 Monad 区块链的协议变更和标准。MIP Land 将技术规范转化为交互式讲解，帮助开发者、验证者和社区成员理解这些提案。",
+    aboutNote:
+      "MIP Land 是由社区独立维护的教育项目。请始终以正式发布的 MIP 规范为权威来源。",
+    browseSpecs: "浏览权威 MIP 规范",
     proposals: "MIP列表",
+    research: "研究",
     explore: "查看详情",
     mip8: {
       title: "分页存储",
@@ -34,6 +41,12 @@ const zh = {
       subtitle: "通过 0xAE 命名空间安全地扩展操作码",
       description:
         "一个操作码位，约 220 种扩展可能。Monad 可以添加新功能，而不会跟以太坊未来的升级冲突。",
+    },
+    mip12: {
+      title: "缩短投票节奏",
+      subtitle: "更快达成共识，各项限制按比例调整",
+      description:
+        "该提案草案将区块投票节奏从 400 毫秒缩短到 300 毫秒，并按比例降低每区块限制。了解每项参数变更的实际含义。",
     },
   },
   mip8: {

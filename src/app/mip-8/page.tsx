@@ -17,10 +17,12 @@ export const metadata: Metadata = {
   title: "MIP-8: Page-ified Storage",
   description:
     "An interactive explainer for MIP-8: aligning EVM storage with hardware reality",
+  alternates: { canonical: "/mip-8" },
   openGraph: {
     title: "MIP-8: Page-ified Storage",
     description:
       "An interactive explainer for MIP-8: aligning EVM storage with hardware reality",
+    url: "/mip-8",
   },
 };
 

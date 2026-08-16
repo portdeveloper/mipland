@@ -12,10 +12,12 @@ export const metadata: Metadata = {
   title: "MIP-4: Reserve Balance Introspection",
   description:
     "An interactive explainer for MIP-4: detecting reserve balance violations mid-execution",
+  alternates: { canonical: "/mip-4" },
   openGraph: {
     title: "MIP-4: Reserve Balance Introspection",
     description:
       "An interactive explainer for MIP-4: detecting reserve balance violations mid-execution",
+    url: "/mip-4",
   },
 };
 

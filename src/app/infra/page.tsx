@@ -5,10 +5,12 @@ export const metadata: Metadata = {
   title: "Infra",
   description:
     "Browse Monad infrastructure tools — try them live, grab the code",
+  alternates: { canonical: "/infra" },
   openGraph: {
     title: "Monad Infra",
     description:
       "Browse Monad infrastructure tools — try them live, grab the code",
+    url: "/infra",
   },
 };
 

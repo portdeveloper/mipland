@@ -96,11 +96,9 @@ export default function SpamHeroSection() {
       >
         {/* Left: text */}
         <div>
-          <h1 className="text-5xl sm:text-6xl font-light leading-[1.05] tracking-tight mb-2">
-            Spam
-          </h1>
-          <h1 className="text-5xl sm:text-6xl font-bold leading-[1.05] tracking-tight mb-8 text-problem-accent">
-            MEV
+          <h1 className="text-5xl sm:text-6xl font-light leading-[1.05] tracking-tight mb-8">
+            Spam{" "}
+            <span className="font-bold text-problem-accent">MEV</span>
           </h1>
           <p className="text-lg text-text-secondary font-light leading-relaxed mb-8 max-w-md">
             {simple

@@ -5,10 +5,17 @@ const en = {
     beta: "beta",
   },
   home: {
-    title: "MIP Land",
-    subtitle: "Interactive explainers for Monad Improvement Proposals.",
+    title: "Monad Improvement Proposals, explained visually",
+    subtitle: "Interactive, plain-language guides for Monad builders.",
     subtitleBreak: "Understand MIPs through visualizations, not just specs.",
+    aboutTitle: "What is a Monad Improvement Proposal?",
+    aboutBody:
+      "Monad Improvement Proposals, or MIPs, describe protocol changes and standards for the Monad blockchain. MIP Land turns the technical specifications into interactive explanations for developers, validators, and curious community members.",
+    aboutNote:
+      "MIP Land is an independent, community-maintained educational project. Always use the published MIP specification as the authoritative source.",
+    browseSpecs: "Browse the canonical MIP specifications",
     proposals: "Proposals",
+    research: "Research",
     explore: "Explore",
     mip8: {
       title: "Page-ified Storage",

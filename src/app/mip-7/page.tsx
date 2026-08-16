@@ -13,10 +13,12 @@ export const metadata: Metadata = {
   title: "MIP-7: Extension Opcodes",
   description:
     "An interactive explainer for MIP-7: safely expanding the EVM opcode space with a reserved extension namespace",
+  alternates: { canonical: "/mip-7" },
   openGraph: {
     title: "MIP-7: Extension Opcodes",
     description:
       "An interactive explainer for MIP-7: safely expanding the EVM opcode space with a reserved extension namespace",
+    url: "/mip-7",
   },
 };
 

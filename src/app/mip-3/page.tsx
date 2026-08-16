@@ -13,10 +13,12 @@ export const metadata: Metadata = {
   title: "MIP-3: Linear Memory",
   description:
     "An interactive explainer for MIP-3: replacing quadratic memory costs with a linear model",
+  alternates: { canonical: "/mip-3" },
   openGraph: {
     title: "MIP-3: Linear Memory",
     description:
       "An interactive explainer for MIP-3: replacing quadratic memory costs with a linear model",
+    url: "/mip-3",
   },
 };
 
