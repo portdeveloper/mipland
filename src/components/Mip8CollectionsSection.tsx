@@ -401,11 +401,17 @@ export default function Mip8CollectionsSection() {
           net-new slot still pays state-growth cost.
         </p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {COLLECTIONS.map((collection) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
+          {COLLECTIONS.map((collection, index) => (
             <article
               key={collection.id}
-              className="rounded-2xl border border-solution-accent-light bg-surface-elevated p-5 sm:p-6 flex flex-col"
+              className={`rounded-2xl border border-solution-accent-light bg-surface-elevated p-5 sm:p-6 flex flex-col ${
+                index < 4 ? "lg:col-span-3" : "lg:col-span-4"
+              } ${
+                index === COLLECTIONS.length - 1
+                  ? "md:col-span-2 md:w-[calc(50%-0.625rem)] md:justify-self-center lg:col-span-4 lg:w-auto lg:justify-self-stretch"
+                  : ""
+              }`}
             >
               <div className="mb-5">
                 <h3 className="text-xl font-semibold tracking-tight mb-1.5">
