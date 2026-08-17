@@ -4,6 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useInView } from "./useInView";
 import { useLanguage } from "@/i18n/LanguageContext";
+import {
+  storagePageIndex,
+  storagePageKey,
+  storageSlotKey,
+} from "@/lib/mip8-storage";
 
 type MobileTab = "code" | "pages" | "log";
 
@@ -14,6 +19,9 @@ interface StorageOp {
   type: "SLOAD" | "SSTORE";
   slot: number;
   label: string;
+  account?: string;
+  locationLabel?: string;
+  pageLabel?: string;
 }
 
 interface CodeLine {
@@ -25,6 +33,7 @@ interface CodeLine {
 
 interface Example {
   name: string;
+  account: string;
   description: string;
   lines: CodeLine[];
 }
@@ -32,6 +41,7 @@ interface Example {
 const EXAMPLES: Example[] = [
   {
     name: "Uniswap V2 swap()",
+    account: "Pair",
     description: "", // translated via exampleDescriptions
     lines: [
       { code: "// UniswapV2Pair.sol", indent: 0, highlight: "comment" },
@@ -52,26 +62,43 @@ const EXAMPLES: Example[] = [
       { code: "require(amount0Out < _reserve0 && amount1Out < _reserve1);", indent: 1 },
       { code: "", indent: 0 },
       {
-        code: "uint balance0 = IERC20(token0).balanceOf(address(this));",
+        code: "address _token0 = token0;",
         indent: 1,
-        op: { type: "SLOAD", slot: 6, label: "token0" },
+        op: { type: "SLOAD", slot: 6, label: "token0 address" },
       },
       {
-        code: "uint balance1 = IERC20(token1).balanceOf(address(this));",
+        code: "address _token1 = token1;",
         indent: 1,
-        op: { type: "SLOAD", slot: 7, label: "token1" },
-      },
-      { code: "", indent: 0 },
-      { code: "// _mintFee (called internally)", indent: 1, highlight: "comment" },
-      {
-        code: "address feeTo = IUniswapV2Factory(factory).feeTo();",
-        indent: 1,
-        op: { type: "SLOAD", slot: 5, label: "factory" },
+        op: { type: "SLOAD", slot: 7, label: "token1 address" },
       },
       {
-        code: "uint _kLast = kLast;",
+        code: "// transfers/callback omitted; token balance pages start untouched",
         indent: 1,
-        op: { type: "SLOAD", slot: 11, label: "kLast" },
+        highlight: "comment",
+      },
+      {
+        code: "uint balance0 = IERC20(_token0).balanceOf(address(this));",
+        indent: 1,
+        op: {
+          type: "SLOAD",
+          slot: 7823,
+          label: "balanceOf(pair)",
+          account: "Token 0",
+          locationLabel: "hashed balance slot",
+          pageLabel: "balance page",
+        },
+      },
+      {
+        code: "uint balance1 = IERC20(_token1).balanceOf(address(this));",
+        indent: 1,
+        op: {
+          type: "SLOAD",
+          slot: 7823,
+          label: "balanceOf(pair)",
+          account: "Token 1",
+          locationLabel: "hashed balance slot",
+          pageLabel: "balance page",
+        },
       },
       { code: "", indent: 0 },
       { code: "// _update", indent: 1, highlight: "comment" },
@@ -97,6 +124,7 @@ const EXAMPLES: Example[] = [
   },
   {
     name: "ERC-1155 batch (page-aware)",
+    account: "ERC-1155",
     description: "", // translated via exampleDescriptions
     lines: [
       { code: "// PageAwareERC1155.sol", indent: 0, highlight: "comment" },
@@ -117,6 +145,7 @@ const EXAMPLES: Example[] = [
   },
   {
     name: "ERC-20 transfer()",
+    account: "ERC-20",
     description: "", // translated via exampleDescriptions
     lines: [
       { code: "// OpenZeppelin ERC20.sol", indent: 0, highlight: "comment" },
@@ -185,14 +214,24 @@ export default function StepperSection() {
 
   // Compute page state up to currentStep
   const { touchedSlots, pageMap, currentGas, mip8Gas, opLog } = useMemo(() => {
-    const touched = new Set<number>();
-    const pages = new Map<number, Set<number>>(); // page -> warm slots
+    const touched = new Set<string>();
+    const pages = new Map<
+      string,
+      {
+        account: string;
+        page: number;
+        pageLabel?: string;
+        slots: Set<number>;
+      }
+    >();
     let cGas = 0;
     let mGas = 0;
     const log: {
       label: string;
       type: string;
+      account: string;
       slot: number;
+      locationLabel?: string;
       coldCurrent: boolean;
       coldMip8: boolean;
       page: number;
@@ -200,28 +239,40 @@ export default function StepperSection() {
 
     for (let i = 0; i <= currentStep && i < opSteps.length; i++) {
       const op = opSteps[i].line.op!;
-      const page = op.slot >> 7;
-      const isFirstTouchSlot = !touched.has(op.slot);
-      const isFirstTouchPage = !pages.has(page);
+      const account = op.account ?? example.account;
+      const page = storagePageIndex(op.slot);
+      const slotKey = storageSlotKey(account, op.slot);
+      const pageKey = storagePageKey(account, op.slot);
+      const isFirstTouchSlot = !touched.has(slotKey);
+      const isFirstTouchPage = !pages.has(pageKey);
 
-      if (!pages.has(page)) pages.set(page, new Set());
+      if (!pages.has(pageKey)) {
+        pages.set(pageKey, {
+          account,
+          page,
+          pageLabel: op.pageLabel,
+          slots: new Set(),
+        });
+      }
 
       if (isFirstTouchSlot) {
-        touched.add(op.slot);
+        touched.add(slotKey);
         // Monad (current): every new slot is cold
         cGas += COLD_COST;
         // MIP-8: cold only if page is new
         mGas += isFirstTouchPage ? COLD_COST : WARM_COST;
       }
 
-      pages.get(page)!.add(op.slot);
+      pages.get(pageKey)!.slots.add(op.slot);
 
       // Only log first-touch ops (re-accesses to the same slot are warm in both models)
       if (isFirstTouchSlot) {
         log.push({
           label: op.label,
           type: op.type,
+          account,
           slot: op.slot,
+          locationLabel: op.locationLabel,
           coldCurrent: true,
           coldMip8: isFirstTouchPage,
           page,
@@ -236,7 +287,7 @@ export default function StepperSection() {
       mip8Gas: mGas,
       opLog: log,
     };
-  }, [currentStep, opSteps]);
+  }, [currentStep, example.account, opSteps]);
 
   const activeLineIdx = currentStep >= 0 && currentStep < opSteps.length
     ? opSteps[currentStep].idx
@@ -294,22 +345,41 @@ export default function StepperSection() {
 
   // Determine which pages to show
   const allPages = useMemo(() => {
-    const pageSlots = new Map<number, number[]>();
+    const pageSlots = new Map<
+      string,
+      {
+        account: string;
+        page: number;
+        pageLabel?: string;
+        slots: number[];
+      }
+    >();
     for (const step of opSteps) {
-      const page = step.line.op!.slot >> 7;
-      if (!pageSlots.has(page)) pageSlots.set(page, []);
-      if (!pageSlots.get(page)!.includes(step.line.op!.slot)) {
-        pageSlots.get(page)!.push(step.line.op!.slot);
+      const op = step.line.op!;
+      const account = op.account ?? example.account;
+      const page = storagePageIndex(op.slot);
+      const pageKey = storagePageKey(account, op.slot);
+      if (!pageSlots.has(pageKey)) {
+        pageSlots.set(pageKey, {
+          account,
+          page,
+          pageLabel: op.pageLabel,
+          slots: [],
+        });
+      }
+      if (!pageSlots.get(pageKey)!.slots.includes(op.slot)) {
+        pageSlots.get(pageKey)!.slots.push(op.slot);
       }
     }
     return pageSlots;
-  }, [opSteps]);
+  }, [example.account, opSteps]);
 
-  const uniquePages = Array.from(allPages.keys()).sort((a, b) => a - b);
+  const uniquePages = Array.from(allPages.entries());
 
   return (
-    <section ref={(el) => { (ref as React.MutableRefObject<HTMLElement | null>).current = el; sectionRef.current = el; }} className="py-24 px-6 bg-surface-elevated relative">
+    <section ref={sectionRef} className="py-24 px-6 bg-surface-elevated relative">
       <div
+        ref={ref}
         className={`max-w-5xl mx-auto section-reveal ${
           isVisible ? "visible" : ""
         }`}
@@ -434,8 +504,10 @@ export default function StepperSection() {
           <div className="lg:col-span-2 space-y-4">
             {/* Page grids */}
             <div className={`space-y-4 ${mobileTab !== "pages" ? "hidden lg:block" : ""}`}>
-            {uniquePages.map((pageNum) => {
-              const pageSlots = pageMap.get(pageNum);
+            {uniquePages.map(([pageKey, pageInfo]) => {
+              const { account, page: pageNum, pageLabel } = pageInfo;
+              const pageState = pageMap.get(pageKey);
+              const pageSlots = pageState?.slots;
               const isWarmed = pageSlots !== undefined && pageSlots.size > 1;
               const pageBase = pageNum * 128;
 
@@ -445,15 +517,15 @@ export default function StepperSection() {
 
               return (
                 <div
-                  key={pageNum}
+                  key={pageKey}
                   className={`bg-surface-elevated rounded-xl p-4 border-2 border-dashed transition-all duration-500 ${
                     isWarmed ? "border-solution-accent" : "border-border"
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <p className="font-mono text-xs text-text-tertiary">
-                      page {pageNum}
-                      {pageNum > 0 && (
+                      {account} · {pageLabel ?? `page ${pageNum}`}
+                      {!pageLabel && pageNum > 0 && (
                         <span className="text-text-tertiary">
                           {" "}(slots {pageBase}-{pageBase + 127})
                         </span>
@@ -477,11 +549,14 @@ export default function StepperSection() {
                   >
                     {Array.from({ length: showSlots }, (_, i) => {
                       const absSlot = pageBase + i;
-                      const isTouched = touchedSlots.has(absSlot);
-                      const isTarget = allPages.get(pageNum)?.includes(absSlot);
+                      const isTouched = touchedSlots.has(
+                        storageSlotKey(account, absSlot),
+                      );
+                      const isTarget = pageInfo.slots.includes(absSlot);
                       const isCurrentOp =
                         currentStep >= 0 &&
                         currentStep < opSteps.length &&
+                        (opSteps[currentStep].line.op?.account ?? example.account) === account &&
                         opSteps[currentStep].line.op?.slot === absSlot;
 
                       let bg = "bg-[#e8e2da]";
@@ -516,7 +591,7 @@ export default function StepperSection() {
               )}
               {opLog.map((entry, i) => (
                 <motion.div
-                  key={`${i}-${entry.slot}`}
+                  key={`${i}-${entry.account}-${entry.slot}`}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   className={`font-mono text-[11px] py-0.5 ${
@@ -526,7 +601,7 @@ export default function StepperSection() {
                   }`}
                 >
                   <span className="text-text-tertiary">{entry.type}</span>{" "}
-                  slot {entry.slot}{" "}
+                  {entry.account} · {entry.locationLabel ?? `slot ${entry.slot}`}{" "}
                   <span className="text-text-tertiary">
                     ({entry.label})
                   </span>{" "}

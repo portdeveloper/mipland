@@ -180,7 +180,7 @@ const en = {
       cold: "cold",
       restWarm: "rest warm",
       uniswapDesc:
-        "8 unique storage slots (5-12) accessed during swap(), all in one page",
+        "Pair storage slots share one page, but balanceOf() reads execute in two separate token contracts. This simplified trace treats each balance page as untouched, so both token reads start cold; earlier token calls in a full transaction could warm them.",
       erc1155Desc:
         "20 contiguous balance reads from a page-aware array layout",
       erc20Desc:
