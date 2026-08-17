@@ -13,8 +13,8 @@ import {Mip4Bundler} from "../src/Mip4Bundler.sol";
 /// MIP-3 linear memory or MIP-8 paged storage gas schedules, so any gas
 /// measurement here is meaningless for the suggestion proofs. We only verify
 /// that the before/after pairs produce the same result (or, for 4a, the
-/// expected behavioral outcome). The real gas proofs come from mainnet via
-/// script/DeployAndMeasure.s.sol.
+/// expected behavioral outcome). MIP-3 gas proofs can come from mainnet via
+/// the deployment script; MIP-8 gas proofs require an MIP-8-enabled testnet.
 contract FunctionalTest is Test {
     function test_mip3a_scratchpad_equivalence() public {
         Mip3Scratchpad c = new Mip3Scratchpad();

@@ -20,33 +20,6 @@
       "beforeGas": null,
       "beforeNote": "No equivalent 'before' tx on Monad — the same source runs on both chains. The qualitative contrast: this call would likely exceed Ethereum's 30 M block gas limit due to quadratic memory expansion of the intermediate keccak buffers."
     },
-    "8a": {
-      "beforeTx": "0x4383b9624f77487ba1d0fe992ca250f286c4656ea6098c30f9af331f6e254362",
-      "beforeGas": 116281,
-      "beforeStatus": "0x1",
-      "afterTx": "0x731376a8cfaeb3561623bad5e2af81866fca3db7e27656f13de4b9ae86531fb9",
-      "afterGas": 115729,
-      "afterStatus": "0x1",
-      "kind": "gas-delta"
-    },
-    "8b": {
-      "beforeTx": "0x1e003c7e99b1597a7f2f21081f9d7cf136bdbc3cc81ed4ab69ae0c98327d9c8f",
-      "beforeGas": 49267,
-      "beforeStatus": "0x1",
-      "afterTx": "0x51319ac9a35c893f8e371710a6416fa6cac0c71f3c5a6889fdaca594e38c1097",
-      "afterGas": 49292,
-      "afterStatus": "0x1",
-      "kind": "gas-delta"
-    },
-    "8c": {
-      "beforeTx": "0x381d65dee04150baedf2e89311cceaf5117387c67b0ebee4dea65789d712c224",
-      "beforeGas": 400500,
-      "beforeStatus": "0x1",
-      "afterTx": "0xdbb20d97221ea4a6c3bbfdf8ddb9128b8a7f7fd5c997b8f1111feedef4d974a8",
-      "afterGas": 400017,
-      "afterStatus": "0x1",
-      "kind": "gas-delta"
-    },
     "4a": {
       "beforeTx": "0x04aa66caf0727cc9cdeb1dbc788900af5ff94f196edd417d688975072bc031d5",
       "beforeGas": 31398,

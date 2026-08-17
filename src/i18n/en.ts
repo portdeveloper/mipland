@@ -119,25 +119,6 @@ const en = {
       card3Desc:
         "Page-aware arrays, careful packing, and low-level layouts that keep related data inside the same 128-slot page open a new optimization space for page-aware gas costs.",
     },
-    suggestions: {
-      title: "What to write differently",
-      desc: "Storage-layout patterns that the MIP-8 spec implies should win. Each savings number comes from a mainnet measurement, not spec math, and the measurements reveal that the spec's predicted gains don't yet materialize at the gas-schedule level. We're publishing the raw numbers below so you can verify and judge for yourself.",
-      s8aTitle: "Replace dense-key mappings with arrays",
-      s8aSummary:
-        "Mappings hash each key to a slot scattered across the storage space. Consecutive logical indices land on different MIP-8 pages and pay a fresh cold-page cost each time.",
-      s8aExplanation:
-        "The MIP-8 spec predicts a large saving here (8 cold pages → 1 cold + 7 warm, roughly 7× cheaper). Our mainnet measurement shows only a 0.5% difference: 116,281 gas scattered vs 115,729 gas packed. The page-locality charges the spec describes don't appear to differentiate these two layouts at the gas-schedule level on current Monad mainnet. Both tx hashes are linked so you can verify. For now, treat this pattern as forward-compatible (it will likely become a real win as MIP-8's full gas schedule lands), but don't refactor existing contracts expecting an immediate gas drop.",
-      s8bTitle: "Co-locate hot struct fields",
-      s8bSummary:
-        "If two fields of a struct are usually read together, put them adjacent in the declaration, not separated by unrelated fields.",
-      s8bExplanation:
-        "Measured on mainnet: scattered layout (fields 128 slots apart, guaranteed different pages) cost 49,267 gas; reordered layout (fields adjacent) cost 49,292 gas. The reordered version was actually 25 gas more expensive, essentially identical. As with pattern 8a, the page-locality benefit the spec describes doesn't yet materialize at the measured-gas level. The pattern is still good hygiene (cleaner code, better cache behavior off-chain) but isn't currently delivering a measurable on-chain saving.",
-      s8cTitle: "Batch fresh-state writes into the same page",
-      s8cSummary:
-        "MIP-8 charges page load and write I/O once per page. Keeping a batch contiguous amortizes those I/O costs, while state-growth cost still applies to every net-new slot.",
-      s8cExplanation:
-        "Under the finalized spec, 10 scattered writes pay 10 cold page loads and 10 page-write charges; 10 packed writes amortize that I/O across one page. Both layouts pay state-growth cost for all 10 new slots. Measured on current mainnet: scattered cost 400,500 gas and packed cost 400,017 gas, a 0.1% difference, so the proposed page-local I/O discount is not yet visible in these transactions. Treat this as a forward-compatible layout improvement, not a way to avoid state-growth fees.",
-    },
     compatibility: {
       title: "Execution stays compatible",
       desc1:
