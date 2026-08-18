@@ -12,6 +12,7 @@ export default function PageMappingSection() {
 
   const pageIndex = slotInput >> 7;
   const offset = slotInput & 0x7f;
+  const slotSummary = `Storage slot ${slotInput} maps to page ${pageIndex} at offset ${offset}.`;
 
   // Show slots 0-511 (4 pages worth)
   const PAGE_SIZE = 128;
@@ -49,6 +50,7 @@ export default function PageMappingSection() {
                 max={511}
                 value={slotInput}
                 onChange={(e) => setSlotInput(Number(e.target.value))}
+                aria-valuetext={slotSummary}
                 className="w-full accent-solution-accent cursor-pointer"
               />
               <div className="flex justify-between font-mono text-xs text-text-tertiary mt-1">
@@ -70,6 +72,8 @@ export default function PageMappingSection() {
                     Math.max(0, Math.min(511, Number(e.target.value)))
                   )
                 }
+                aria-label={t("mip8.pageMapping.storageSlot")}
+                aria-describedby="slot-mapping-summary"
                 className="w-24 px-3 py-2 rounded-md border border-border bg-surface text-right font-mono text-lg tabular-nums focus:outline-none focus:border-solution-accent"
               />
             </div>
@@ -108,10 +112,17 @@ export default function PageMappingSection() {
               </p>
             </div>
           </div>
+          <p id="slot-mapping-summary" className="sr-only" aria-live="polite">
+            {slotSummary}
+          </p>
         </div>
 
         {/* Visual slot map */}
-        <div className="bg-surface-elevated rounded-xl border border-border p-4 overflow-x-auto">
+        <div
+          className="bg-surface-elevated rounded-xl border border-border p-4 overflow-x-auto"
+          role="img"
+          aria-label={`Four page slot map. ${slotSummary} The active page is highlighted and the selected slot is marked within it.`}
+        >
           <div className="flex gap-3 min-w-[600px]">
             {Array.from({ length: VISIBLE_PAGES }, (_, pageIdx) => (
               <div key={pageIdx} className="flex-1">

@@ -31,6 +31,7 @@ export default function CherryPickedSection() {
   const mip8 = mip8Gas(batchSize);
   const improvement = ratio(batchSize);
   const savings = Math.round(((current - mip8) / current) * 100);
+  const batchSummary = `${batchSize} tokens use ${current.toLocaleString()} gas in the standard layout and ${mip8.toLocaleString()} gas in the page-aware layout, saving ${savings}% gas.`;
 
   return (
     <section ref={ref} className="py-24 px-6 bg-solution-bg relative">
@@ -76,7 +77,11 @@ export default function CherryPickedSection() {
               </p>
             </div>
             {/* Scattered page visualization */}
-            <div className="grid grid-cols-4 gap-2">
+            <div
+              className="grid grid-cols-4 gap-2"
+              role="img"
+              aria-label={`Standard mapping layout scatters ${batchSize} token reads across separate pages. All ${batchSize} reads are cold for ${current.toLocaleString()} gas.`}
+            >
               {Array.from({ length: 4 }, (_, pageIdx) => (
                 <div key={pageIdx} className="bg-problem-bg rounded-md p-2">
                   <p className="font-mono text-xs text-text-tertiary mb-1">
@@ -126,7 +131,11 @@ export default function CherryPickedSection() {
               </p>
             </div>
             {/* Single page visualization */}
-            <div className="bg-solution-bg rounded-md p-2">
+            <div
+              className="bg-solution-bg rounded-md p-2"
+              role="img"
+              aria-label={`Page-aware layout keeps ${batchSize} token reads on one page. The first read is cold and ${batchSize - 1} reads are warm for ${mip8.toLocaleString()} gas.`}
+            >
               <p className="font-mono text-xs text-text-tertiary mb-1">
                 page 0
               </p>
@@ -158,9 +167,12 @@ export default function CherryPickedSection() {
         <div className="bg-surface-elevated rounded-xl border border-border p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="font-mono text-xs text-text-tertiary uppercase tracking-wider">
+              <label
+                htmlFor="batch-size-range"
+                className="font-mono text-xs text-text-tertiary uppercase tracking-wider"
+              >
                 {t("cherryPicked.batchSize")}
-              </p>
+              </label>
               <p className="text-sm text-text-secondary font-light mt-1">
                 {t("cherryPicked.batchDesc")}
               </p>
@@ -178,11 +190,14 @@ export default function CherryPickedSection() {
             </div>
           </div>
           <input
+            id="batch-size-range"
             type="range"
             min={2}
             max={64}
             value={batchSize}
             onChange={(e) => setBatchSize(Number(e.target.value))}
+            aria-valuetext={batchSummary}
+            aria-describedby="batch-size-summary"
             className="w-full accent-solution-accent cursor-pointer"
           />
           <div className="flex justify-between font-mono text-xs text-text-tertiary mt-1">
@@ -190,6 +205,9 @@ export default function CherryPickedSection() {
             <span>{t("cherryPicked.threshold")}</span>
             <span>64</span>
           </div>
+          <p id="batch-size-summary" className="sr-only" aria-live="polite">
+            {batchSummary}
+          </p>
         </div>
 
         {/* Results */}
@@ -255,7 +273,11 @@ export default function CherryPickedSection() {
         </div>
 
         {/* Savings bar */}
-        <div className="bg-surface-elevated rounded-lg border border-border p-4">
+        <div
+          className="bg-surface-elevated rounded-lg border border-border p-4"
+          role="img"
+          aria-label={`Gas comparison bar. ${batchSummary}`}
+        >
           <div className="flex items-center justify-between mb-2">
             <p className="font-mono text-xs text-text-tertiary">
               {t("cherryPicked.gasComparison")}

@@ -18,9 +18,11 @@ const MAX_BMAX = 2000;
 function MarginalCapacityChart({
   params,
   Bmax,
+  label,
 }: {
   params: ModelParams;
   Bmax: number;
+  label: string;
 }) {
   const W = 620;
   const H = 200;
@@ -69,6 +71,8 @@ function MarginalCapacityChart({
       viewBox={`0 0 ${W} ${H}`}
       className="w-full"
       style={{ maxHeight: 240 }}
+      role="img"
+      aria-label={label}
     >
       {/* Area under curve */}
       <path d={areaPath} fill="#3b7dd8" opacity={0.1} />
@@ -201,6 +205,11 @@ export default function DesignLeversSection() {
     MAX_BMAX > 0 ? (eqCurrent.Qu / MAX_BMAX) * 100 : 0;
   const spamPct =
     MAX_BMAX > 0 ? (eqCurrent.spamGas / MAX_BMAX) * 100 : 0;
+  const blockSizeSummary = `${Bmax.toLocaleString()} gas units of block capacity. User gas ${Math.round(eqCurrent.Qu).toLocaleString()}, spam gas ${Math.round(eqCurrent.spamGas).toLocaleString()}.`;
+  const feeSummary = `Minimum gas price ${gmin}. Spam share ${(eqCurrent.spamShare * 100).toFixed(1)}%, gas price ${eqCurrent.g.toFixed(1)}.`;
+  const prioritySummary = `Users bidding for priority ${(v * 100).toFixed(0)}%. Spam share ${(eqCurrent.spamShare * 100).toFixed(1)}%.`;
+  const compositionSummary = `Block composition with current settings: user gas ${Math.round(eqCurrent.Qu).toLocaleString()}, spam gas ${Math.round(eqCurrent.spamGas).toLocaleString()}, spam share ${(eqCurrent.spamShare * 100).toFixed(1)}%.`;
+  const marginalSummary = `Marginal capacity chart. At B max ${Bmax.toLocaleString()}, user share of the next capacity unit is ${(marginalUserShare(Bmax, params) * 100).toFixed(0)}%.`;
 
   return (
     <section ref={ref} className="py-24 px-6 bg-surface-alt relative">
@@ -239,6 +248,7 @@ export default function DesignLeversSection() {
                 max={MAX_BMAX}
                 value={Bmax}
                 onChange={(e) => setBmax(Number(e.target.value))}
+                aria-valuetext={blockSizeSummary}
                 className="w-full accent-text-primary cursor-pointer"
               />
             </div>
@@ -263,6 +273,7 @@ export default function DesignLeversSection() {
                 max={80}
                 value={gmin}
                 onChange={(e) => setGmin(Number(e.target.value))}
+                aria-valuetext={feeSummary}
                 className="w-full accent-text-primary cursor-pointer"
               />
               <div className="flex justify-between font-mono text-xs text-text-tertiary mt-1">
@@ -276,9 +287,15 @@ export default function DesignLeversSection() {
               <p className="font-mono text-xs text-text-tertiary mb-3">
                 Transaction ordering
               </p>
-              <div className="flex gap-2 mb-3">
+              <div
+                className="flex gap-2 mb-3"
+                role="group"
+                aria-label="Transaction ordering"
+              >
                 <button
                   onClick={() => setOrdering("random")}
+                  type="button"
+                  aria-pressed={ordering === "random"}
                   className={`font-mono text-xs px-3 py-2 rounded-md border transition-all cursor-pointer flex-1 ${
                     ordering === "random"
                       ? "bg-text-primary text-surface border-text-primary"
@@ -289,6 +306,8 @@ export default function DesignLeversSection() {
                 </button>
                 <button
                   onClick={() => setOrdering("pfo")}
+                  type="button"
+                  aria-pressed={ordering === "pfo"}
                   className={`font-mono text-xs px-3 py-2 rounded-md border transition-all cursor-pointer flex-1 ${
                     ordering === "pfo"
                       ? "bg-text-primary text-surface border-text-primary"
@@ -319,6 +338,7 @@ export default function DesignLeversSection() {
                     max={100}
                     value={v * 100}
                     onChange={(e) => setV(Number(e.target.value) / 100)}
+                    aria-valuetext={prioritySummary}
                     className="w-full accent-text-primary cursor-pointer"
                   />
                 </div>
@@ -333,7 +353,11 @@ export default function DesignLeversSection() {
               <p className="font-mono text-xs text-text-tertiary mb-3">
                 Block composition with current settings
               </p>
-              <div className="relative h-10 bg-border/30 rounded-lg overflow-hidden mb-3">
+              <div
+                className="relative h-10 bg-border/30 rounded-lg overflow-hidden mb-3"
+                role="img"
+                aria-label={compositionSummary}
+              >
                 <motion.div
                   className="absolute top-0 bottom-0 left-0 rounded-l-lg"
                   style={{ backgroundColor: "#3b7dd8" }}
@@ -460,7 +484,11 @@ export default function DesignLeversSection() {
               ? "As blocks get bigger, each additional unit of space increasingly goes to spam rather than real users. By not adding that last stretch of capacity, designers can cut a lot of spam with very little impact on users."
               : "The share of each marginal unit of capacity going to users is strictly decreasing. Near the plateau, most additional capacity serves spam. Capping B_max before that point eliminates disproportionate spam at a small cost to user welfare."}
           </p>
-          <MarginalCapacityChart params={params} Bmax={Bmax} />
+          <MarginalCapacityChart
+            params={params}
+            Bmax={Bmax}
+            label={marginalSummary}
+          />
           <p className="font-mono text-xs text-text-tertiary mt-2">
             User share of marginal block capacity as B_max grows. The curve
             drops toward zero near B_plat: each additional unit of capacity

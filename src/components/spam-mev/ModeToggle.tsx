@@ -10,6 +10,9 @@ export default function ModeToggle() {
   return (
     <button
       onClick={toggle}
+      type="button"
+      aria-pressed={isSimple}
+      aria-label={isSimple ? "Switch to technical explanation mode" : "Switch to simple explanation mode"}
       className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 font-mono text-xs cursor-pointer select-none bg-surface-elevated rounded-full border border-border px-4 py-2.5 shadow-lg hover:shadow-xl transition-shadow"
     >
       <span className={`transition-colors ${isSimple ? "text-text-primary font-semibold" : "text-text-tertiary"}`}>

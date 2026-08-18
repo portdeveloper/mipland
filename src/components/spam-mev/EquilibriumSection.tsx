@@ -35,10 +35,12 @@ function SweepChart({
   sweep,
   currentBmax,
   params,
+  label,
 }: {
   sweep: ReturnType<typeof computeSweep>;
   currentBmax: number;
   params: ModelParams;
+  label: string;
 }) {
   const W = 580;
   const H = 240;
@@ -95,6 +97,8 @@ function SweepChart({
       viewBox={`0 0 ${W} ${H}`}
       className="w-full"
       style={{ maxHeight: 280 }}
+      role="img"
+      aria-label={label}
     >
       {/* Regime background bands */}
       <rect
@@ -413,6 +417,9 @@ export default function EquilibriumSection() {
       : eq.regime === "congested"
         ? "#c4653a"
         : "#9b9084";
+  const bmaxValueText = `${Bmax.toLocaleString()} gas units of block capacity. Regime: ${regimeLabel}. User gas ${Math.round(eq.Qu).toLocaleString()}, spam gas ${Math.round(eq.spamGas).toLocaleString()}${idle > 10 ? `, idle capacity ${Math.round(idle).toLocaleString()}` : ""}.`;
+  const compositionSummary = `Block composition: ${regimeLabel}. User gas ${Math.round(eq.Qu).toLocaleString()}, spam gas ${Math.round(eq.spamGas).toLocaleString()}${idle > 10 ? `, idle capacity ${Math.round(idle).toLocaleString()}` : ""}.`;
+  const sweepSummary = `Spam equilibrium chart across block sizes. Current block capacity is ${Bmax.toLocaleString()}; user gas is ${Math.round(eq.Qu).toLocaleString()}, spam gas is ${Math.round(eq.spamGas).toLocaleString()}, and the plateau is ${Math.round(eq.Bplat).toLocaleString()}.`;
 
   return (
     <section ref={ref} className="py-24 px-6 bg-surface relative">
@@ -461,15 +468,24 @@ export default function EquilibriumSection() {
             max={SLIDER_STEPS}
             value={sliderValue}
             onChange={(e) => setSliderValue(Number(e.target.value))}
+            aria-valuetext={bmaxValueText}
+            aria-describedby="bmax-summary"
             className="w-full accent-text-primary cursor-pointer"
           />
           <div className="flex justify-between font-mono text-xs text-text-tertiary mt-1">
             <span>0</span>
             <span>{MAX_BMAX.toLocaleString()}</span>
           </div>
+          <p id="bmax-summary" className="sr-only" aria-live="polite">
+            {bmaxValueText}
+          </p>
 
           {/* Preset buttons */}
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div
+            className="flex flex-wrap gap-2 mt-4"
+            role="group"
+            aria-label="Block capacity presets"
+          >
             {presets.map((preset) => {
               const sv = Math.round(
                 (preset.Bmax / MAX_BMAX) * SLIDER_STEPS
@@ -479,6 +495,8 @@ export default function EquilibriumSection() {
                 <button
                   key={preset.label}
                   onClick={() => setSliderValue(sv)}
+                  type="button"
+                  aria-pressed={isActive}
                   className={`font-mono text-xs px-2.5 py-1.5 rounded-md border transition-all cursor-pointer ${
                     isActive
                       ? "bg-text-primary text-surface border-text-primary"
@@ -513,7 +531,11 @@ export default function EquilibriumSection() {
           </div>
 
           {/* Stacked bar */}
-          <div className="relative h-10 bg-border/30 rounded-lg overflow-hidden">
+          <div
+            className="relative h-10 bg-border/30 rounded-lg overflow-hidden"
+            role="img"
+            aria-label={compositionSummary}
+          >
             {/* Capacity boundary */}
             <div
               className="absolute top-0 bottom-0 left-0 bg-border/10 rounded-lg"
@@ -673,6 +695,7 @@ export default function EquilibriumSection() {
             sweep={sweep}
             currentBmax={Bmax}
             params={params}
+            label={sweepSummary}
           />
           <div className="flex items-center gap-4 mt-3 font-mono text-xs text-text-tertiary">
             <span className="flex items-center gap-1.5">
