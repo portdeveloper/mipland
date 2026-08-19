@@ -1,8 +1,39 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { NEGOTIATED_ROUTES, prefersMarkdown } from "@/lib/mip-routes";
+
+// Keep in sync with NEGOTIATED_ROUTES keys below plus the admin gate. The
+// matcher has to be a static literal, so a test asserts the two stay aligned.
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/",
+    "/mip-3",
+    "/mip-4",
+    "/mip-7",
+    "/mip-8",
+    "/mip-12",
+  ],
 };
+
+// --- Machine-readable content negotiation ---
+
+function negotiate(
+  req: NextRequest,
+  route: { markdown: string; link: string },
+): NextResponse {
+  if (prefersMarkdown(req.headers.get("accept"))) {
+    const res = NextResponse.rewrite(new URL(route.markdown, req.url));
+    res.headers.set("Vary", "Accept");
+    return res;
+  }
+  const res = NextResponse.next();
+  res.headers.set("Link", route.link);
+  res.headers.set("Vary", "Accept");
+  return res;
+}
+
+// --- Admin Basic Auth ---
 
 const REALM = "MIP Admin";
 
@@ -22,7 +53,7 @@ function timingSafeEqual(a: string, b: string): boolean {
   return mismatch === 0;
 }
 
-export function middleware(req: NextRequest): NextResponse {
+function requireAdmin(req: NextRequest): NextResponse {
   const expected = process.env.ADMIN_PASSWORD;
   // Fail closed in production: a missing env var must not leave /admin open.
   // Fail open in dev so local /admin/chat works without a password env.
@@ -47,5 +78,15 @@ export function middleware(req: NextRequest): NextResponse {
   const password = decoded.slice(idx + 1);
 
   if (!timingSafeEqual(password, expected)) return unauthorized();
+  return NextResponse.next();
+}
+
+export function middleware(req: NextRequest): NextResponse {
+  const { pathname } = req.nextUrl;
+  if (pathname.startsWith("/admin")) return requireAdmin(req);
+
+  const route = NEGOTIATED_ROUTES[pathname];
+  if (route) return negotiate(req, route);
+
   return NextResponse.next();
 }
