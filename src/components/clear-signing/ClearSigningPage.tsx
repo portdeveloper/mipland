@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 // Monad mainnet
 const MONAD_CHAIN_ID_HEX = "0x8f"; // 143
@@ -28,37 +29,47 @@ const DEMO_SPENDER = "0x1b81D678ffb9C0263b24A97847620C99d213eB14";
 const REGISTRY_RENDER: {
   selector: string;
   action: string;
-  fields: [string, string][];
+  actionGloss: string;
+  fields: [string, string, string][];
 }[] = [
-  { selector: "0xd0e30db0", action: "Wrap MON", fields: [["Amount", "10 MON"]] },
+  {
+    selector: "0xd0e30db0",
+    action: "Wrap MON",
+    actionGloss: "wrap",
+    fields: [["Amount", "10 MON", "amount"]],
+  },
   {
     selector: "0x2e1a7d4d",
     action: "Unwrap WMON",
-    fields: [["Amount", "10 WMON"]],
+    actionGloss: "unwrap",
+    fields: [["Amount", "10 WMON", "amount"]],
   },
   {
     selector: "0x095ea7b3",
     action: "Approve WMON",
+    actionGloss: "approve",
     fields: [
-      ["Spender", "0x1b81…eB14"],
-      ["Amount", "1 WMON"],
+      ["Spender", "0x1b81…eB14", "spender"],
+      ["Amount", "1 WMON", "amount"],
     ],
   },
   {
     selector: "0xa9059cbb",
     action: "Send WMON",
+    actionGloss: "send",
     fields: [
-      ["To", "0x7547…b603"],
-      ["Amount", "5 WMON"],
+      ["To", "0x7547…b603", "to"],
+      ["Amount", "5 WMON", "amount"],
     ],
   },
   {
     selector: "0x23b872dd",
     action: "Transfer WMON",
+    actionGloss: "transfer",
     fields: [
-      ["From", "0x1b81…eB14"],
-      ["To", "0x7547…b603"],
-      ["Amount", "5 WMON"],
+      ["From", "0x1b81…eB14", "from"],
+      ["To", "0x7547…b603", "to"],
+      ["Amount", "5 WMON", "amount"],
     ],
   },
 ];
@@ -113,37 +124,46 @@ function buildPermitSingle(spender: string) {
 }
 
 type Status = "idle" | "working" | "signed" | "error";
+type Feedback = { key: string } | { raw: string };
 
 export default function ClearSigningPage() {
+  const { locale, t } = useLanguage();
   const [status, setStatus] = useState<Status>("idle");
   const [account, setAccount] = useState<string | null>(null);
   const [signature, setSignature] = useState<string | null>(null);
-  const [message, setMessage] = useState<string>("");
+  const [message, setMessage] = useState<Feedback | null>(null);
   const [testStatus, setTestStatus] = useState<Status>("idle");
-  const [testMessage, setTestMessage] = useState<string>("");
+  const [testMessage, setTestMessage] = useState<Feedback | null>(null);
+
+  const feedbackText = (feedback: Feedback) =>
+    "key" in feedback
+      ? t(feedback.key)
+      : `${t("clearSigning.status.providerError")} ${feedback.raw}`;
 
   async function runDemo() {
     const eth = getEthereum();
     if (!eth) {
       setStatus("error");
-      setMessage(
-        "No EVM wallet detected. Install MetaMask (or another browser wallet) and try again.",
-      );
+      setMessage({ key: "clearSigning.status.noWallet" });
       return;
     }
     try {
       setStatus("working");
       setSignature(null);
 
-      setMessage("Requesting account access…");
+      setMessage({ key: "clearSigning.status.requestingAccount" });
       const accounts = (await eth.request({
         method: "eth_requestAccounts",
       })) as string[];
       const from = accounts?.[0];
-      if (!from) throw new Error("No account returned by the wallet.");
+      if (!from) {
+        setStatus("error");
+        setMessage({ key: "clearSigning.status.noAccount" });
+        return;
+      }
       setAccount(from);
 
-      setMessage("Switching to Monad mainnet…");
+      setMessage({ key: "clearSigning.status.switchingNetwork" });
       try {
         await eth.request({
           method: "wallet_switchEthereumChain",
@@ -160,7 +180,7 @@ export default function ClearSigningPage() {
         }
       }
 
-      setMessage("Open your wallet and review the request…");
+      setMessage({ key: "clearSigning.status.reviewRequest" });
       const typedData = buildPermitSingle(DEMO_SPENDER);
       const sig = (await eth.request({
         method: "eth_signTypedData_v4",
@@ -169,13 +189,16 @@ export default function ClearSigningPage() {
 
       setSignature(sig);
       setStatus("signed");
-      setMessage(
-        "Signed. What did your wallet show, raw hex or a readable summary? That readable view is Clear Signing.",
-      );
+      setMessage({ key: "clearSigning.status.signed" });
     } catch (err: unknown) {
       setStatus("error");
-      const m = (err as { message?: string })?.message ?? String(err);
-      setMessage(m.includes("User rejected") ? "Request cancelled." : m);
+      const e = err as { code?: number; message?: string };
+      const m = e?.message ?? String(err);
+      setMessage(
+        e?.code === 4001 || m.includes("User rejected")
+          ? { key: "clearSigning.status.requestCancelled" }
+          : { raw: m },
+      );
     }
   }
 
@@ -183,22 +206,24 @@ export default function ClearSigningPage() {
     const eth = getEthereum();
     if (!eth) {
       setTestStatus("error");
-      setTestMessage(
-        "No EVM wallet detected. Connect a wallet (a Ledger through MetaMask works) and try again.",
-      );
+      setTestMessage({ key: "clearSigning.status.testNoWallet" });
       return;
     }
     try {
       setTestStatus("working");
-      setTestMessage("Requesting account access…");
+      setTestMessage({ key: "clearSigning.status.requestingAccount" });
       const accounts = (await eth.request({
         method: "eth_requestAccounts",
       })) as string[];
       const from = accounts?.[0];
-      if (!from) throw new Error("No account returned by the wallet.");
+      if (!from) {
+        setTestStatus("error");
+        setTestMessage({ key: "clearSigning.status.noAccount" });
+        return;
+      }
       setAccount(from);
 
-      setTestMessage("Switching to Monad mainnet…");
+      setTestMessage({ key: "clearSigning.status.switchingNetwork" });
       try {
         await eth.request({
           method: "wallet_switchEthereumChain",
@@ -215,30 +240,24 @@ export default function ClearSigningPage() {
         }
       }
 
-      setTestMessage(
-        "Read the confirmation screen now (on your Ledger device if it is connected through MetaMask), then reject it. Nothing needs to be sent.",
-      );
+      setTestMessage({ key: "clearSigning.status.testReview" });
       await eth.request({
         method: "eth_sendTransaction",
         params: [{ from, to: WMON, value: WRAP_VALUE_HEX, data: WMON_DEPOSIT }],
       });
 
       setTestStatus("signed");
-      setTestMessage(
-        'You approved it, so a tiny wrap may go through (harmless, just unwrap it later). Either way the screen you saw is the answer: "Wrap MON" with an amount means a registry descriptor is rendering on Monad; raw hex means it is not ingested for chain 143 yet.',
-      );
+      setTestMessage({ key: "clearSigning.status.testApproved" });
     } catch (err: unknown) {
       const e = err as { code?: number; message?: string };
       const rejected =
         e?.code === 4001 || (e?.message ?? "").includes("User rejected");
       if (rejected) {
         setTestStatus("signed");
-        setTestMessage(
-          'Rejected, nothing was sent. That confirmation screen was the test: "Wrap MON" with an amount means a registry descriptor is rendering on Monad; raw hex means it is not ingested for chain 143 yet.',
-        );
+        setTestMessage({ key: "clearSigning.status.testRejected" });
       } else {
         setTestStatus("error");
-        setTestMessage(e?.message ?? String(err));
+        setTestMessage({ raw: e?.message ?? String(err) });
       }
     }
   }
@@ -252,13 +271,10 @@ export default function ClearSigningPage() {
             ERC-7730
           </p>
           <h1 className="mt-2 text-4xl sm:text-5xl font-semibold tracking-tight">
-            Clear Signing on Monad
+            {t("clearSigning.hero.title")}
           </h1>
           <p className="mt-5 text-lg text-text-secondary">
-            Your wallet should tell you what you are signing in plain language,
-            not a wall of hex. Clear Signing (ERC-7730) does exactly that, and it
-            works on Monad today. Trigger a real signature on Monad mainnet below
-            and see it for yourself.
+            {t("clearSigning.hero.description")}
           </p>
         </div>
       </section>
@@ -266,32 +282,32 @@ export default function ClearSigningPage() {
       {/* Why it matters */}
       <section className="px-6 py-16 bg-surface-alt">
         <div className="mx-auto max-w-3xl">
-          <h2 className="text-2xl font-semibold">Why this matters</h2>
+          <h2 className="text-2xl font-semibold">
+            {t("clearSigning.why.title")}
+          </h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             <div className="rounded-xl border border-border bg-surface-elevated p-5">
               <p className="text-sm font-semibold">
-                Blind signing drains wallets
+                {t("clearSigning.why.blindTitle")}
               </p>
               <p className="mt-2 text-sm text-text-secondary">
-                Most phishing losses start with a user approving a malicious
-                transaction or token permit they could not read. Hex hides the
-                spender and the amount.
+                {t("clearSigning.why.blindDescription")}
               </p>
             </div>
             <div className="rounded-xl border border-border bg-surface-elevated p-5">
-              <p className="text-sm font-semibold">You verify the real action</p>
+              <p className="text-sm font-semibold">
+                {t("clearSigning.why.verifyTitle")}
+              </p>
               <p className="mt-2 text-sm text-text-secondary">
-                Clear Signing shows the actual intent: who you are approving,
-                which token, how much, on which network, before you sign. No
-                trust in the dApp UI required.
+                {t("clearSigning.why.verifyDescription")}
               </p>
             </div>
             <div className="rounded-xl border border-border bg-surface-elevated p-5">
-              <p className="text-sm font-semibold">Trust for a new chain</p>
+              <p className="text-sm font-semibold">
+                {t("clearSigning.why.trustTitle")}
+              </p>
               <p className="mt-2 text-sm text-text-secondary">
-                For Monad it means day-one signing safety on par with Ethereum
-                mainnet. Lower the odds users get drained, raise the odds they
-                transact with confidence.
+                {t("clearSigning.why.trustDescription")}
               </p>
             </div>
           </div>
@@ -303,19 +319,17 @@ export default function ClearSigningPage() {
         <div className="mx-auto max-w-3xl">
           <div className="rounded-2xl border-2 border-solution-accent-light bg-surface-elevated p-6 sm:p-8 shadow-sm">
             <h2 className="text-2xl font-semibold text-solution-accent">
-              Try it live
+              {t("clearSigning.demo.title")}
             </h2>
             <p className="mt-2 text-sm text-text-secondary">
-              This signs a Permit2 token-approval message on Monad. It is a
-              signature only: it is generated locally in your browser and never
-              broadcast, no gas is spent, and no funds move.
+              {t("clearSigning.demo.description")}
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Button onClick={runDemo} disabled={status === "working"}>
                 {status === "working"
-                  ? "Check your wallet…"
-                  : "Sign a Permit2 approval on Monad"}
+                  ? t("clearSigning.demo.checkWallet")
+                  : t("clearSigning.demo.signApproval")}
               </Button>
               {account && (
                 <span className="font-mono text-xs text-text-tertiary">
@@ -333,7 +347,7 @@ export default function ClearSigningPage() {
                     : "text-text-secondary")
                 }
               >
-                {message}
+                {feedbackText(message)}
               </p>
             )}
 
@@ -344,11 +358,7 @@ export default function ClearSigningPage() {
             )}
 
             <p className="mt-6 text-xs text-text-tertiary">
-              MetaMask decodes Permit2 itself, so this readable view shows on any
-              chain, Monad included. That is real, but it is the wallet&apos;s
-              built-in decoding, not the ERC-7730 registry. To see what the
-              registry produces for a Monad contract no wallet decodes on its
-              own, look just below.
+              {t("clearSigning.demo.note")}
             </p>
           </div>
         </div>
@@ -358,21 +368,23 @@ export default function ClearSigningPage() {
       <section className="px-6 py-16 bg-surface-alt">
         <div className="mx-auto max-w-3xl">
           <p className="font-mono text-xs font-medium uppercase tracking-wide text-solution-accent">
-            Proof, not a mock
+            {t("clearSigning.registry.eyebrow")}
           </p>
           <h2 className="mt-2 text-2xl font-semibold">
-            What the registry produces for Monad
+            {t("clearSigning.registry.title")}
           </h2>
           <p className="mt-3 text-text-secondary">
-            Permit2 above renders because MetaMask already knows Permit2. Wrapped
-            MON is the honest test: it is a plain wrapper, so no wallet decodes{" "}
-            <code className="font-mono text-sm">deposit()</code> or{" "}
-            <code className="font-mono text-sm">withdraw()</code> on its own. The
-            action names and labels below come from our ERC-7730 descriptor in the
-            registry and nowhere else. This is the resolved output of{" "}
-            <code className="font-mono text-sm">erc7730 calldata --chain-id 143</code>{" "}
-            on the WMON descriptor, the same payload a Ledger device loads to
-            render it.
+            {t("clearSigning.registry.introBeforeDeposit")}{" "}
+            <code className="font-mono text-sm">deposit()</code>{" "}
+            {t("clearSigning.registry.introOr")}{" "}
+            <code className="font-mono text-sm">withdraw()</code>
+            {locale === "en" && " "}
+            {t("clearSigning.registry.introAfterWithdraw")}{" "}
+            <code className="font-mono text-sm">
+              erc7730 calldata --chain-id 143
+            </code>
+            {locale === "en" && " "}
+            {t("clearSigning.registry.introAfterCommand")}
           </p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -382,22 +394,41 @@ export default function ClearSigningPage() {
                 className="rounded-2xl border border-solution-accent-light bg-surface-elevated p-5"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-solution-accent">
+                  <p className="min-w-0 text-sm font-semibold text-solution-accent">
                     {r.action}
+                    {locale === "zh" && (
+                      <span className="ml-1 font-normal text-text-tertiary">
+                        （{t(`clearSigning.registry.actions.${r.actionGloss}`)}）
+                      </span>
+                    )}
                   </p>
-                  <code className="font-mono text-xs text-text-tertiary">
+                  <code className="shrink-0 font-mono text-xs text-text-tertiary">
                     {r.selector}
                   </code>
                 </div>
                 <dl className="mt-3 space-y-1.5 text-sm">
-                  {r.fields.map(([label, value]) => (
+                  {r.fields.map(([label, value, gloss]) => (
                     <div key={label} className="flex justify-between gap-4">
-                      <dt className="text-text-tertiary">{label}</dt>
+                      <dt className="text-text-tertiary">
+                        {label}
+                        {locale === "zh" && (
+                          <span>
+                            （{t(`clearSigning.registry.fields.${gloss}`)}）
+                          </span>
+                        )}
+                      </dt>
                       <dd className="text-right font-medium">{value}</dd>
                     </div>
                   ))}
                   <div className="flex justify-between gap-4">
-                    <dt className="text-text-tertiary">Network</dt>
+                    <dt className="text-text-tertiary">
+                      Network
+                      {locale === "zh" && (
+                        <span>
+                          （{t("clearSigning.registry.fields.network")}）
+                        </span>
+                      )}
+                    </dt>
                     <dd className="text-right font-medium">Monad</dd>
                   </div>
                 </dl>
@@ -406,26 +437,23 @@ export default function ClearSigningPage() {
           </div>
 
           <p className="mt-4 text-xs text-text-tertiary">
-            Field values are illustrative. The action names and field labels are
-            exactly what the descriptor emits for chain 143. Reproduce it with{" "}
+            {t("clearSigning.registry.fieldNoteBeforeCommand")}{" "}
             <code className="font-mono">
               uvx erc7730 calldata --chain-id 143 calldata-wmon.json
             </code>
-            .
+            {t("clearSigning.registry.fieldNoteAfterCommand")}
           </p>
 
           {/* Live litmus test: trigger a non-native render */}
           <div className="mt-8 rounded-2xl border border-border bg-surface-elevated p-5 sm:p-6">
-            <p className="text-sm font-semibold">Got a Ledger?</p>
+            <p className="text-sm font-semibold">
+              {t("clearSigning.registry.gotLedger")}
+            </p>
             <p className="mt-2 text-sm text-text-secondary">
-              This is the cleanest way to settle it. Connect through MetaMask and
-              confirm a real Wrap MON transaction on Monad, then reject it:
-              nothing needs to be sent. Any wallet works, but Ledger is the one
-              that reads the registry. If the device shows{" "}
-              <span className="font-medium text-text-primary">Wrap MON</span>{" "}
-              with an amount, a descriptor is rendering on Monad. If it shows raw
-              hex or a generic contract interaction, nothing has ingested it for
-              chain 143 yet.
+              {t("clearSigning.registry.ledgerBeforeWrap")}{" "}
+              <span className="font-medium text-text-primary">Wrap MON</span>
+              {locale === "en" && " "}
+              {t("clearSigning.registry.ledgerAfterWrap")}
             </p>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -434,8 +462,8 @@ export default function ClearSigningPage() {
                 disabled={testStatus === "working"}
               >
                 {testStatus === "working"
-                  ? "Check your wallet…"
-                  : "Review a WMON wrap on Monad"}
+                  ? t("clearSigning.demo.checkWallet")
+                  : t("clearSigning.registry.reviewWrap")}
               </Button>
               {account && (
                 <span className="font-mono text-xs text-text-tertiary">
@@ -453,14 +481,12 @@ export default function ClearSigningPage() {
                     : "text-text-secondary")
                 }
               >
-                {testMessage}
+                {feedbackText(testMessage)}
               </p>
             )}
 
             <p className="mt-4 text-xs text-text-tertiary">
-              The page cannot see your device screen, so eyeball it or grab a
-              screenshot. That screenshot is exactly the proof the registry
-              render needs.
+              {t("clearSigning.registry.screenshotNote")}
             </p>
           </div>
         </div>
@@ -469,43 +495,57 @@ export default function ClearSigningPage() {
       {/* Before / after */}
       <section className="px-6 py-16 bg-surface">
         <div className="mx-auto max-w-3xl">
-          <h2 className="text-2xl font-semibold">Hex versus readable</h2>
+          <h2 className="text-2xl font-semibold">
+            {t("clearSigning.comparison.title")}
+          </h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-problem-accent-light bg-surface-elevated p-5">
               <p className="font-mono text-xs font-medium uppercase tracking-wide text-problem-accent-strong">
-                Before: blind signing
+                {t("clearSigning.comparison.before")}
               </p>
               <pre className="mt-3 overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-problem-accent-light bg-surface p-3 font-mono text-xs text-text-secondary">
                 0x095ea7b3000000000000000000000000fe9c9ca3eed0fb3e6a5c0bf42ad6f1a0d1c7b2a40000000000000000000000000000000000000000000000000000000003b9aca00
               </pre>
               <p className="mt-3 text-sm text-text-secondary">
-                Sign and hope. You cannot see the spender or the amount.
+                {t("clearSigning.comparison.beforeDescription")}
               </p>
             </div>
             <div className="rounded-2xl border border-solution-accent-light bg-surface-elevated p-5">
               <p className="font-mono text-xs font-medium uppercase tracking-wide text-solution-accent">
-                After: clear signing
+                {t("clearSigning.comparison.after")}
               </p>
               <dl className="mt-3 space-y-1.5 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-text-tertiary">Action</dt>
-                  <dd className="font-medium">Approve USDC</dd>
+                  <dt className="text-text-tertiary">
+                    {t("clearSigning.comparison.action")}
+                  </dt>
+                  <dd className="font-medium">
+                    {t("clearSigning.comparison.approveUsdc")}
+                  </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-text-tertiary">Spender</dt>
-                  <dd className="font-medium">Uniswap Router</dd>
+                  <dt className="text-text-tertiary">
+                    {t("clearSigning.registry.fields.spender")}
+                  </dt>
+                  <dd className="font-medium">
+                    {t("clearSigning.comparison.uniswapRouter")}
+                  </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-text-tertiary">Amount</dt>
+                  <dt className="text-text-tertiary">
+                    {t("clearSigning.registry.fields.amount")}
+                  </dt>
                   <dd className="font-medium">1 USDC</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-text-tertiary">Network</dt>
+                  <dt className="text-text-tertiary">
+                    {t("clearSigning.registry.fields.network")}
+                  </dt>
                   <dd className="font-medium">Monad</dd>
                 </div>
               </dl>
               <p className="mt-3 text-sm text-text-secondary">
-                See exactly what you authorize, then sign.
+                {t("clearSigning.comparison.afterDescription")}
               </p>
             </div>
           </div>
@@ -515,12 +555,11 @@ export default function ClearSigningPage() {
       {/* Why a live demo */}
       <section className="px-6 py-16 bg-surface-alt">
         <div className="mx-auto max-w-3xl">
-          <h2 className="text-2xl font-semibold">Why a live demo</h2>
+          <h2 className="text-2xl font-semibold">
+            {t("clearSigning.liveDemo.title")}
+          </h2>
           <p className="mt-3 text-text-secondary">
-            Existing preview tools only render against Ethereum mainnet, so they
-            cannot show what signing looks like on Monad. This page signs against
-            Monad directly in your own wallet, the only way to see the real
-            render on chain 143.
+            {t("clearSigning.liveDemo.description")}
           </p>
         </div>
       </section>
@@ -528,10 +567,11 @@ export default function ClearSigningPage() {
       {/* For builders */}
       <section className="px-6 py-16 bg-surface">
         <div className="mx-auto max-w-3xl">
-          <h2 className="text-2xl font-semibold">For builders</h2>
+          <h2 className="text-2xl font-semibold">
+            {t("clearSigning.builders.title")}
+          </h2>
           <p className="mt-3 text-text-secondary">
-            Make your Monad contract clear-signable: publish an ERC-7730
-            descriptor and open a PR to the registry.
+            {t("clearSigning.builders.description")}
           </p>
           <ul className="mt-5 space-y-2 text-sm">
             <li>
@@ -539,7 +579,7 @@ export default function ClearSigningPage() {
                 className="text-solution-accent underline"
                 href="https://eips.ethereum.org/EIPS/eip-7730"
               >
-                ERC-7730 specification
+                {t("clearSigning.builders.spec")}
               </a>
             </li>
             <li>
@@ -547,7 +587,7 @@ export default function ClearSigningPage() {
                 className="text-solution-accent underline"
                 href="https://github.com/ethereum/clear-signing-erc7730-registry"
               >
-                Clear Signing registry
+                {t("clearSigning.builders.registry")}
               </a>
             </li>
             <li>
@@ -555,7 +595,7 @@ export default function ClearSigningPage() {
                 className="text-solution-accent underline"
                 href="https://github.com/ethereum/clear-signing-erc7730-registry/pull/2611"
               >
-                Permit2 on Monad (PR #2611)
+                {t("clearSigning.builders.permit2")}
               </a>
             </li>
             <li>
@@ -563,7 +603,7 @@ export default function ClearSigningPage() {
                 className="text-solution-accent underline"
                 href="https://docs.monad.xyz/developer-essentials/network-information"
               >
-                Monad network info (chainId 143)
+                {t("clearSigning.builders.networkInfo")}
               </a>
             </li>
           </ul>
