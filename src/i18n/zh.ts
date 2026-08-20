@@ -637,28 +637,28 @@ const zh = {
     hero: {
       title: "Monad 上的清晰签名",
       description:
-        "钱包应该用直白的语言告诉你正在签署什么，而不是只显示一长串十六进制数据。清晰签名（Clear Signing，ERC-7730）正是为此而生，而且现在已经可以在 Monad 上使用。你可以在下方发起一次真实的 Monad 主网签名，亲自看看效果。",
+        "你的钱包应该用通俗易懂的语言告诉你正在签署什么，而不是一堆十六进制字符墙。清晰签名（ERC-7730）则解决了这个问题，并且在 Monad 上已经支持。在下方于 Monad 主网上触发一次真实签名，亲自体验一下。",
     },
     why: {
       title: "为什么这很重要",
-      blindTitle: "盲签可能让钱包被盗",
+      blindTitle: "盲签会让钱包被盗空",
       blindDescription:
-        "许多钓鱼损失都始于用户批准了一笔看不懂的恶意交易或代币授权。十六进制数据会隐藏被授权方和授权金额。",
-      verifyTitle: "核对真实操作",
+        "大多数钓鱼损失都始于用户批准了一笔自己根本看不懂的恶意交易或代币授权。十六进制字符串掩盖了支出方和金额。",
+      verifyTitle: "你核实的是真实操作",
       verifyDescription:
-        "清晰签名会在签名前展示真实意图：你在授权谁、哪种代币、多少金额，以及在哪个网络上操作，无需盲目信任 dApp 界面。",
+        "清晰签名会在你签名之前展示真实意图：你在给谁授权、哪个代币、多少数量、在哪个网络上。无需信任 dApp 界面。",
       trustTitle: "为新链建立信任",
       trustDescription:
-        "对 Monad 来说，这意味着从第一天起就具备与以太坊主网相当的签名安全体验，降低用户资产被盗的风险，让交易更有把握。",
+        "对 Monad 而言，这意味着上线第一天就拥有与以太坊主网同等的签名安全性：降低用户资产被盗空的概率，让用户放心交易。",
     },
     demo: {
-      title: "立即体验",
+      title: "尝试一下",
       description:
-        "这里会在 Monad 上签署一条 Permit2 代币授权消息。它只生成签名：签名在浏览器本地完成，永远不会广播，不消耗 gas，也不会转移资金。",
-      checkWallet: "请查看钱包…",
+        "在 Monad 上创建一个 Permit2 代币授权签名。放心，它只在你的浏览器中本地生成，不会产生任何真实交易。",
+      checkWallet: "请检查你的钱包…",
       signApproval: "在 Monad 上签署 Permit2 授权",
       note:
-        "MetaMask 自带 Permit2 解码，因此在包括 Monad 在内的任何链上都能显示可读信息。这是真实效果，但来自钱包内置解码，而不是 ERC-7730 注册表。要查看注册表如何渲染一个钱包自身无法解码的 Monad 合约，请继续往下看。",
+        "MetaMask 本身就能解码 Permit2，因此这种可读视图在任何链上都会显示，包括 Monad。这是真实的，但它是钱包内置的解码，而非 ERC-7730 注册表。想看看注册表为某个没有钱包能自行解码的 Monad 合约生成什么，请看下方。",
     },
     status: {
       noWallet:
@@ -666,75 +666,75 @@ const zh = {
       requestingAccount: "正在请求账户访问权限…",
       noAccount: "钱包未返回任何账户。",
       switchingNetwork: "正在切换到 Monad 主网…",
-      reviewRequest: "请打开钱包并检查签名请求…",
+      reviewRequest: "请打开钱包并审查该请求…",
       signed:
-        "签名完成。你的钱包显示的是原始十六进制数据，还是可读摘要？后者就是清晰签名。",
+        "已签名。你的钱包显示的是原始十六进制，还是可读摘要？那个可读视图就是清晰签名。",
       requestCancelled: "请求已取消。",
-      providerError: "钱包返回错误：",
+      providerError: "钱包错误：",
       testNoWallet:
-        "未检测到 EVM 钱包。请连接钱包后重试（也可以通过 MetaMask 连接 Ledger）。",
+        "未检测到 EVM 钱包。请连接钱包（通过 MetaMask 连接的 Ledger 也可以）后重试。",
       testReview:
-        "请立即查看确认界面（如果 Ledger 通过 MetaMask 连接，请查看 Ledger 设备），然后拒绝请求。无需发送任何交易。",
+        "现在仔细阅读确认屏幕（如果是通过 MetaMask 连接的 Ledger，则阅读 Ledger 设备上的屏幕），然后拒绝它。无需发送任何交易。",
       testApproved:
-        '你批准了请求，因此这笔 0.001 MON 的封装交易已经提交，并会消耗 gas。请在钱包活动记录中确认；如有需要，之后可以解封装 WMON。无论如何，你刚才看到的界面就是测试结果：如果显示带金额的“Wrap MON”，说明注册表描述符正在 Monad 上生效；如果显示原始十六进制数据，说明钱包尚未收录链 143 的描述符。',
+        '你已批准，因此 0.001 MON 的封装交易已提交，将消耗 gas。请查看你的钱包活动记录；如有需要，之后可以解封 WMON。无论哪种情况，你看到的屏幕就是答案：显示带金额的 "Wrap MON"，说明注册表描述符正在 Monad 上渲染；显示原始十六进制，则说明它尚未被 chain 143 收录。',
       testRejected:
-        '已拒绝，未发送任何交易。刚才的确认界面就是测试结果：如果显示带金额的“Wrap MON”，说明注册表描述符正在 Monad 上生效；如果显示原始十六进制数据，说明钱包尚未收录链 143 的描述符。',
+        '已拒绝，未发送任何交易。那个确认屏幕就是测试本身：显示带金额的 "Wrap MON"，说明注册表描述符正在 Monad 上渲染；显示原始十六进制，则说明它尚未被 chain 143 收录。',
     },
     registry: {
-      eyebrow: "真实证明，而非模拟",
-      title: "注册表在 Monad 上生成的内容",
+      eyebrow: "实证，而非模拟",
+      title: "注册表为 Monad 生成的内容",
       introBeforeDeposit:
-        "上方 Permit2 能显示可读信息，是因为 MetaMask 已经认识 Permit2。Wrapped MON 才是真正的检验：它只是一个普通封装合约，因此没有钱包会自行解码",
+        "上面的 Permit2 之所以能渲染，是因为 MetaMask 本来就知道 Permit2。Wrapped MON 才是有效的测试：它只是一个普通包装合约，任何钱包都无法自行解码",
       introOr: "或",
       introAfterWithdraw:
-        "。下方的英文动作名称和字段标签完全来自注册表中的 ERC-7730 描述符，而非其他来源。它们是对 WMON 描述符运行",
+        "这两个调用。下方的操作名称和标签来自我们在注册表中的 ERC-7730 描述符，除此之外别无来源。这是对",
       introAfterCommand:
-        "后的解析结果，也就是 Ledger 设备加载并用于渲染的同一份数据。",
+        "在 WMON 描述符上运行后的解析输出，也就是 Ledger 设备加载渲染时使用的同一份内容。",
       actions: {
         wrap: "封装 MON",
-        unwrap: "解封装 WMON",
+        unwrap: "解封 WMON",
         approve: "授权 WMON",
         send: "发送 WMON",
-        transfer: "转移 WMON",
+        transfer: "转账 WMON",
       },
       fields: {
         amount: "金额",
-        spender: "被授权方",
+        spender: "支出方",
         to: "接收方",
         from: "发送方",
         network: "网络",
       },
       fieldNoteBeforeCommand:
-        "字段值仅作演示。英文动作名称和字段标签与链 143 的描述符输出完全一致。运行以下命令即可复现：",
+        "字段值仅为示意。操作名称和字段标签正是描述符为 chain 143 输出的内容。可以用以下命令复现：",
       fieldNoteAfterCommand: "。",
       gotLedger: "有 Ledger 吗？",
       ledgerBeforeWrap:
-        "这是验证效果最直接的方法。通过 MetaMask 连接钱包，调出一笔真实 Monad Wrap MON 交易的确认界面，然后拒绝请求，无需真正发送。任何钱包都能发起测试，但 Ledger 才会读取注册表。如果设备显示带金额的",
+        "这是最简单的验证方式。通过MetaMask连接，在Monad上确认一笔真实的Wrap MON交易，然后拒绝它：无需发送任何内容。任何钱包都可以，不过Ledger可以读取注册表。如果设备显示",
       ledgerAfterWrap:
-        "，说明描述符正在 Monad 上渲染。如果显示原始十六进制数据或通用合约交互，说明钱包尚未收录链 143 的描述符。",
-      reviewWrap: "检查 Monad 上的 WMON 封装交易",
+        "及金额，说明渲染正常。如果显示的是原始十六进制或通用合约交互，说明它尚未支持Monad链。",
+      reviewWrap: "检查Monad上的 WMON包装Token 交易",
       screenshotNote:
-        "本页面无法读取你的设备屏幕，请直接观察或截图。那张截图正是验证注册表渲染结果所需的证据。",
+        "页面无法看到你的设备屏幕，请亲眼确认或截取一张截图。这张截图正是注册表渲染的结果。",
     },
     comparison: {
-      title: "十六进制数据与可读信息对比",
+      title: "十六进制对比可读视图",
       before: "之前：盲签",
-      beforeDescription: "只能签下去并祈祷无事发生，完全看不到被授权方或金额。",
+      beforeDescription: "签完只能碰运气。你看不到支出方是谁，也看不到金额。",
       after: "之后：清晰签名",
       action: "操作",
       approveUsdc: "授权 USDC",
-      uniswapRouter: "Uniswap 路由器",
-      afterDescription: "先准确了解自己授权的内容，再签名。",
+      uniswapRouter: "Uniswap Router",
+      afterDescription: "先看清你要授权的确切内容，再签名。",
     },
     liveDemo: {
-      title: "为什么要用真实演示",
+      title: "为什么是现场演示",
       description:
-        "现有预览工具只能针对以太坊主网渲染，无法展示 Monad 上的签名效果。本页面会直接通过你的钱包在 Monad 上发起签名，这是查看链 143 真实渲染结果的唯一方式。",
+        "现有的预览工具只针对以太坊主网渲染，无法展示 Monad 上的签名效果。本页面直接在你的钱包中针对 Monad 签名，这是在 chain 143 上看到真实渲染的唯一方式。",
     },
     builders: {
-      title: "开发者指南",
+      title: "面向开发者",
       description:
-        "让你的 Monad 合约支持清晰签名：发布 ERC-7730 描述符，并向注册表提交 PR。",
+        "让你的 Monad 合约支持清晰签名：发布一个 ERC-7730 描述符，并向注册表提交 PR。",
       spec: "ERC-7730 规范",
       registry: "清晰签名注册表",
       permit2: "Monad 上的 Permit2（PR #2611）",

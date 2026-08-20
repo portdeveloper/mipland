@@ -450,7 +450,8 @@ export default function ClearSigningPage() {
               {t("clearSigning.registry.gotLedger")}
             </p>
             <p className="mt-2 text-sm text-text-secondary">
-              {t("clearSigning.registry.ledgerBeforeWrap")}{" "}
+              {t("clearSigning.registry.ledgerBeforeWrap")}
+              {locale === "en" && " "}
               <span className="font-medium text-text-primary">Wrap MON</span>
               {locale === "en" && " "}
               {t("clearSigning.registry.ledgerAfterWrap")}
