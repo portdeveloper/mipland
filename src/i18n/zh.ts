@@ -3,6 +3,7 @@ const zh = {
     brand: "MIP Land",
     soon: "即将推出",
     beta: "beta",
+    clearSigning: "清晰签名",
   },
   home: {
     title: "用可视化方式理解 Monad 改进提案",
@@ -630,6 +631,114 @@ const zh = {
       body: "区块从每 400ms 一个变成每 300ms 一个，意味着每秒多出约 33% 的区块。由于每个区块少装 25% 的交易、Gas 和字节，网络每秒的总容量基本不变。管子没变粗——只是变快了。区块奖励缩水也是同理：区块更小、更频繁。",
       scopeTitle: "影响范围",
       scopeBody: "这只是共识层的改动。执行层不受影响，现有合约的行为与之前完全一致。启用它需要在共识客户端上进行一次硬分叉。",
+    },
+  },
+  clearSigning: {
+    hero: {
+      title: "Monad 上的清晰签名",
+      description:
+        "你的钱包应该用通俗易懂的语言告诉你正在签署什么，而不是一堆十六进制字符墙。清晰签名（ERC-7730）则解决了这个问题，并且在 Monad 上已经支持。在下方于 Monad 主网上触发一次真实签名，亲自体验一下。",
+    },
+    why: {
+      title: "为什么这很重要",
+      blindTitle: "盲签会让钱包被盗空",
+      blindDescription:
+        "大多数钓鱼损失都始于用户批准了一笔自己根本看不懂的恶意交易或代币授权。十六进制字符串掩盖了支出方和金额。",
+      verifyTitle: "你核实的是真实操作",
+      verifyDescription:
+        "清晰签名会在你签名之前展示真实意图：你在给谁授权、哪个代币、多少数量、在哪个网络上。无需信任 dApp 界面。",
+      trustTitle: "为新链建立信任",
+      trustDescription:
+        "对 Monad 而言，这意味着上线第一天就拥有与以太坊主网同等的签名安全性：降低用户资产被盗空的概率，让用户放心交易。",
+    },
+    demo: {
+      title: "尝试一下",
+      description:
+        "在 Monad 上创建一个 Permit2 代币授权签名。放心，它只在你的浏览器中本地生成，不会产生任何真实交易。",
+      checkWallet: "请检查你的钱包…",
+      signApproval: "在 Monad 上签署 Permit2 授权",
+      note:
+        "MetaMask 本身就能解码 Permit2，因此这种可读视图在任何链上都会显示，包括 Monad。这是真实的，但它是钱包内置的解码，而非 ERC-7730 注册表。想看看注册表为某个没有钱包能自行解码的 Monad 合约生成什么，请看下方。",
+    },
+    status: {
+      noWallet:
+        "未检测到 EVM 钱包。请安装 MetaMask（或其他浏览器钱包）后重试。",
+      requestingAccount: "正在请求账户访问权限…",
+      noAccount: "钱包未返回任何账户。",
+      switchingNetwork: "正在切换到 Monad 主网…",
+      reviewRequest: "请打开钱包并审查该请求…",
+      signed:
+        "已签名。你的钱包显示的是原始十六进制，还是可读摘要？那个可读视图就是清晰签名。",
+      requestCancelled: "请求已取消。",
+      providerError: "钱包错误：",
+      testNoWallet:
+        "未检测到 EVM 钱包。请连接钱包（通过 MetaMask 连接的 Ledger 也可以）后重试。",
+      testReview:
+        "现在仔细阅读确认屏幕（如果是通过 MetaMask 连接的 Ledger，则阅读 Ledger 设备上的屏幕），然后拒绝它。无需发送任何交易。",
+      testApproved:
+        '你已批准，因此 0.001 MON 的封装交易已提交，将消耗 gas。请查看你的钱包活动记录；如有需要，之后可以解封 WMON。无论哪种情况，你看到的屏幕就是答案：显示带金额的 "Wrap MON"，说明注册表描述符正在 Monad 上渲染；显示原始十六进制，则说明它尚未被 chain 143 收录。',
+      testRejected:
+        '已拒绝，未发送任何交易。那个确认屏幕就是测试本身：显示带金额的 "Wrap MON"，说明注册表描述符正在 Monad 上渲染；显示原始十六进制，则说明它尚未被 chain 143 收录。',
+    },
+    registry: {
+      eyebrow: "实证，而非模拟",
+      title: "注册表为 Monad 生成的内容",
+      introBeforeDeposit:
+        "上面的 Permit2 之所以能渲染，是因为 MetaMask 本来就知道 Permit2。Wrapped MON 才是有效的测试：它只是一个普通包装合约，任何钱包都无法自行解码",
+      introOr: "或",
+      introAfterWithdraw:
+        "这两个调用。下方的操作名称和标签来自我们在注册表中的 ERC-7730 描述符，除此之外别无来源。这是对",
+      introAfterCommand:
+        "在 WMON 描述符上运行后的解析输出，也就是 Ledger 设备加载渲染时使用的同一份内容。",
+      actions: {
+        wrap: "封装 MON",
+        unwrap: "解封 WMON",
+        approve: "授权 WMON",
+        send: "发送 WMON",
+        transfer: "转账 WMON",
+      },
+      fields: {
+        amount: "金额",
+        spender: "支出方",
+        to: "接收方",
+        from: "发送方",
+        network: "网络",
+      },
+      fieldNoteBeforeCommand:
+        "字段值仅为示意。操作名称和字段标签正是描述符为 chain 143 输出的内容。可以用以下命令复现：",
+      fieldNoteAfterCommand: "。",
+      gotLedger: "有 Ledger 吗？",
+      ledgerBeforeWrap:
+        "这是最简单的验证方式。通过MetaMask连接，在Monad上确认一笔真实的Wrap MON交易，然后拒绝它：无需发送任何内容。任何钱包都可以，不过Ledger可以读取注册表。如果设备显示",
+      ledgerAfterWrap:
+        "及金额，说明渲染正常。如果显示的是原始十六进制或通用合约交互，说明它尚未支持Monad链。",
+      reviewWrap: "检查Monad上的 WMON包装Token 交易",
+      screenshotNote:
+        "页面无法看到你的设备屏幕，请亲眼确认或截取一张截图。这张截图正是注册表渲染的结果。",
+    },
+    comparison: {
+      title: "十六进制对比可读视图",
+      before: "之前：盲签",
+      beforeDescription: "签完只能碰运气。你看不到支出方是谁，也看不到金额。",
+      after: "之后：清晰签名",
+      action: "操作",
+      approveUsdc: "授权 USDC",
+      uniswapRouter: "Uniswap Router",
+      afterDescription: "先看清你要授权的确切内容，再签名。",
+    },
+    liveDemo: {
+      title: "为什么是现场演示",
+      description:
+        "现有的预览工具只针对以太坊主网渲染，无法展示 Monad 上的签名效果。本页面直接在你的钱包中针对 Monad 签名，这是在 chain 143 上看到真实渲染的唯一方式。",
+    },
+    builders: {
+      title: "面向开发者",
+      description:
+        "让你的 Monad 合约支持清晰签名：发布一个 ERC-7730 描述符，并向注册表提交 PR。",
+      spec: "ERC-7730 规范",
+      registry: "清晰签名注册表",
+      permit2: "Monad 上的 Permit2（PR #2611）",
+      networkInfo: "Monad 网络信息（chainId 143）",
     },
   },
   footer: {

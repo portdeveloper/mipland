@@ -3,6 +3,7 @@ const en = {
     brand: "MIP Land",
     soon: "soon",
     beta: "beta",
+    clearSigning: "Clear Signing",
   },
   home: {
     title: "Monad Improvement Proposals, explained visually",
@@ -647,6 +648,115 @@ const en = {
       scopeTitle: "What it touches",
       scopeBody:
         "This is a consensus-layer change only. The execution layer is unaffected and existing contracts behave exactly as before. Activating it requires a hard fork on the consensus client.",
+    },
+  },
+  clearSigning: {
+    hero: {
+      title: "Clear Signing on Monad",
+      description:
+        "Your wallet should tell you what you are signing in plain language, not a wall of hex. Clear Signing (ERC-7730) does exactly that, and it works on Monad today. Trigger a real signature on Monad mainnet below and see it for yourself.",
+    },
+    why: {
+      title: "Why this matters",
+      blindTitle: "Blind signing drains wallets",
+      blindDescription:
+        "Most phishing losses start with a user approving a malicious transaction or token permit they could not read. Hex hides the spender and the amount.",
+      verifyTitle: "You verify the real action",
+      verifyDescription:
+        "Clear Signing shows the actual intent: who you are approving, which token, how much, on which network, before you sign. No trust in the dApp UI required.",
+      trustTitle: "Trust for a new chain",
+      trustDescription:
+        "For Monad it means day-one signing safety on par with Ethereum mainnet. Lower the odds users get drained, raise the odds they transact with confidence.",
+    },
+    demo: {
+      title: "Try it live",
+      description:
+        "This signs a Permit2 token-approval message on Monad. It is a signature only: it is generated locally in your browser and never broadcast, no gas is spent, and no funds move.",
+      checkWallet: "Check your wallet…",
+      signApproval: "Sign a Permit2 approval on Monad",
+      note:
+        "MetaMask decodes Permit2 itself, so this readable view shows on any chain, Monad included. That is real, but it is the wallet's built-in decoding, not the ERC-7730 registry. To see what the registry produces for a Monad contract no wallet decodes on its own, look just below.",
+    },
+    status: {
+      noWallet:
+        "No EVM wallet detected. Install MetaMask (or another browser wallet) and try again.",
+      requestingAccount: "Requesting account access…",
+      noAccount: "No account returned by the wallet.",
+      switchingNetwork: "Switching to Monad mainnet…",
+      reviewRequest: "Open your wallet and review the request…",
+      signed:
+        "Signed. What did your wallet show, raw hex or a readable summary? That readable view is Clear Signing.",
+      requestCancelled: "Request cancelled.",
+      providerError: "Wallet error:",
+      testNoWallet:
+        "No EVM wallet detected. Connect a wallet (a Ledger through MetaMask works) and try again.",
+      testReview:
+        "Read the confirmation screen now (on your Ledger device if it is connected through MetaMask), then reject it. Nothing needs to be sent.",
+      testApproved:
+        'You approved it, so the 0.001 MON wrap transaction was submitted and gas will be spent. Check your wallet activity; you can unwrap the WMON later if desired. Either way the screen you saw is the answer: "Wrap MON" with an amount means a registry descriptor is rendering on Monad; raw hex means it is not ingested for chain 143 yet.',
+      testRejected:
+        'Rejected, nothing was sent. That confirmation screen was the test: "Wrap MON" with an amount means a registry descriptor is rendering on Monad; raw hex means it is not ingested for chain 143 yet.',
+    },
+    registry: {
+      eyebrow: "Proof, not a mock",
+      title: "What the registry produces for Monad",
+      introBeforeDeposit:
+        "Permit2 above renders because MetaMask already knows Permit2. Wrapped MON is the honest test: it is a plain wrapper, so no wallet decodes",
+      introOr: "or",
+      introAfterWithdraw:
+        "on its own. The action names and labels below come from our ERC-7730 descriptor in the registry and nowhere else. This is the resolved output of",
+      introAfterCommand:
+        "on the WMON descriptor, the same payload a Ledger device loads to render it.",
+      actions: {
+        wrap: "Wrap MON",
+        unwrap: "Unwrap WMON",
+        approve: "Approve WMON",
+        send: "Send WMON",
+        transfer: "Transfer WMON",
+      },
+      fields: {
+        amount: "Amount",
+        spender: "Spender",
+        to: "To",
+        from: "From",
+        network: "Network",
+      },
+      fieldNoteBeforeCommand:
+        "Field values are illustrative. The action names and field labels are exactly what the descriptor emits for chain 143. Reproduce it with",
+      fieldNoteAfterCommand: ".",
+      gotLedger: "Got a Ledger?",
+      ledgerBeforeWrap:
+        "This is the cleanest way to settle it. Connect through MetaMask and confirm a real Wrap MON transaction on Monad, then reject it: nothing needs to be sent. Any wallet works, but Ledger is the one that reads the registry. If the device shows",
+      ledgerAfterWrap:
+        "with an amount, a descriptor is rendering on Monad. If it shows raw hex or a generic contract interaction, nothing has ingested it for chain 143 yet.",
+      reviewWrap: "Review a WMON wrap on Monad",
+      screenshotNote:
+        "The page cannot see your device screen, so eyeball it or grab a screenshot. That screenshot is exactly the proof the registry render needs.",
+    },
+    comparison: {
+      title: "Hex versus readable",
+      before: "Before: blind signing",
+      beforeDescription:
+        "Sign and hope. You cannot see the spender or the amount.",
+      after: "After: clear signing",
+      action: "Action",
+      approveUsdc: "Approve USDC",
+      uniswapRouter: "Uniswap Router",
+      afterDescription: "See exactly what you authorize, then sign.",
+    },
+    liveDemo: {
+      title: "Why a live demo",
+      description:
+        "Existing preview tools only render against Ethereum mainnet, so they cannot show what signing looks like on Monad. This page signs against Monad directly in your own wallet, the only way to see the real render on chain 143.",
+    },
+    builders: {
+      title: "For builders",
+      description:
+        "Make your Monad contract clear-signable: publish an ERC-7730 descriptor and open a PR to the registry.",
+      spec: "ERC-7730 specification",
+      registry: "Clear Signing registry",
+      permit2: "Permit2 on Monad (PR #2611)",
+      networkInfo: "Monad network info (chainId 143)",
     },
   },
   footer: {

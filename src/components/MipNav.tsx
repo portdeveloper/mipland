@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const TABS = [
@@ -10,12 +11,26 @@ const TABS = [
   { name: "MIP-4", href: "/mip-4", ready: true },
   { name: "MIP-7", href: "/mip-7", ready: true },
   { name: "MIP-12", href: "/mip-12", ready: true },
-  { name: "Clear Signing", href: "/clear-signing", ready: true },
+  {
+    name: "Clear Signing",
+    labelKey: "nav.clearSigning",
+    href: "/clear-signing",
+    ready: true,
+  },
 ];
 
 export default function MipNav() {
   const pathname = usePathname();
   const { locale, setLocale, t } = useLanguage();
+  const activeTabRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    activeTabRef.current?.scrollIntoView({
+      behavior: "auto",
+      block: "nearest",
+      inline: "nearest",
+    });
+  }, [locale, pathname]);
 
   return (
     <nav
@@ -37,6 +52,7 @@ export default function MipNav() {
               return (
                 <Link
                   key={tab.name}
+                  ref={isActive ? activeTabRef : undefined}
                   href={tab.href}
                   className={`inline-flex items-center h-8 font-mono text-xs px-2.5 sm:px-3 rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${
                     isActive
@@ -46,7 +62,7 @@ export default function MipNav() {
                       : "text-text-tertiary cursor-default"
                   }`}
                 >
-                  {tab.name}
+                  {tab.labelKey ? t(tab.labelKey) : tab.name}
                   {!tab.ready && (
                     <span className="ml-1.5 text-[10px] opacity-50">{t("nav.soon")}</span>
                   )}
