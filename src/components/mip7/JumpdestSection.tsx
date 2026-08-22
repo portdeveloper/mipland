@@ -234,14 +234,15 @@ export default function JumpdestSection() {
   // Auto-advance
   useEffect(() => {
     if (!isPlaying) return;
-    if (scanStep >= totalBytes - 1) {
-      setIsPlaying(false);
-      return;
-    }
-    const timer = setTimeout(
-      () => setScanStep((s) => s + 1),
-      scanStep === -1 ? 300 : 700
-    );
+    if (scanStep >= totalBytes - 1) return;
+    const timer = setTimeout(() => {
+      setScanStep((s) => {
+        if (s + 1 >= totalBytes - 1) {
+          setIsPlaying(false);
+        }
+        return s + 1;
+      });
+    }, scanStep === -1 ? 300 : 700);
     return () => clearTimeout(timer);
   }, [isPlaying, scanStep, totalBytes]);
 

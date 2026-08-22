@@ -256,14 +256,16 @@ export default function AnalyzerPage() {
       analyzeProgress.finish();
       setLoading(false);
     },
-    [analyzeProgress]
+    [analyzeProgress, setTab]
   );
 
   // Auto-analyze when navigated with ?q= param
   useEffect(() => {
     if (queryInput && !autoAnalyzed) {
-      setAutoAnalyzed(true);
-      handleAnalyze();
+      setTimeout(() => {
+        setAutoAnalyzed(true);
+        handleAnalyze();
+      }, 0);
     }
   }, [queryInput, autoAnalyzed, handleAnalyze]);
 

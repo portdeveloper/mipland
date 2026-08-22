@@ -416,7 +416,7 @@ function MiniSpamGrid() {
     generate();
     const timer = setInterval(generate, 3000);
     return () => { cancelled = true; clearInterval(timer); };
-  }, []);
+  }, [total]);
 
   // 0=user, 1=spam-idle, 2=spam-fail, 3=spam-success
   const colors = ["#d4e4f4", "#f0d0c0", "#e8b8a8", "#c8e6d8"];
@@ -466,7 +466,7 @@ function MiniBteGrid() {
       cancelled = true;
       t.forEach(clearTimeout);
     };
-  }, []);
+  }, [total]);
 
   return (
     <div

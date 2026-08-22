@@ -4,7 +4,6 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   type ReactNode,
 } from "react";
 
@@ -29,12 +28,7 @@ function readStored(): ExplainMode {
 }
 
 export function ExplainModeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<ExplainMode>("technical");
-
-  // Hydrate from localStorage after mount
-  useEffect(() => {
-    setMode(readStored());
-  }, []);
+  const [mode, setMode] = useState<ExplainMode>(readStored);
 
   const toggle = () =>
     setMode((m) => {
