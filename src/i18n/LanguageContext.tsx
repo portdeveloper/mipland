@@ -6,6 +6,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import en from "./en";
@@ -41,26 +42,33 @@ function getNestedValue(obj: Record<string, unknown>, path: string): string {
   return typeof current === "string" ? current : path;
 }
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("en");
-  const [showBanner, setShowBanner] = useState(false);
-  const [mounted, setMounted] = useState(false);
+const emptySubscribe = () => () => {};
 
-  useEffect(() => {
-    const saved = localStorage.getItem("locale");
-    if (saved === "en" || saved === "zh") {
-      // User has a saved preference - use it directly
-      setLocaleState(saved);
-    } else {
-      // No saved preference - check if browser is Chinese
-      const lang = navigator.language || "";
-      if (lang.startsWith("zh")) {
-        // Show banner asking if they want Chinese, but stay on English
-        setShowBanner(true);
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const isClient = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("locale");
+      if (saved === "en" || saved === "zh") return saved;
+    }
+    return "en";
+  });
+
+  const [showBanner, setShowBanner] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("locale");
+      if (saved !== "en" && saved !== "zh") {
+        const lang = navigator.language || "";
+        return lang.startsWith("zh");
       }
     }
-    setMounted(true);
-  }, []);
+    return false;
+  });
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
@@ -89,7 +97,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = locale;
   }, [locale]);
 
-  if (!mounted) {
+  if (!isClient) {
     return (
       <LanguageContext.Provider
         value={{

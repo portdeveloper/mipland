@@ -231,12 +231,6 @@ export default function OraclePlayground() {
       }
     };
 
-    // Reset state for new token
-    setLoading(true);
-    setError(null);
-    setPrices([]);
-    latestPriceRef.current = null;
-
     fetchPrice();
     const interval = setInterval(fetchPrice, 10_000);
     return () => {
@@ -244,6 +238,16 @@ export default function OraclePlayground() {
       clearInterval(interval);
     };
   }, [selectedToken]);
+
+  const handleSelectToken = (i: number) => {
+    if (i !== selectedToken) {
+      setSelectedToken(i);
+      setLoading(true);
+      setError(null);
+      setPrices([]);
+      latestPriceRef.current = null;
+    }
+  };
 
   const currentPrice =
     prices.length > 0 ? prices[prices.length - 1].price : 0;
@@ -294,7 +298,7 @@ export default function OraclePlayground() {
               {TOKENS.map((t, i) => (
                 <button
                   key={t.symbol}
-                  onClick={() => setSelectedToken(i)}
+                  onClick={() => handleSelectToken(i)}
                   className={`font-mono text-sm px-3 py-2 rounded-lg border transition-all ${
                     selectedToken === i
                       ? "bg-text-primary text-surface border-text-primary"

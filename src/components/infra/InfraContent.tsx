@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import OraclePlayground from "./OraclePlayground";
 import IndexerPlayground from "./IndexerPlayground";
 import SwapPlayground from "./SwapPlayground";
@@ -25,19 +25,18 @@ const CATEGORIES: Category[] = [
   { id: "auth", label: "Add Auth", icon: "⊡", ready: false },
 ];
 
-export default function InfraContent() {
-  const [active, setActive] = useState("oracles");
-  const [visited, setVisited] = useState(() => new Set(["oracles"]));
-
-  // Restore active tab from URL hash on mount
-  useEffect(() => {
+function getInitialActive() {
+  if (typeof window !== "undefined") {
     const hash = window.location.hash.slice(1);
     const valid = CATEGORIES.find((c) => c.id === hash && c.ready);
-    if (valid) {
-      setActive(hash);
-      setVisited((prev) => new Set(prev).add(hash));
-    }
-  }, []);
+    if (valid) return hash;
+  }
+  return "oracles";
+}
+
+export default function InfraContent() {
+  const [active, setActive] = useState(getInitialActive);
+  const [visited, setVisited] = useState(() => new Set([getInitialActive()]));
 
   const selectCategory = (id: string) => {
     setActive(id);

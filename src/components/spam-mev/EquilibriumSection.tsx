@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useInView } from "../useInView";
 import { useExplainMode } from "./ExplainModeContext";
 import Hint from "./Hint";
@@ -56,8 +56,14 @@ function SweepChart({
     ...sweep.map((s) => s.Qu + s.spamGas)
   );
 
-  const x = (bmax: number) => padL + (bmax / MAX_BMAX) * chartW;
-  const y = (gas: number) => padT + chartH - (gas / maxGas) * chartH;
+  const x = useCallback(
+    (bmax: number) => padL + (bmax / MAX_BMAX) * chartW,
+    [chartW]
+  );
+  const y = useCallback(
+    (gas: number) => padT + chartH - (gas / maxGas) * chartH,
+    [chartH, maxGas]
+  );
 
   // Build area paths
   const userAreaPath = useMemo(() => {
@@ -66,7 +72,7 @@ function SweepChart({
       .join(" ");
     const back = `L${x(MAX_BMAX)},${y(0)} L${x(0)},${y(0)} Z`;
     return forward + " " + back;
-  }, [sweep]);
+  }, [sweep, x, y]);
 
   const spamAreaPath = useMemo(() => {
     const forward = sweep
@@ -80,7 +86,7 @@ function SweepChart({
       .map((s, i) => `L${x((sweep.length - 1 - i) * 10)},${y(s.Qu)}`)
       .join(" ");
     return forward + " " + back + " Z";
-  }, [sweep]);
+  }, [sweep, x, y]);
 
   // Regime boundaries
   const BnoSpam = sweep[0]?.BnoSpam ?? 0;
@@ -291,10 +297,8 @@ function SweepChart({
 /** Plain-language narrative for simple mode, replacing raw metrics */
 function NarrativeCallout({
   eq,
-  Bmax,
 }: {
   eq: ReturnType<typeof computeEquilibrium>;
-  Bmax: number;
 }) {
   const welfareLoss =
     eq.userWelfareNoSpam > 0
@@ -604,7 +608,7 @@ export default function EquilibriumSection() {
 
         {/* Metrics: narrative in simple mode, raw numbers in technical */}
         {simple ? (
-          <NarrativeCallout eq={eq} Bmax={Bmax} />
+          <NarrativeCallout eq={eq} />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
             <div className="bg-surface-elevated rounded-lg border border-border p-4">

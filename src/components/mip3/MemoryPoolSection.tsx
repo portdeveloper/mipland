@@ -69,7 +69,7 @@ export default function MemoryPoolSection() {
     if (stepIdx < demoSteps.length - 1) {
       setStepIdx((s) => s + 1);
     }
-  }, [stepIdx]);
+  }, [stepIdx, demoSteps.length]);
 
   const handlePrev = useCallback(() => {
     if (stepIdx > 0) {
@@ -102,13 +102,17 @@ export default function MemoryPoolSection() {
   // Auto-advance when playing using a timer
   useEffect(() => {
     if (!isPlaying) return;
-    if (stepIdx >= demoSteps.length - 1) {
-      setIsPlaying(false);
-      return;
-    }
-    const timer = setTimeout(() => setStepIdx((s) => s + 1), 1200);
+    if (stepIdx >= demoSteps.length - 1) return;
+    const timer = setTimeout(() => {
+      setStepIdx((s) => {
+        if (s + 1 >= demoSteps.length - 1) {
+          setIsPlaying(false);
+        }
+        return s + 1;
+      });
+    }, 1200);
     return () => clearTimeout(timer);
-  }, [isPlaying, stepIdx]);
+  }, [isPlaying, stepIdx, demoSteps.length]);
 
   return (
     <section ref={ref} className="py-24 px-6 bg-surface-elevated relative">

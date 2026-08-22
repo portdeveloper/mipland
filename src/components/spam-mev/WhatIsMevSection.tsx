@@ -2,7 +2,6 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useExplainMode } from "./ExplainModeContext";
-import Hint from "./Hint";
 
 interface TxCardProps {
   label: string;

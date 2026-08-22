@@ -349,10 +349,12 @@ function CommitteeAnimation() {
       // isn't known yet (reduced=false) — force the final frame here.
       clearTimers();
       playingRef.current = false;
-      setCtVisible(new Array(BATCH).fill(true));
-      setServerOn(new Array(COMMITTEE_N).fill(true));
-      setPtVisible(new Array(BATCH).fill(true));
-      setDots([]);
+      setTimeout(() => {
+        setCtVisible(new Array(BATCH).fill(true));
+        setServerOn(new Array(COMMITTEE_N).fill(true));
+        setPtVisible(new Array(BATCH).fill(true));
+        setDots([]);
+      }, 0);
       return;
     }
     const io = new IntersectionObserver(
@@ -597,8 +599,10 @@ function FftComparison() {
           el.style.opacity = "0.95";
         }
       });
-      setNaiveCount(64);
-      setBtxCount(btxActiveOrder.length);
+      setTimeout(() => {
+        setNaiveCount(64);
+        setBtxCount(btxActiveOrder.length);
+      }, 0);
       return;
     }
 

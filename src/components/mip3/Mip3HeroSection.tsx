@@ -34,17 +34,24 @@ export default function Mip3HeroSection() {
   const innerTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
     if (!running) return;
-    if (step >= STEPS) {
-      // Reset after pause
-      const timer = setTimeout(() => {
-        setStep(0);
-        innerTimerRef.current = setTimeout(() => setRunning(true), 500);
-      }, 3000);
-      setRunning(false);
-      return () => { clearTimeout(timer); clearTimeout(innerTimerRef.current); };
-    }
-    const timer = setTimeout(() => setStep((s) => s + 1), STEP_DELAY);
-    return () => clearTimeout(timer);
+    if (step >= STEPS) return;
+    const timer = setTimeout(() => {
+      setStep((s) => {
+        const next = s + 1;
+        if (next >= STEPS) {
+          setRunning(false);
+          innerTimerRef.current = setTimeout(() => {
+            setStep(0);
+            innerTimerRef.current = setTimeout(() => setRunning(true), 500);
+          }, 3000);
+        }
+        return next;
+      });
+    }, STEP_DELAY);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(innerTimerRef.current);
+    };
   }, [step, running]);
 
   // Exponential scale so early steps show small sizes, later steps show big

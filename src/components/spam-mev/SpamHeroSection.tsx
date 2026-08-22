@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useSyncExternalStore } from "react";
 import { useExplainMode } from "./ExplainModeContext";
 
 const COLS = 9;
@@ -47,17 +47,23 @@ const INITIAL_GRID: CellType[] = Array.from({ length: TOTAL }, (_, i) => {
   return "spam-fail";
 });
 
+const emptySubscribe = () => () => {};
+
 export default function SpamHeroSection() {
-  const [cells, setCells] = useState<CellType[]>(INITIAL_GRID);
+  const isClient = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+
+  const [cells, setCells] = useState<CellType[]>(() => {
+    if (typeof window !== "undefined") {
+      return generateBlock();
+    }
+    return INITIAL_GRID;
+  });
   const [revealCount, setRevealCount] = useState(0);
   const [cycle, setCycle] = useState(0);
-  const [mounted, setMounted] = useState(false);
-
-  // Only start random generation after hydration
-  useEffect(() => {
-    setMounted(true);
-    setCells(generateBlock());
-  }, []);
 
   const startCycle = useCallback(() => {
     setCells(generateBlock());
@@ -66,7 +72,7 @@ export default function SpamHeroSection() {
 
   // Reveal cells one by one
   useEffect(() => {
-    if (!mounted) return;
+    if (!isClient) return;
     if (revealCount >= TOTAL) {
       const timer = setTimeout(() => {
         setCycle((c) => c + 1);
@@ -79,7 +85,7 @@ export default function SpamHeroSection() {
       revealCount === 0 ? 800 : 25
     );
     return () => clearTimeout(timer);
-  }, [revealCount, startCycle, cycle, mounted]);
+  }, [revealCount, startCycle, cycle, isClient]);
 
   const spamCount = cells.filter((c) => c !== "user").length;
   const successCount = cells.filter((c) => c === "spam-success").length;
