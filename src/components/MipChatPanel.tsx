@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { MessageCircle, X } from "lucide-react";
+import { AlertCircle, MessageCircle, RotateCcw, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
@@ -24,6 +24,7 @@ import {
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 import type { PendingChatQuestion } from "@/components/MipChat";
+import { formatChatError } from "@/lib/ai/chat-error";
 
 interface MipChatPanelProps {
   open: boolean;
@@ -56,7 +57,21 @@ export default function MipChatPanel({
     () => new DefaultChatTransport({ api: "/api/chat" }),
     [],
   );
-  const { messages, sendMessage, status } = useChat({ transport });
+  const { messages, sendMessage, status, error, regenerate } = useChat({
+    transport,
+    onError: (err) => {
+      if (typeof window !== "undefined") {
+        const ph = (
+          window as unknown as {
+            posthog?: { capture: (event: string, props?: Record<string, unknown>) => void };
+          }
+        ).posthog;
+        ph?.capture("chat_error", {
+          error: err.message,
+        });
+      }
+    },
+  });
 
   const pageContext = useCallback(() => {
     return {
@@ -64,6 +79,18 @@ export default function MipChatPanel({
       title: typeof document !== "undefined" ? document.title : undefined,
     };
   }, [pathname]);
+
+  const formattedError = useMemo(() => {
+    return error ? formatChatError(error) : null;
+  }, [error]);
+
+  const handleRetry = useCallback(async () => {
+    try {
+      await regenerate({ body: { pageContext: pageContext() } });
+    } catch {
+      // Error handled by useChat
+    }
+  }, [pageContext, regenerate]);
 
   useEffect(() => {
     if (!pendingQuestion || pendingQuestion.id <= lastQuestionId.current) return;
@@ -141,6 +168,40 @@ export default function MipChatPanel({
             <Message from="assistant">
               <MessageContent>
                 <TypingDots />
+              </MessageContent>
+            </Message>
+          )}
+          {status === "error" && formattedError && (
+            <Message from="assistant">
+              <MessageContent className="w-full">
+                <div
+                  role="alert"
+                  className="flex flex-col gap-2 rounded-xl border border-[var(--color-problem-accent)]/30 bg-[var(--color-problem-bg)] p-3 text-xs text-[var(--color-text-primary)]"
+                >
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-problem-accent)]" />
+                    <div className="flex-1 space-y-0.5">
+                      <p className="font-semibold text-[var(--color-problem-accent-strong)]">
+                        {formattedError.isRateLimit
+                          ? "Rate limit reached"
+                          : "Request failed"}
+                      </p>
+                      <p className="text-[var(--color-text-secondary)] leading-relaxed">
+                        {formattedError.message}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={handleRetry}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-problem-accent)]/40 bg-[var(--color-surface-elevated)] px-2.5 py-1 text-xs font-medium text-[var(--color-problem-accent-strong)] transition hover:bg-[var(--color-problem-accent-light)] hover:border-[var(--color-problem-accent)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--color-problem-accent)]"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      Retry
+                    </button>
+                  </div>
+                </div>
               </MessageContent>
             </Message>
           )}
