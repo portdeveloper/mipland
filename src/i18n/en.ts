@@ -379,9 +379,9 @@ const en = {
     },
     bundler: {
       title: "Find the action that breaks the bundle",
-      desc: "Five user actions are bundled into one transaction. Action #3 works on its own, but leaves the account with too little MON in reserve.",
+      desc: "This spec-derived simulation follows a realistic smart-wallet flow. Alice asks her wallet to do five things at once: swap 2 MON, mint an NFT, bridge 15 MON, stake 1 MON, and make one final swap. Her wallet sends them to a bundler, which packs all five actions into one transaction.",
       subDesc:
-        "MIP-4 only answers yes or no—it does not name the problem action. Checking after each action shows where things went wrong, so the bundler can retry without it.",
+        "Alice’s delegated account starts with 22 MON. The first two actions are safe. The bridge in Action #3 also reports success, but it leaves only 7 MON—below Monad’s 10 MON reserve. Without MIP-4, the bundler discovers that only after the whole transaction fails. With MIP-4, the reserve check says no after Actions #1 and #2, then yes immediately after #3. MIP-4 does not name the action; the bundler knows it was #3 because that was the last action completed. It can leave the bridge out and retry the other four in a new transaction.",
       scenario: "What goes wrong",
       scenarioDesc:
         "Action #3 bridges 15 MON out of an account with 22 MON. That leaves 7 MON—below the required 10 MON reserve—even though the bridge call itself succeeds.",
