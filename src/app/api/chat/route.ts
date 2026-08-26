@@ -1,6 +1,7 @@
 import {
   convertToModelMessages,
-  streamText,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
   type ModelMessage,
   type UIMessage,
 } from "ai";
@@ -10,6 +11,13 @@ import { z } from "zod";
 import { getChatConfig } from "@/lib/ai/config";
 import { getKnowledgeBundle } from "@/lib/ai/knowledge";
 import { checkRateLimit, getClientIp } from "@/lib/ai/ratelimit";
+import {
+  getSiloRailClient,
+  openAIStreamToUIMessageStream,
+  responseToError,
+  silorailErrorResponse,
+  toSiloRailMessages,
+} from "@/lib/ai/silorail";
 
 // Fluid Compute (Node.js runtime) — full streaming support, no edge limits.
 export const maxDuration = 60;
@@ -84,8 +92,8 @@ export async function POST(req: Request) {
 
   const modelMessages = await convertToModelMessages(parsed.messages);
 
-  // Static prefix: instructions + knowledge bundle. Stable across requests
-  // so the gateway's automatic caching can hit on the prefix.
+  // Static prefix: instructions + knowledge bundle. Kept separate from the
+  // per-page hint so the durable MIP context stays easy to inspect.
   const systemMessages: ModelMessage[] = [
     {
       role: "system",
@@ -94,8 +102,7 @@ export async function POST(req: Request) {
   ];
 
   // Dynamic suffix: where the user currently is in the app. Kept as a
-  // separate system message after the cached prefix so it doesn't break
-  // prefix caching when the user navigates between pages.
+  // separate system message so navigation context remains explicit.
   if (parsed.pageContext?.path) {
     const { path, title } = parsed.pageContext;
     const line = `Current page the user is viewing: ${path}${
@@ -104,16 +111,29 @@ export async function POST(req: Request) {
     systemMessages.push({ role: "system", content: line });
   }
 
-  const result = streamText({
-    model: config.model,
-    messages: [...systemMessages, ...modelMessages],
-    temperature: config.temperature,
-    maxOutputTokens: config.maxTokens,
-    providerOptions: {
-      gateway: { caching: "auto" },
-      deepseek: { thinking: { type: "disabled" } },
-    },
+  let response: Response;
+  try {
+    const request = await getSiloRailClient().request({
+      model: config.model,
+      messages: toSiloRailMessages([...systemMessages, ...modelMessages]),
+      temperature: config.temperature,
+      max_tokens: config.maxTokens,
+      stream: true,
+    });
+    response = request.response;
+  } catch (error) {
+    return silorailErrorResponse(error);
+  }
+
+  if (!response.ok) {
+    return responseToError(response);
+  }
+
+  const stream = createUIMessageStream({
+    execute: ({ writer }) => openAIStreamToUIMessageStream(response, writer),
+    onError: (error) =>
+      error instanceof Error ? error.message : "SiloRail stream failed.",
   });
 
-  return result.toUIMessageStreamResponse();
+  return createUIMessageStreamResponse({ stream });
 }

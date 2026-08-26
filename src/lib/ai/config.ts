@@ -2,6 +2,8 @@ import "server-only";
 
 import { get } from "@vercel/edge-config";
 
+import { DEFAULT_SILORAIL_MODEL } from "@/lib/ai/silorail";
+
 export type ChatConfig = {
   systemPrompt: string;
   model: string;
@@ -35,7 +37,7 @@ export const DEFAULT_CONFIG: ChatConfig = {
     "genuinely off-topic (not about Monad, MIPs, or the page), or (b) no " +
     "page hint is given and the question is too vague to answer from the " +
     "bundle. Be concise and cite the MIP number when relevant.",
-  model: "deepseek/deepseek-v4-pro",
+  model: process.env.SILORAIL_MODEL?.trim() || DEFAULT_SILORAIL_MODEL,
   allowedTopics: [
     "Monad Improvement Proposals (MIPs)",
     "the MIP process",

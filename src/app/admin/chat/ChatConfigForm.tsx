@@ -6,8 +6,10 @@ import { type ChatConfig } from "@/lib/ai/config";
 import { saveChatConfig, type SaveResult } from "./actions";
 
 const MODEL_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: "anthropic/claude-sonnet-4-6", label: "Claude Sonnet 4.6 (default)" },
-  { value: "anthropic/claude-haiku-4-5", label: "Claude Haiku 4.5 (cheap)" },
+  { value: "google/gemma-4-31b-it:free", label: "Gemma 4 31B free (testnet)" },
+  { value: "anthropic/claude-haiku-4.5", label: "Claude Haiku 4.5" },
+  { value: "anthropic/claude-sonnet-4.6", label: "Claude Sonnet 4.6" },
+  { value: "deepseek/deepseek-v4-pro", label: "DeepSeek V4 Pro" },
   { value: "openai/gpt-5", label: "GPT-5" },
 ];
 
@@ -47,7 +49,7 @@ export default function ChatConfigForm({ initial, writeReady }: Props) {
         />
       </Field>
 
-      <Field label="Model" hint="Routed through Vercel AI Gateway.">
+      <Field label="Model" hint="Routed through SiloRail.">
         <select
           name="model"
           defaultValue={initial.model}

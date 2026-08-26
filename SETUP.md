@@ -1,14 +1,18 @@
 # MIP Chat infra setup
 
-The chat widget will run with no infra at all — the AI Gateway call is the only
-hard dependency. Everything else degrades gracefully (defaults, no-op rate
-limiter). This document walks each piece from minimum-to-talk to fully wired.
+The chat widget routes model calls through SiloRail. Everything else degrades
+gracefully (defaults, no-op rate limiter). This document walks each piece from
+minimum-to-talk to fully wired.
 
 ## TL;DR — env vars
 
 | Var                          | Where         | Required for                            |
 | ---------------------------- | ------------- | --------------------------------------- |
-| `AI_GATEWAY_API_KEY`         | local only    | `/api/chat` to reach a model in dev     |
+| `SILORAIL_WALLET_KEY`        | local + prod  | unattended SiloRail signing             |
+| `SILORAIL_GATEWAY_URL`       | local + prod  | optional gateway override               |
+| `SILORAIL_MODEL`             | local + prod  | optional default model override         |
+| `SILORAIL_PER_CALL_MAX_MICRO_USD` | local + prod | optional per-call spend cap        |
+| `SILORAIL_SESSION_MAX_MICRO_USD`  | local + prod | optional per-instance spend cap     |
 | `EDGE_CONFIG`                | local + prod  | runtime config reads (else: defaults)   |
 | `EDGE_CONFIG_ID`             | local + prod  | admin writes (auto-parsed from above)   |
 | `VERCEL_API_TOKEN`           | local + prod  | admin saves config from `/admin/chat`   |
@@ -24,22 +28,35 @@ vercel env pull .env.local
 
 ---
 
-## 1. AI Gateway — the only hard dependency
+## 1. SiloRail — the model gateway
 
-The route uses plain `"anthropic/claude-sonnet-4-6"` strings, which the AI SDK
-routes through the Vercel AI Gateway.
+The route calls SiloRail from `src/app/api/chat/route.ts` through
+`@silorail/sdk`. The browser still posts to `/api/chat`; only the server-side
+completion path changes.
 
-- **In production on Vercel**, auth happens automatically via OIDC. You don't
-  set anything. The Gateway is enabled by default on all projects.
-- **In local dev**, OIDC isn't available. Mint a Gateway key in the Vercel
-  dashboard (Project → AI Gateway → API Keys) and add it to `.env.local`:
+Minimum local/testnet setup:
 
-  ```sh
-  AI_GATEWAY_API_KEY=vck_xxxxxxxxxxxx
-  ```
+```sh
+SILORAIL_WALLET_KEY=0x...
+SILORAIL_GATEWAY_URL=https://testnet.silorail.com
+SILORAIL_MODEL=google/gemma-4-31b-it:free
+SILORAIL_PER_CALL_MAX_MICRO_USD=50000
+SILORAIL_SESSION_MAX_MICRO_USD=500000
+```
 
-Without one of those, every chat request fails with an auth error. There is no
-local fallback for this — it's the actual model call.
+If `SILORAIL_GATEWAY_URL` is unset, the SDK uses the public testnet gateway.
+Testnet is limited to free models. For paid production traffic, set:
+
+```sh
+SILORAIL_GATEWAY_URL=https://mainnet.silorail.com
+SILORAIL_MODEL=deepseek/deepseek-v4-pro
+```
+
+The SDK can create a local key file automatically, but server environments
+should use `SILORAIL_WALLET_KEY` so the signing key is stable across deploys.
+Fund that wallet with the USDC required by the selected SiloRail network. The
+budget env vars are advisory client-side caps in micro-USDC (`50000` = $0.05).
+The signed x402 authorization still remains the gateway-enforced upper bound.
 
 ---
 
@@ -80,7 +97,7 @@ seed it manually too:
 curl -X PATCH "https://api.vercel.com/v1/edge-config/$EDGE_CONFIG_ID/items" \
   -H "Authorization: Bearer $VERCEL_API_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"items":[{"operation":"upsert","key":"chat","value":{"model":"anthropic/claude-sonnet-4-6"}}]}'
+  -d '{"items":[{"operation":"upsert","key":"chat","value":{"model":"google/gemma-4-31b-it:free"}}]}'
 ```
 
 ---
@@ -197,5 +214,6 @@ pnpm dev
 4. Send another chat — the new system prompt should take effect on the next
    request (no deploy needed).
 
-If step 2 fails with an auth error, you're missing `AI_GATEWAY_API_KEY`. If it
-streams a refusal, the knowledge bundle is empty or doesn't mention the topic.
+If step 2 fails with a payment or budget error, check the SiloRail wallet,
+gateway URL, selected model, and budget env vars. If it streams a refusal, the
+knowledge bundle is empty or doesn't mention the topic.
