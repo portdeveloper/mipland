@@ -16,9 +16,18 @@ import type {
 export const DEFAULT_SILORAIL_GATEWAY_URL = "https://testnet.silorail.com";
 export const DEFAULT_SILORAIL_MODEL = "google/gemma-4-31b-it:free";
 
+export class SiloRailConfigError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SiloRailConfigError";
+  }
+}
+
 let client: SiloRail | null = null;
 
 export function getSiloRailClient(): SiloRail {
+  assertSiloRailWalletConfigured();
+
   client ??= new SiloRail({
     gatewayUrl:
       process.env.SILORAIL_GATEWAY_URL?.trim() ||
@@ -32,6 +41,10 @@ export function getSiloRailClient(): SiloRail {
   return client;
 }
 
+export function resetSiloRailClientForTests(): void {
+  client = null;
+}
+
 export function toSiloRailMessages(messages: ModelMessage[]): ChatMessage[] {
   return messages.map((message) => ({
     role: message.role,
@@ -40,6 +53,17 @@ export function toSiloRailMessages(messages: ModelMessage[]): ChatMessage[] {
 }
 
 export function silorailErrorResponse(error: unknown): Response {
+  if (error instanceof SiloRailConfigError || isSiloRailKeyFileError(error)) {
+    return Response.json(
+      {
+        error:
+          "The MIP Assistant is missing its SiloRail wallet configuration. " +
+          "Set SILORAIL_WALLET_KEY for this deployment.",
+      },
+      { status: 503 },
+    );
+  }
+
   if (error instanceof BudgetExceededError) {
     return Response.json({ error: error.message }, { status: 402 });
   }
@@ -105,6 +129,15 @@ export async function responseToError(response: Response): Promise<Response> {
   const body = await response.text();
   const message = cleanSiloRailError(body || response.statusText);
   return Response.json({ error: message }, { status: response.status });
+}
+
+function assertSiloRailWalletConfigured(): void {
+  if (process.env.VERCEL !== "1") return;
+  if (process.env.SILORAIL_WALLET_KEY?.trim()) return;
+
+  throw new SiloRailConfigError(
+    "SILORAIL_WALLET_KEY is required when SiloRail chat runs on Vercel.",
+  );
 }
 
 function readMicroUsdEnv(name: string): bigint | undefined {
@@ -191,6 +224,15 @@ function toFinishReason(reason: string): FinishReason {
     default:
       return "other";
   }
+}
+
+function isSiloRailKeyFileError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const withCode = error as Error & { code?: string };
+  return (
+    (withCode.code === "ENOENT" || withCode.code === "EACCES") &&
+    error.message.includes(".silorail")
+  );
 }
 
 function cleanSiloRailError(raw: string): string {

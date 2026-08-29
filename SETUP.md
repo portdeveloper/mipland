@@ -52,11 +52,13 @@ SILORAIL_GATEWAY_URL=https://mainnet.silorail.com
 SILORAIL_MODEL=deepseek/deepseek-v4-pro
 ```
 
-The SDK can create a local key file automatically, but server environments
-should use `SILORAIL_WALLET_KEY` so the signing key is stable across deploys.
-Fund that wallet with the USDC required by the selected SiloRail network. The
-budget env vars are advisory client-side caps in micro-USDC (`50000` = $0.05).
-The signed x402 authorization still remains the gateway-enforced upper bound.
+The SDK can create a local key file automatically, but Vercel preview and
+production deployments must set `SILORAIL_WALLET_KEY`. The route refuses to
+fall back to `~/.silorail/key` on Vercel because that filesystem is not a stable
+place for a spending key. Fund that wallet with the USDC required by the
+selected SiloRail network. The budget env vars are advisory client-side caps in
+micro-USDC (`50000` = $0.05). The signed x402 authorization still remains the
+gateway-enforced upper bound.
 
 ---
 
@@ -214,6 +216,8 @@ pnpm dev
 4. Send another chat — the new system prompt should take effect on the next
    request (no deploy needed).
 
-If step 2 fails with a payment or budget error, check the SiloRail wallet,
-gateway URL, selected model, and budget env vars. If it streams a refusal, the
-knowledge bundle is empty or doesn't mention the topic.
+If step 2 says the SiloRail wallet is not configured, set
+`SILORAIL_WALLET_KEY` for that deployment and redeploy. If it fails with a
+payment or budget error, check the wallet balance, gateway URL, selected model,
+and budget env vars. If it streams a refusal, the knowledge bundle is empty or
+doesn't mention the topic.
