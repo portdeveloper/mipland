@@ -10,7 +10,7 @@ minimum-to-talk to fully wired.
 | ---------------------------- | ------------- | --------------------------------------- |
 | `SILORAIL_WALLET_KEY`        | local + prod  | unattended SiloRail signing             |
 | `SILORAIL_GATEWAY_URL`       | local + prod  | optional gateway override               |
-| `SILORAIL_MODEL`             | local + prod  | optional default model override         |
+| `SILORAIL_MODEL`             | local + prod  | optional model override                 |
 | `SILORAIL_PER_CALL_MAX_MICRO_USD` | local + prod | optional per-call spend cap        |
 | `SILORAIL_SESSION_MAX_MICRO_USD`  | local + prod | optional per-instance spend cap     |
 | `EDGE_CONFIG`                | local + prod  | runtime config reads (else: defaults)   |
@@ -39,13 +39,16 @@ Minimum local/testnet setup:
 ```sh
 SILORAIL_WALLET_KEY=0x...
 SILORAIL_GATEWAY_URL=https://testnet.silorail.com
-SILORAIL_MODEL=google/gemma-4-31b-it:free
+SILORAIL_MODEL=openrouter/free
 SILORAIL_PER_CALL_MAX_MICRO_USD=50000
 SILORAIL_SESSION_MAX_MICRO_USD=500000
 ```
 
 If `SILORAIL_GATEWAY_URL` is unset, the SDK uses the public testnet gateway.
-Testnet is limited to free models. For paid production traffic, set:
+Testnet is limited to free models. `openrouter/free` lets SiloRail route to an
+available free model instead of pinning the chat to one upstream provider's
+shared quota. `SILORAIL_MODEL`, when set, overrides the model from Edge Config
+as well as the code default. For paid production traffic, set:
 
 ```sh
 SILORAIL_GATEWAY_URL=https://mainnet.silorail.com
@@ -99,7 +102,7 @@ seed it manually too:
 curl -X PATCH "https://api.vercel.com/v1/edge-config/$EDGE_CONFIG_ID/items" \
   -H "Authorization: Bearer $VERCEL_API_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"items":[{"operation":"upsert","key":"chat","value":{"model":"google/gemma-4-31b-it:free"}}]}'
+  -d '{"items":[{"operation":"upsert","key":"chat","value":{"model":"openrouter/free"}}]}'
 ```
 
 ---

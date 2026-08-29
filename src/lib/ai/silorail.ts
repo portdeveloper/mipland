@@ -14,7 +14,7 @@ import type {
 } from "ai";
 
 export const DEFAULT_SILORAIL_GATEWAY_URL = "https://testnet.silorail.com";
-export const DEFAULT_SILORAIL_MODEL = "google/gemma-4-31b-it:free";
+export const DEFAULT_SILORAIL_MODEL = "openrouter/free";
 
 export class SiloRailConfigError extends Error {
   constructor(message: string) {
