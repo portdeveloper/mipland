@@ -6,6 +6,7 @@ import { type ChatConfig } from "@/lib/ai/config";
 import { saveChatConfig, type SaveResult } from "./actions";
 
 const MODEL_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "openrouter/free", label: "OpenRouter free auto (testnet)" },
   { value: "google/gemma-4-31b-it:free", label: "Gemma 4 31B free (testnet)" },
   { value: "anthropic/claude-haiku-4.5", label: "Claude Haiku 4.5" },
   { value: "anthropic/claude-sonnet-4.6", label: "Claude Sonnet 4.6" },

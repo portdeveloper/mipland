@@ -57,17 +57,22 @@ function isPartialChatConfig(value: unknown): value is Partial<ChatConfig> {
 }
 
 export async function getChatConfig(): Promise<ChatConfig> {
+  const applyEnvOverrides = (config: ChatConfig): ChatConfig => {
+    const model = process.env.SILORAIL_MODEL?.trim();
+    return model ? { ...config, model } : config;
+  };
+
   if (!process.env.EDGE_CONFIG) {
-    return DEFAULT_CONFIG;
+    return applyEnvOverrides(DEFAULT_CONFIG);
   }
 
   try {
     const stored = await get(EDGE_CONFIG_KEY);
-    if (!isPartialChatConfig(stored)) return DEFAULT_CONFIG;
-    return { ...DEFAULT_CONFIG, ...stored };
+    if (!isPartialChatConfig(stored)) return applyEnvOverrides(DEFAULT_CONFIG);
+    return applyEnvOverrides({ ...DEFAULT_CONFIG, ...stored });
   } catch {
     // Edge Config unreachable or key missing — fall back to defaults rather
     // than 500ing the chat.
-    return DEFAULT_CONFIG;
+    return applyEnvOverrides(DEFAULT_CONFIG);
   }
 }
