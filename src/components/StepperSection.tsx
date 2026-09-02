@@ -213,7 +213,7 @@ export default function StepperSection() {
   );
 
   // Compute page state up to currentStep
-  const { touchedSlots, pageMap, currentGas, mip8Gas, opLog } = useMemo(() => {
+  const { touchedSlots, pageMap, preMip8Gas, mip8Gas, opLog } = useMemo(() => {
     const touched = new Set<string>();
     const pages = new Map<
       string,
@@ -232,7 +232,7 @@ export default function StepperSection() {
       account: string;
       slot: number;
       locationLabel?: string;
-      coldCurrent: boolean;
+      coldPreMip8: boolean;
       coldMip8: boolean;
       page: number;
     }[] = [];
@@ -257,7 +257,7 @@ export default function StepperSection() {
 
       if (isFirstTouchSlot) {
         touched.add(slotKey);
-        // Monad (current): every new slot is cold
+        // Before MIP-8, every new slot is cold.
         cGas += COLD_COST;
         // MIP-8: cold only if page is new
         mGas += isFirstTouchPage ? COLD_COST : WARM_COST;
@@ -273,7 +273,7 @@ export default function StepperSection() {
           account,
           slot: op.slot,
           locationLabel: op.locationLabel,
-          coldCurrent: true,
+          coldPreMip8: true,
           coldMip8: isFirstTouchPage,
           page,
         });
@@ -283,7 +283,7 @@ export default function StepperSection() {
     return {
       touchedSlots: touched,
       pageMap: pages,
-      currentGas: cGas,
+      preMip8Gas: cGas,
       mip8Gas: mGas,
       opLog: log,
     };
@@ -296,13 +296,13 @@ export default function StepperSection() {
   const totalOps = opSteps.length;
   const finished = currentStep >= totalOps - 1 && currentStep >= 0;
   const savings =
-    currentGas > 0
-      ? Math.round(((currentGas - mip8Gas) / currentGas) * 100)
+    preMip8Gas > 0
+      ? Math.round(((preMip8Gas - mip8Gas) / preMip8Gas) * 100)
       : 0;
   const stepStatus =
     currentStep < 0
       ? `${example.name} is ready. ${totalOps} storage operations are available.`
-      : `${example.name}, step ${currentStep + 1} of ${totalOps}. Current Monad gas is ${currentGas.toLocaleString()}; MIP-8 gas is ${mip8Gas.toLocaleString()}.`;
+      : `${example.name}, step ${currentStep + 1} of ${totalOps}. Pre-MIP-8 gas is ${preMip8Gas.toLocaleString()}; current MIP-8 gas is ${mip8Gas.toLocaleString()}.`;
 
   const handleNext = useCallback(() => {
     if (currentStep < totalOps - 1) {
@@ -690,13 +690,13 @@ export default function StepperSection() {
                   aria-atomic="true"
                 >
                   <div className="text-right">
-                    <p className="font-mono text-xs text-text-tertiary">Monad</p>
+                    <p className="font-mono text-xs text-text-tertiary">Pre-MIP-8</p>
                     <p className="font-mono text-sm font-semibold text-problem-accent tabular-nums">
-                      {currentGas.toLocaleString()}
+                      {preMip8Gas.toLocaleString()}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-mono text-xs text-text-tertiary">MIP-8</p>
+                    <p className="font-mono text-xs text-text-tertiary">MIP-8 (current)</p>
                     <p className="font-mono text-sm font-semibold text-solution-accent tabular-nums">
                       {mip8Gas.toLocaleString()}
                     </p>
@@ -734,15 +734,15 @@ export default function StepperSection() {
             <div className="grid grid-cols-2 gap-4 mt-3">
               <div>
                 <p className="font-mono text-xs text-text-tertiary">
-                  {t("mip8.gasCalc.monadCurrent")}: {uniquePages.length} page{uniquePages.length > 1 ? "s" : ""}, {t("mip8.stepper.allSlotsCold")}
+                  {t("mip8.gasCalc.preMip8")}: {uniquePages.length} page{uniquePages.length > 1 ? "s" : ""}, {t("mip8.stepper.allSlotsCold")}
                 </p>
                 <p className="font-mono text-sm text-problem-accent font-semibold">
-                  {currentGas.toLocaleString()} gas
+                  {preMip8Gas.toLocaleString()} gas
                 </p>
               </div>
               <div>
                 <p className="font-mono text-xs text-text-tertiary">
-                  MIP-8: {pageMap.size} page{pageMap.size > 1 ? "s" : ""} {t("mip8.stepper.cold")}, {t("mip8.stepper.restWarm")}
+                  MIP-8 (current): {pageMap.size} page{pageMap.size > 1 ? "s" : ""} {t("mip8.stepper.cold")}, {t("mip8.stepper.restWarm")}
                 </p>
                 <p className="font-mono text-sm text-solution-accent font-semibold">
                   {mip8Gas.toLocaleString()} gas

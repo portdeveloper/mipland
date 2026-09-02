@@ -5,23 +5,23 @@ import { useLanguage } from "@/i18n/LanguageContext";
 
 const SPEC_URLS: Record<string, { url: string; mip: string }> = {
   "/mip-3": {
-    url: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-3.md",
+    url: "https://github.com/monad-crypto/MIPs/blob/main/MIPs/MIP-3.md",
     mip: "MIP-3",
   },
   "/mip-4": {
-    url: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-4.md",
+    url: "https://github.com/monad-crypto/MIPs/blob/main/MIPs/MIP-4.md",
     mip: "MIP-4",
   },
   "/mip-7": {
-    url: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-7.md",
+    url: "https://github.com/monad-crypto/MIPs/blob/main/MIPs/MIP-7.md",
     mip: "MIP-7",
   },
   "/mip-8": {
-    url: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-8.md",
+    url: "https://github.com/monad-crypto/MIPs/blob/main/MIPs/MIP-8.md",
     mip: "MIP-8",
   },
   "/mip-12": {
-    url: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-12.md",
+    url: "https://github.com/monad-crypto/MIPs/blob/main/MIPs/MIP-12.md",
     mip: "MIP-12",
   },
 };

@@ -5,27 +5,27 @@ import { useLanguage } from "@/i18n/LanguageContext";
 
 const FOOTER_DATA: Record<string, { specUrl: string; specLabel: string; noteKey: string }> = {
   "/mip-8": {
-    specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-8.md",
+    specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPs/MIP-8.md",
     specLabel: "MIP-8 on GitHub",
     noteKey: "footer.mip8Note",
   },
   "/mip-3": {
-    specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-3.md",
+    specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPs/MIP-3.md",
     specLabel: "MIP-3 on GitHub",
     noteKey: "footer.mip3Note",
   },
   "/mip-4": {
-    specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-4.md",
+    specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPs/MIP-4.md",
     specLabel: "MIP-4 on GitHub",
     noteKey: "footer.mip4Note",
   },
   "/mip-7": {
-    specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-7.md",
+    specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPs/MIP-7.md",
     specLabel: "MIP-7 on GitHub",
     noteKey: "footer.mip7Note",
   },
   "/mip-12": {
-    specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPS/MIP-12.md",
+    specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPs/MIP-12.md",
     specLabel: "MIP-12 on GitHub",
     noteKey: "footer.mip12Note",
   },

@@ -14,7 +14,8 @@ notes, and a path to activation.
 - **MIP-7 — Extension Opcodes.** Reserves a namespace in the opcode space so
   new opcodes can be added safely without colliding with future EIPs.
 - **MIP-8 — Page-ified Storage.** Aligns EVM storage layout with the underlying
-  hardware page boundary, reducing I/O amplification on commits.
+  hardware page boundary, reducing I/O amplification on commits. Final and
+  active on Monad mainnet since the MONAD_TEN upgrade on September 2, 2026.
 - **MIP-12 — Decrease Vote Pace.** Shortens the consensus vote pace from 400ms
   to 300ms, with the per-block limits and the block reward scaled down
   proportionally. A draft consensus-layer change, not yet live on mainnet.

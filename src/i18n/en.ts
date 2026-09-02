@@ -64,7 +64,7 @@ const en = {
       siblingNote: "127 sibling slots stay unused in this example",
     },
     problem: {
-      label: "Current EVM",
+      label: "Pre-MIP-8",
       title: "Hashing destroys locality",
       desc: "Ethereum's trie/database path hashes storage keys, so logically contiguous slots lose backend locality. In a worst-case pattern like this illustration, four related fields can end up on four different backend pages even though they are adjacent in Solidity.",
       structComment: "// Solidity struct",
@@ -77,7 +77,7 @@ const en = {
       moreDataNote: "128x more data touched than returned",
     },
     solution: {
-      label: "MIP-8",
+      label: "MIP-8 (current)",
       title: "One page touch warms 128 slots",
       desc: "MIP-8 groups 128 consecutive slots into a page. Touch one slot, and the rest of that page becomes warm for the transaction. This demo uses Monad's 8,100/100 cold-vs-warm read constants for illustration.",
       reset: "reset",
@@ -89,8 +89,8 @@ const en = {
       totalGas: "Total gas",
       coldReads: "Cold reads",
       warmReads: "Warm reads",
-      currentEvm: "Current EVM",
-      mip8Example: "MIP-8 example",
+      currentEvm: "Pre-MIP-8",
+      mip8Example: "MIP-8 (current)",
       cheaperHere: "74% cheaper here",
     },
     comparison: {
@@ -99,7 +99,7 @@ const en = {
       clickNote:
         "Click each field to load it and compare the gas cost side by side. Cold read costs 8,100 gas, warm read costs 100 gas on Monad.",
       reset: "reset",
-      monadCurrent: "Monad (current)",
+      preMip8: "Pre-MIP-8",
       coldRead: "cold read",
       coldReads: "cold reads",
       cold: "cold",
@@ -127,20 +127,19 @@ const en = {
       desc2:
         "Contracts that read consecutive storage slots often get cheaper because Solidity stores struct members, fixed arrays, and runs of dynamic-array elements contiguously once their base location is known. Mappings still use hashed locations, so mapping-heavy access patterns tend to change less. The main contracts at risk are those that hardcode opcode-gas assumptions for consecutive storage accesses.",
       blake3Note:
-        "Each 4,096-byte page is committed via a fixed binary tree built from the BLAKE3 compression function. 128 slots pair into 64 leaves, which hash through 6 levels into a single 32-byte root. An inclusion proof for any slot is about 257 bytes (1-byte index + target word + sibling word + 6 parent hashes), plus the MPT proof for the page commitment.",
+        "Each 4,096-byte page is committed with an induced BLAKE3-based subtree over occupied 64-byte slot pairs. Empty branches are bypassed, and a 128-bit occupancy bitmap seals the exact positions. The bitmap plus sibling hashes is at most 208 bytes, excluding the target value and the outer MPT proof.",
     },
     gasCalc: {
       title: "Compare the cost",
-      desc: "Select a scenario to see the gas breakdown under Monad's current model versus MIP-8's page-aware model.",
-      note: "The read examples use Monad's gas constants (8,100 cold / 100 warm) and assume the accessed run fits in one page. The write example is qualitative because MIP-8 defines abstract page-write and state-growth parameters instead of fixed numbers.",
-      monadCurrent: "Monad (current)",
+      desc: "Select a scenario to compare the pre-MIP-8 slot-based model with Monad's current page-aware model.",
+      note: "The examples use MIP-8's final gas constants: 8,100 gas for the first read from a page and 100 gas for each subsequent read from that page.",
+      preMip8: "Pre-MIP-8",
       gas: "gas",
       gasSavings: "Gas savings",
       cheaper: "cheaper",
       noChange: "No change",
-      specOpen: "Spec leaves this open",
-      specNote:
-        "MIP-8 specifies the shape of the write formula, but not final protocol constants.",
+      specOpen: "No fixed comparison",
+      specNote: "This scenario does not have a fixed gas comparison.",
       saved: "Saved",
       scenario1Name: "Read 4 struct fields",
       scenario1Desc:
@@ -764,7 +763,7 @@ const en = {
     about: "About",
     madeBy: "made by",
     mip8Note:
-      "MIP-8's future-directions section points to MIP-9 as a possible follow-on exploring flexible fanout trees for smaller proofs and optimized storage writes.",
+      "MIP-8 is Final and activated on Monad mainnet with MONAD_TEN on September 2, 2026 at 14:30 UTC.",
     mip3Note:
       "MIP-3 shipped as part of the MONAD_NINE network upgrade. It replaces the quadratic memory cost model with a linear one and introduces a shared 8 MB memory pool.",
     mip4Note:

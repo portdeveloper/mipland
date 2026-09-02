@@ -16,12 +16,12 @@ import Mip8WatchSection from "@/components/Mip8WatchSection";
 export const metadata: Metadata = {
   title: "MIP-8: Page-ified Storage",
   description:
-    "An interactive explainer for MIP-8: aligning EVM storage with hardware reality",
+    "Explore Monad's live MIP-8 page-aware storage model and gas schedule",
   alternates: { canonical: "/mip-8" },
   openGraph: {
     title: "MIP-8: Page-ified Storage",
     description:
-      "An interactive explainer for MIP-8: aligning EVM storage with hardware reality",
+      "Explore Monad's live MIP-8 page-aware storage model and gas schedule",
     url: "/mip-8",
   },
 };

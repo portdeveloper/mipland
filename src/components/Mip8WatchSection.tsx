@@ -28,11 +28,11 @@ const STATUS_COPY: Record<
 > = {
   active: {
     summary: "page warming is live",
-    detail: "Page warming is live: one cold page load warms the seven adjacent slots.",
+    detail: "Observed the MIP-8 schedule: one cold page load warms the seven adjacent slots.",
   },
   inactive: {
-    summary: "page warming is not live",
-    detail: "Page warming is not live: every storage slot still pays the full cold-read cost.",
+    summary: "the probe did not observe page warming",
+    detail: "This RPC did not return the activated MIP-8 schedule. Check the endpoint and block height.",
   },
   unknown: {
     summary: "the schedule is unrecognized",
@@ -66,12 +66,12 @@ function NetworkCard({ network }: { network: NetworkResult }) {
       <div className="p-5">
         <table className="w-full table-fixed text-left">
           <caption className="sr-only">
-            Expected MIP-8 gas costs compared with the latest {network.name} probe
+            MIP-8 protocol gas costs compared with the latest {network.name} probe
           </caption>
           <thead>
             <tr className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">
               <th scope="col" className="w-1/2 pb-3 font-normal">Pattern</th>
-              <th scope="col" className="pb-3 text-right font-normal">Expected gas</th>
+              <th scope="col" className="pb-3 text-right font-normal">Protocol gas</th>
               <th scope="col" className="pb-3 text-right font-normal">Observed gas</th>
             </tr>
           </thead>
@@ -149,11 +149,12 @@ export default function Mip8WatchSection() {
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between mb-8">
           <div className="max-w-2xl">
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3">
-              MIP-8 Watch
+              MIP-8 is live
             </h2>
             <p className="text-text-secondary font-light leading-relaxed">
-              Eight adjacent reads become dramatically cheaper when page warming is live.
-              This read-only check runs against both networks without sending a transaction.
+              Monad mainnet activated MIP-8 with MONAD_TEN on September 2, 2026
+              at 14:30 UTC. This read-only check verifies the active gas schedule
+              on mainnet and testnet without sending a transaction.
             </p>
           </div>
           <button

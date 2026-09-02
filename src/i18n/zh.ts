@@ -64,7 +64,7 @@ const zh = {
       siblingNote: "本例中其余 127 个相邻 slot 没有被使用",
     },
     problem: {
-      label: "当前 EVM",
+      label: "MIP-8 之前",
       title: "哈希打散了相邻数据",
       desc: "以太坊的 trie/数据库会对存储键做哈希，逻辑上相邻的 slot 在底层被打散。下面演示的是最坏情况：四个相关字段落在四个不同的底层页上，尽管它们在 Solidity 布局中紧挨着。",
       structComment: "// Solidity 结构体",
@@ -77,7 +77,7 @@ const zh = {
       moreDataNote: "实际读取的数据量是返回值的 128 倍",
     },
     solution: {
-      label: "MIP-8",
+      label: "MIP-8（当前）",
       title: "读一个 slot，同页 128 个 slot 全部变热读状态",
       desc: "MIP-8 把连续的 128 个 slot 归为一页。只要碰过其中一个，同页其余 slot 在本次交易中都算「热」的。本演示用 Monad 的冷读 8,100 / 热读 100 gas 常数来说明。",
       reset: "重置",
@@ -89,8 +89,8 @@ const zh = {
       totalGas: "总 gas",
       coldReads: "冷读次数",
       warmReads: "热读次数",
-      currentEvm: "当前 EVM",
-      mip8Example: "MIP-8 方案",
+      currentEvm: "MIP-8 之前",
+      mip8Example: "MIP-8（当前）",
       cheaperHere: "便宜 74%",
     },
     comparison: {
@@ -99,7 +99,7 @@ const zh = {
       clickNote:
         "点击每个字段来加载，对比两侧的 gas 开销。Monad 上冷读 8,100 gas，热读 100 gas。",
       reset: "重置",
-      monadCurrent: "Monad（当前）",
+      preMip8: "MIP-8 之前",
       coldRead: "次冷读",
       coldReads: "次冷读",
       cold: "冷",
@@ -127,19 +127,19 @@ const zh = {
       desc2:
         "读连续 slot 的合约通常会变便宜，因为 Solidity 本来就把 struct 成员、定长数组、动态数组元素紧挨着存放。Mapping 仍用哈希定位，所以大量 mapping 操作的费用变化不大。需要注意的是那些硬编码了连续存储访问 gas 假设的合约。",
       blake3Note:
-        "每个 4,096 字节的页通过基于 BLAKE3 压缩函数的固定二叉树来提交。128 个 slot 配对成 64 个叶子，经过 6 层哈希得到一个 32 字节的根。一个 slot 的包含证明约 257 字节（1 字节索引 + 目标字 + 兄弟字 + 6 个父哈希），再加上页承诺的 MPT 证明。",
+        "每个 4,096 字节的页通过基于 BLAKE3 的诱导子树提交，只处理已占用的 64 字节 slot 对并跳过空分支。一个 128 位占用位图会固定各值的准确位置；位图与兄弟哈希合计最多 208 字节，不含目标值和外层 MPT 证明。",
     },
     gasCalc: {
       title: "费用对比",
-      desc: "选择一个场景，查看 Monad 当前模型和 MIP-8 按页计费模型下的 gas 明细。",
-      note: "读取示例使用 Monad 的 gas 常数（冷读 8,100 / 热读 100），并假设访问范围在一页内。写入示例是定性的，因为 MIP-8 只定义了页写入和状态增长的抽象参数，没有给出具体数字。",
-      monadCurrent: "Monad（当前）",
+      desc: "选择一个场景，对比 MIP-8 之前按 slot 计费的模型与 Monad 当前按页计费的模型。",
+      note: "示例使用 MIP-8 的最终 gas 常数：首次读取一个页需 8,100 gas，随后读取同一页中的每个 slot 需 100 gas。",
+      preMip8: "MIP-8 之前",
       gas: "gas",
       gasSavings: "Gas 节省",
       cheaper: "更便宜",
       noChange: "无变化",
-      specOpen: "规范未确定",
-      specNote: "MIP-8 定义了写入公式的形式，但最终的协议常数尚未确定。",
+      specOpen: "无固定对比",
+      specNote: "此场景没有固定的 gas 对比。",
       saved: "已节省",
       scenario1Name: "读 4 个 struct 字段",
       scenario1Desc: "加载同一页内的 4 个连续 struct 字段",
@@ -746,7 +746,7 @@ const zh = {
     about: "关于",
     madeBy: "作者",
     mip8Note:
-      "MIP-8 的「未来方向」部分提到了 MIP-9，探索灵活的扇出树结构以实现更小的证明和更优化的存储写入。",
+      "MIP-8 已定稿，并于 2026 年 9 月 2 日 14:30 UTC 随 MONAD_TEN 在 Monad 主网上激活。",
     mip3Note:
       "MIP-3 随 MONAD_NINE 网络升级发布，用线性计费取代了二次方内存计费，并引入了 8 MB 共享内存池。",
     mip4Note:

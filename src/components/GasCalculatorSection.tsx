@@ -8,11 +8,11 @@ import { useLanguage } from "@/i18n/LanguageContext";
 interface Scenario {
   name: string;
   description: string;
-  currentGas: number | null;
+  preMip8Gas: number | null;
   mip8Gas: number | null;
-  currentBreakdown: string;
+  preMip8Breakdown: string;
   mip8Breakdown: string;
-  currentLabel?: string;
+  preMip8Label?: string;
   mip8Label?: string;
   note?: string;
 }
@@ -21,33 +21,33 @@ const SCENARIO_DATA = [
   {
     nameKey: "mip8.gasCalc.scenario1Name",
     descKey: "mip8.gasCalc.scenario1Desc",
-    currentGas: 32400,
+    preMip8Gas: 32400,
     mip8Gas: 8400,
-    currentBreakdown: "4 × 8,100 (distinct cold slots on Monad)",
+    preMip8Breakdown: "4 × 8,100 (distinct cold slots before MIP-8)",
     mip8Breakdown: "1 × 8,100 (first page touch) + 3 × 100 (warm reads in same page)",
   },
   {
     nameKey: "mip8.gasCalc.scenario2Name",
     descKey: "mip8.gasCalc.scenario2Desc",
-    currentGas: 64800,
+    preMip8Gas: 64800,
     mip8Gas: 8800,
-    currentBreakdown: "8 × 8,100 (distinct cold slots on Monad)",
+    preMip8Breakdown: "8 × 8,100 (distinct cold slots before MIP-8)",
     mip8Breakdown: "1 × 8,100 (first page touch) + 7 × 100 (warm reads in same page)",
   },
   {
     nameKey: "mip8.gasCalc.scenario3Name",
     descKey: "mip8.gasCalc.scenario3Desc",
-    currentGas: 64800,
+    preMip8Gas: 64800,
     mip8Gas: 64800,
-    currentBreakdown: "8 × 8,100 (distinct cold slots)",
+    preMip8Breakdown: "8 × 8,100 (distinct cold slots)",
     mip8Breakdown: "8 × 8,100 (typically 8 different pages)",
   },
   {
     nameKey: "mip8.gasCalc.scenario4Name",
     descKey: "mip8.gasCalc.scenario4Desc",
-    currentGas: 24300,
+    preMip8Gas: 24300,
     mip8Gas: 24300,
-    currentBreakdown: "3 × 8,100 (distinct cold slots)",
+    preMip8Breakdown: "3 × 8,100 (distinct cold slots)",
     mip8Breakdown: "3 × 8,100 (usually 3 different pages)",
   },
 ];
@@ -60,34 +60,34 @@ export default function GasCalculatorSection() {
   const scenarios: Scenario[] = useMemo(() => SCENARIO_DATA.map((s) => ({
     name: t(s.nameKey),
     description: t(s.descKey),
-    currentGas: s.currentGas,
+    preMip8Gas: s.preMip8Gas,
     mip8Gas: s.mip8Gas,
-    currentBreakdown: s.currentBreakdown,
+    preMip8Breakdown: s.preMip8Breakdown,
     mip8Breakdown: s.mip8Breakdown,
   })), [t]);
 
   const scenario = scenarios[selectedIdx];
-  const currentGas = scenario.currentGas;
+  const preMip8Gas = scenario.preMip8Gas;
   const mip8Gas = scenario.mip8Gas;
 
-  const hasComparableNumbers = currentGas !== null && mip8Gas !== null;
+  const hasComparableNumbers = preMip8Gas !== null && mip8Gas !== null;
   const savings = hasComparableNumbers
-    ? Math.round(((currentGas - mip8Gas) / currentGas) * 100)
+    ? Math.round(((preMip8Gas - mip8Gas) / preMip8Gas) * 100)
     : null;
-  const currentDisplay =
-    currentGas !== null
-      ? currentGas.toLocaleString()
-      : scenario.currentLabel ?? "variable";
+  const preMip8Display =
+    preMip8Gas !== null
+      ? preMip8Gas.toLocaleString()
+      : scenario.preMip8Label ?? "variable";
   const mip8Display =
     mip8Gas !== null
       ? mip8Gas.toLocaleString()
       : scenario.mip8Label ?? "variable";
   const savingsSummary =
     savings !== null
-      ? `${scenario.name}: current Monad uses ${currentDisplay} gas and MIP-8 uses ${mip8Display} gas. ${
-          savings > 0 ? `MIP-8 is ${savings}% cheaper.` : "There is no MIP-8 gas change."
+      ? `${scenario.name}: the pre-MIP-8 model uses ${preMip8Display} gas and current MIP-8 uses ${mip8Display} gas. ${
+          savings > 0 ? `MIP-8 is ${savings}% cheaper.` : "There is no gas change under MIP-8."
         }`
-      : `${scenario.name}: gas comparison is variable because the specification is still open.`;
+      : `${scenario.name}: this scenario does not have a fixed gas comparison.`;
 
   return (
     <section ref={ref} className="py-24 px-6 bg-surface relative">
@@ -137,23 +137,23 @@ export default function GasCalculatorSection() {
 
         {/* Side by side comparison */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          {/* Monad (current) */}
+          {/* Pre-MIP-8 slot-based model */}
           <div className="bg-problem-bg rounded-xl border border-problem-cell-hover p-6">
             <p className="font-mono text-xs text-problem-muted uppercase tracking-wider mb-4">
-              {t("mip8.gasCalc.monadCurrent")}
+              {t("mip8.gasCalc.preMip8")}
             </p>
             <motion.p
-              key={`current-${selectedIdx}`}
+              key={`pre-mip8-${selectedIdx}`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="font-mono text-4xl font-semibold text-problem-accent tabular-nums mb-2"
             >
-              {currentDisplay}
+              {preMip8Display}
             </motion.p>
             <p className="font-mono text-xs text-text-tertiary">{t("mip8.gasCalc.gas")}</p>
             <div className="mt-4 pt-4 border-t border-problem-cell-hover">
               <p className="font-mono text-xs text-text-secondary">
-                {scenario.currentBreakdown}
+                {scenario.preMip8Breakdown}
               </p>
             </div>
           </div>
@@ -161,7 +161,7 @@ export default function GasCalculatorSection() {
           {/* MIP-8 */}
           <div className="bg-solution-bg rounded-xl border border-solution-accent-light p-6">
             <p className="font-mono text-xs text-solution-muted uppercase tracking-wider mb-4">
-              MIP-8
+              MIP-8 (current)
             </p>
             <motion.p
               key={`mip8-${selectedIdx}`}
@@ -217,7 +217,7 @@ export default function GasCalculatorSection() {
               </div>
               <div className="flex justify-between mt-1 font-mono text-xs text-text-tertiary">
                 <span>{t("mip8.gasCalc.saved")}</span>
-                <span>{t("mip8.gasCalc.monadCurrent")}</span>
+                <span>{t("mip8.gasCalc.preMip8")}</span>
               </div>
             </>
           ) : (

@@ -5,9 +5,9 @@ section on `/mip-3` and `/mip-4`. Each published suggestion's gas number or
 behavioral proof comes from a real Monad-mainnet transaction whose hash is
 linked from the card.
 
-The MIP-8 contracts are experimental fixtures for an MIP-8-enabled testnet.
-MIP-8 is not live on mainnet, so mainnet runs of those contracts are not MIP-8
-measurements and must not be published as MIP-8 evidence.
+The MIP-8 contracts are experimental fixtures for the page-aware gas schedule.
+MIP-8 activated on Monad mainnet on September 2, 2026 at 14:30 UTC. Only
+transactions mined after that timestamp are valid mainnet MIP-8 measurements.
 
 ## What's here
 
@@ -15,9 +15,9 @@ measurements and must not be published as MIP-8 evidence.
 |---|---|---|
 | 3a | `src/Mip3Scratchpad.sol` | Storage-as-scratchpad vs memory-as-scratchpad, 1 KB of intermediate state |
 | 3b | `src/Mip3LargeMemory.sol` | 1 MB memory allocation on Monad (~16 k gas) vs ETH quadratic (~2.3 M gas analytical) |
-| 8a | `src/Mip8DenseKey.sol` | Testnet fixture: `mapping(uint=>uint)` vs `uint256[]` for 8 dense-key reads |
-| 8b | `src/Mip8StructOrdering.sol` | Testnet fixture: co-accessed struct fields adjacent vs 6 slots apart |
-| 8c | `src/Mip8Batched.sol` | Testnet fixture: 10 fresh writes scattered across pages vs into one page |
+| 8a | `src/Mip8DenseKey.sol` | `mapping(uint=>uint)` vs `uint256[]` for 8 dense-key reads |
+| 8b | `src/Mip8StructOrdering.sol` | Co-accessed struct fields on separate pages vs adjacent slots |
+| 8c | `src/Mip8Batched.sol` | 10 fresh writes scattered across pages vs into one page |
 | 4a | `src/Mip4Bundler.sol` | Bundler that uses MIP-4 precompile to surface offending UserOp vs naive bundler |
 
 ## Reusable MIP-8 primitives
@@ -54,16 +54,16 @@ FOUNDRY_PROFILE=mip8 forge test --match-path "test/PageBitTreeGas.t.sol" -vv
 The Foundry test suite only verifies that each before/after pair produces the
 same logical result (or, for 4a, attempts to invoke the precompile). It cannot
 verify the MIP-3 / MIP-8 gas relations because `forge` runs vanilla revm
-without Monad's custom gas schedule. Mainnet can prove MIP-3 behavior, but
-MIP-8 gas relations require an MIP-8-enabled testnet.
+without Monad's custom gas schedule. Post-activation mainnet or testnet
+transactions are required to verify MIP-8 gas relations.
 
-## Mainnet deploy + measure (MIP-3 and MIP-4 only)
+## Mainnet deploy + measure
 
 Prerequisites:
 
 - `MONAD_RPC_URL` — defaults to `https://rpc.monad.xyz`
-- `PRIVATE_KEY` — funded with ~12 MON (10.5 temporarily locked in the bundler
-  during the demo, ~1 MON for deploys + calls + slack, recovered at the end)
+- `PRIVATE_KEY` — funded with enough MON for six deployments and the benchmark
+  calls
 
 ```sh
 cp .env.example .env
@@ -82,14 +82,11 @@ node script/postprocess.mjs 143
 The script:
 
 1. Deploys 6 benchmark contracts.
-2. Funds the bundler with 10.5 MON.
-3. Calls each before/after method once. Both MIP-4 calls revert (expected) —
-   the funding stays in the bundler.
-4. Withdraws the bundler's balance back to the deployer.
-5. Foundry writes `broadcast/DeployAndMeasure.s.sol/143/run-latest.json` with
+2. Calls each before/after method once, including the MIP-8 fixtures.
+3. Foundry writes `broadcast/DeployAndMeasure.s.sol/143/run-latest.json` with
    per-tx receipts.
-6. `postprocess.mjs` reads that log, pairs CALLs with receipts, and produces
-   `measurements.json`. It deliberately excludes the MIP-8 calls.
+4. `postprocess.mjs` reads that log, pairs CALLs with receipts, and produces
+   `measurements.json`, including the post-activation MIP-8 calls.
 
 ## Re-running
 
@@ -100,5 +97,5 @@ UI will pick up the new measurements.json on the next build.
 
 Foundry's gas reporting uses revm with Ethereum's gas schedule. MIP-3
 (linear memory) and MIP-8 (paged storage) use different schedules in the
-Monad client. Accurate MIP-8 numbers must come from an MIP-8-enabled testnet,
-not Monad mainnet.
+Monad client. Accurate MIP-8 numbers must come from post-activation Monad
+mainnet or testnet transactions.

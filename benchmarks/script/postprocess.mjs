@@ -43,15 +43,15 @@ const CALL_ORDER = [
   { contract: "Mip3Scratchpad",   fn: "runBefore",          tag: "3a:before" },
   { contract: "Mip3Scratchpad",   fn: "runAfter",           tag: "3a:after" },
   { contract: "Mip3LargeMemory",  fn: "allocateAndFold",    tag: "3b:after" },
-  // MIP-8 is not live on mainnet. Keep these calls for testnet experiments,
-  // but never emit them as UI proofs from this mixed-network pipeline.
-  { contract: "Mip8DenseKey",     fn: "readScattered",      tag: "_skip" },
-  { contract: "Mip8DenseKey",     fn: "readPacked",         tag: "_skip" },
+  // MIP-8 is active on mainnet and testnet. These tags are valid only for
+  // transactions mined after the relevant network activation timestamp.
+  { contract: "Mip8DenseKey",     fn: "readScattered",      tag: "8a:before" },
+  { contract: "Mip8DenseKey",     fn: "readPacked",         tag: "8a:after" },
   { contract: "Mip8StructOrdering", fn: "seed",             tag: "_skip" },
-  { contract: "Mip8StructOrdering", fn: "readPairScattered", tag: "_skip" },
-  { contract: "Mip8StructOrdering", fn: "readPairReordered", tag: "_skip" },
-  { contract: "Mip8Batched",      fn: "writeScattered",     tag: "_skip" },
-  { contract: "Mip8Batched",      fn: "writePacked",        tag: "_skip" },
+  { contract: "Mip8StructOrdering", fn: "readPairScattered", tag: "8b:before" },
+  { contract: "Mip8StructOrdering", fn: "readPairReordered", tag: "8b:after" },
+  { contract: "Mip8Batched",      fn: "writeScattered",     tag: "8c:before" },
+  { contract: "Mip8Batched",      fn: "writePacked",        tag: "8c:after" },
   { contract: "Mip4Bundler",      fn: "executeNaive",       tag: "4a:before" },
   { contract: "Mip4Bundler",      fn: "executeAware",       tag: "4a:after" },
 ];

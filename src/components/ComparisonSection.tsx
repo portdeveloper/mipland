@@ -25,7 +25,7 @@ export default function ComparisonSection() {
   const [loadedSlots, setLoadedSlots] = useState<number[]>([]);
   const [pageWarmed, setPageWarmed] = useState(false);
 
-  const currentGas = loadedSlots.length * COLD_COST;
+  const preMip8Gas = loadedSlots.length * COLD_COST;
   const mip8Gas = loadedSlots.length === 0
     ? 0
     : COLD_COST + (loadedSlots.length - 1) * WARM_COST;
@@ -42,14 +42,14 @@ export default function ComparisonSection() {
   };
 
   const allLoaded = loadedSlots.length === 4;
-  const savings = currentGas > 0
-    ? Math.round(((currentGas - mip8Gas) / currentGas) * 100)
+  const savings = preMip8Gas > 0
+    ? Math.round(((preMip8Gas - mip8Gas) / preMip8Gas) * 100)
     : 0;
   const loadedFieldNames = loadedSlots.map((i) => FIELD_NAMES[i]).join(", ");
   const comparisonSummary =
     loadedSlots.length === 0
-      ? "No fields loaded yet. Load fields to compare current Monad cold reads with MIP-8 page warming."
-      : `${loadedSlots.length} field${loadedSlots.length === 1 ? "" : "s"} loaded: ${loadedFieldNames}. Current Monad gas is ${currentGas.toLocaleString()}; MIP-8 gas is ${mip8Gas.toLocaleString()}.`;
+      ? "No fields loaded yet. Load fields to compare the pre-MIP-8 model with the current MIP-8 schedule."
+      : `${loadedSlots.length} field${loadedSlots.length === 1 ? "" : "s"} loaded: ${loadedFieldNames}. Pre-MIP-8 gas is ${preMip8Gas.toLocaleString()}; current MIP-8 gas is ${mip8Gas.toLocaleString()}.`;
 
   return (
     <section ref={ref} className="py-24 px-6 bg-surface-alt relative">
@@ -132,11 +132,11 @@ export default function ComparisonSection() {
 
         {/* Side by side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-          {/* Left: Monad (current) (problem) */}
+          {/* Left: pre-MIP-8 slot-based model */}
           <div className="bg-problem-bg rounded-xl border border-problem-cell-hover p-5">
             <div className="flex items-center justify-between mb-4">
               <p className="font-mono text-xs text-problem-muted uppercase tracking-wider">
-                {t("mip8.comparison.monadCurrent")}
+                {t("mip8.comparison.preMip8")}
               </p>
               <p className="font-mono text-xs text-problem-muted">
                 {loadedSlots.length} {loadedSlots.length !== 1 ? t("mip8.comparison.coldReads") : t("mip8.comparison.coldRead")}
@@ -147,7 +147,7 @@ export default function ComparisonSection() {
             <div
               className="grid grid-cols-2 gap-2 mb-4"
               role="img"
-              aria-label={`Current Monad layout. ${loadedSlots.length} of 4 fields loaded across separate pages for ${currentGas.toLocaleString()} gas.`}
+              aria-label={`Pre-MIP-8 layout. ${loadedSlots.length} of 4 fields loaded across separate pages for ${preMip8Gas.toLocaleString()} gas.`}
             >
               {PAGES.map((page, pageIndex) => {
                 const isLoaded = loadedSlots.includes(pageIndex);
@@ -194,12 +194,12 @@ export default function ComparisonSection() {
                 {loadedSlots.length} x 8,100
               </p>
               <motion.p
-                key={`current-${currentGas}`}
-                initial={{ scale: currentGas > 0 ? 1.15 : 1 }}
+                key={`pre-mip8-${preMip8Gas}`}
+                initial={{ scale: preMip8Gas > 0 ? 1.15 : 1 }}
                 animate={{ scale: 1 }}
                 className="font-mono text-2xl font-semibold text-problem-accent tabular-nums"
               >
-                {currentGas.toLocaleString()}
+                {preMip8Gas.toLocaleString()}
               </motion.p>
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function ComparisonSection() {
           <div className="bg-solution-bg rounded-xl border border-solution-accent-light p-5">
             <div className="flex items-center justify-between mb-4">
               <p className="font-mono text-xs text-solution-muted uppercase tracking-wider">
-                MIP-8
+                MIP-8 (current)
               </p>
               <p className="font-mono text-xs text-solution-muted">
                 {loadedSlots.length > 0 ? `1 ${t("mip8.comparison.cold")}` : "0"}{loadedSlots.length > 1 ? ` + ${loadedSlots.length - 1} ${t("mip8.comparison.warm")}` : ""}
@@ -300,7 +300,7 @@ export default function ComparisonSection() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-surface-elevated rounded-lg border border-border p-4"
               role="img"
-              aria-label={`Four fields loaded. MIP-8 costs ${mip8Gas.toLocaleString()} gas versus ${currentGas.toLocaleString()} gas on current Monad, ${savings}% cheaper with MIP-8.`}
+              aria-label={`Four fields loaded. Current MIP-8 costs ${mip8Gas.toLocaleString()} gas versus ${preMip8Gas.toLocaleString()} gas before MIP-8, ${savings}% cheaper.`}
             >
               <div className="flex items-center justify-between mb-2">
                 <p className="font-mono text-xs text-text-tertiary">
@@ -313,14 +313,14 @@ export default function ComparisonSection() {
               <div className="w-full h-3 bg-problem-cell rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${(mip8Gas / currentGas) * 100}%` }}
+                  animate={{ width: `${(mip8Gas / preMip8Gas) * 100}%` }}
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                   className="h-full bg-solution-accent rounded-full"
                 />
               </div>
               <div className="flex justify-between mt-1 font-mono text-xs text-text-tertiary">
                 <span>MIP-8: {mip8Gas.toLocaleString()}</span>
-                <span>Monad: {currentGas.toLocaleString()}</span>
+                <span>Pre-MIP-8: {preMip8Gas.toLocaleString()}</span>
               </div>
             </motion.div>
           )}

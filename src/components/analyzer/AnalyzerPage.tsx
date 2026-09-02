@@ -372,6 +372,7 @@ export default function AnalyzerPage() {
   const gas = useMemo(() => {
     if (traceMode && traceResult?.trace) {
       const t = traceResult.trace;
+      // The analyzer backend's `current` field is the legacy, per-slot baseline.
       const current = t.gasEstimate.current;
       const mip8 = t.gasEstimate.mip8;
       const savings = current > 0 ? Math.round(((current - mip8) / current) * 100) : 0;
@@ -872,13 +873,13 @@ export default function AnalyzerPage() {
                     </div>
 
                     <div className="bg-problem-bg rounded-xl border border-problem-cell-hover p-4 mb-4">
-                      <p className="font-mono text-xs text-problem-muted uppercase tracking-wider mb-2">Monad (current)</p>
+                      <p className="font-mono text-xs text-problem-muted uppercase tracking-wider mb-2">Pre-MIP-8</p>
                       <motion.p key={gas.currentGas} initial={{ scale: 1.05 }} animate={{ scale: 1 }} className="font-mono text-2xl font-semibold text-problem-accent tabular-nums">{gas.currentGas.toLocaleString()}</motion.p>
                       <p className="font-mono text-xs text-text-tertiary">{uniqueSelectedSlots} x 8,100 gas</p>
                     </div>
 
                     <div className="bg-solution-bg rounded-xl border border-solution-accent-light p-4 mb-4">
-                      <p className="font-mono text-xs text-solution-muted uppercase tracking-wider mb-2">MIP-8</p>
+                      <p className="font-mono text-xs text-solution-muted uppercase tracking-wider mb-2">MIP-8 (current)</p>
                       <motion.p key={gas.mip8Gas} initial={{ scale: 1.05 }} animate={{ scale: 1 }} className="font-mono text-2xl font-semibold text-solution-accent tabular-nums">{gas.mip8Gas.toLocaleString()}</motion.p>
                       <p className="font-mono text-xs text-text-tertiary">{uniqueSelectedPages} x 8,100 + {Math.max(0, uniqueSelectedSlots - uniqueSelectedPages)} x 100</p>
                     </div>
@@ -894,7 +895,7 @@ export default function AnalyzerPage() {
                         </div>
                         <div className="flex justify-between mt-1 font-mono text-xs text-text-tertiary">
                           <span>MIP-8</span>
-                          <span>Current</span>
+                          <span>Pre-MIP-8</span>
                         </div>
                         {gas.ratio > 1.5 && (
                           <p className="font-mono text-xs text-solution-accent font-semibold mt-2">{gas.ratio.toFixed(1)}x cheaper</p>
