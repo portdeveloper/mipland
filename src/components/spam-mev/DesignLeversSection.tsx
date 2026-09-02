@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useInView } from "../useInView";
+import { useUrlState } from "../useUrlState";
 import { useExplainMode } from "./ExplainModeContext";
 import Hint from "./Hint";
 import {
@@ -12,8 +13,27 @@ import {
   DEFAULTS,
 } from "./model";
 import type { ModelParams } from "./model";
+import { enumParam, numberParam } from "@/lib/url-state";
 
 const MAX_BMAX = 2000;
+
+const BMAX_URL_PARAM = numberParam({
+  min: 200,
+  max: MAX_BMAX,
+  step: 1,
+  fallback: 1000,
+});
+const GMIN_URL_PARAM = numberParam({
+  min: 1,
+  max: 80,
+  step: 1,
+  fallback: DEFAULTS.gmin,
+});
+const ORDERING_URL_PARAM = enumParam({
+  values: ["random", "pfo"] as const,
+  fallback: "random",
+});
+const V_URL_PARAM = numberParam({ min: 0, max: 1, fallback: 0.5 });
 
 function MarginalCapacityChart({
   params,
@@ -177,10 +197,10 @@ export default function DesignLeversSection() {
   const { ref, isVisible } = useInView(0.1);
   const { mode } = useExplainMode();
   const simple = mode === "simple";
-  const [Bmax, setBmax] = useState(1000);
-  const [gmin, setGmin] = useState(DEFAULTS.gmin);
-  const [ordering, setOrdering] = useState<"random" | "pfo">("random");
-  const [v, setV] = useState(0.5);
+  const [Bmax, setBmax] = useUrlState("bmax", BMAX_URL_PARAM);
+  const [gmin, setGmin] = useUrlState("gmin", GMIN_URL_PARAM);
+  const [ordering, setOrdering] = useUrlState("ord", ORDERING_URL_PARAM);
+  const [v, setV] = useUrlState("v", V_URL_PARAM);
 
   const params: ModelParams = useMemo(
     () => ({ ...DEFAULTS, gmin: Math.max(1, gmin) }),

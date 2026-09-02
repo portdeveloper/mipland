@@ -1,15 +1,24 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useInView } from "../useInView";
+import { useUrlState } from "../useUrlState";
 import { useExplainMode } from "./ExplainModeContext";
 import Hint from "./Hint";
 import { computeEquilibrium, computeSweep, DEFAULTS } from "./model";
 import type { ModelParams } from "./model";
+import { numberParam } from "@/lib/url-state";
 
 const MAX_BMAX = 2000;
-const SLIDER_STEPS = 200;
+const BMAX_STEP = 10;
+
+const BMAX_URL_PARAM = numberParam({
+  min: 0,
+  max: MAX_BMAX,
+  step: BMAX_STEP,
+  fallback: 1200,
+});
 
 const REGIME_PRESETS_TECHNICAL = [
   { label: "No spam", Bmax: 350 },
@@ -382,10 +391,9 @@ export default function EquilibriumSection() {
   const { ref, isVisible } = useInView(0.1);
   const { mode } = useExplainMode();
   const simple = mode === "simple";
-  const [sliderValue, setSliderValue] = useState(120); // ~1200
+  const [Bmax, setBmax] = useUrlState("eq", BMAX_URL_PARAM);
   const params = DEFAULTS;
 
-  const Bmax = Math.round((sliderValue / SLIDER_STEPS) * MAX_BMAX);
   const eq = computeEquilibrium(Bmax, params);
   const sweep = useMemo(() => computeSweep(params, MAX_BMAX), [params]);
 
@@ -465,9 +473,10 @@ export default function EquilibriumSection() {
             id="bmax-range"
             type="range"
             min={0}
-            max={SLIDER_STEPS}
-            value={sliderValue}
-            onChange={(e) => setSliderValue(Number(e.target.value))}
+            max={MAX_BMAX}
+            step={BMAX_STEP}
+            value={Bmax}
+            onChange={(e) => setBmax(Number(e.target.value))}
             aria-valuetext={bmaxValueText}
             aria-describedby="bmax-summary"
             className="w-full accent-text-primary cursor-pointer"
@@ -487,14 +496,11 @@ export default function EquilibriumSection() {
             aria-label="Block capacity presets"
           >
             {presets.map((preset) => {
-              const sv = Math.round(
-                (preset.Bmax / MAX_BMAX) * SLIDER_STEPS
-              );
-              const isActive = Math.abs(sliderValue - sv) <= 5;
+              const isActive = Math.abs(Bmax - preset.Bmax) <= 50;
               return (
                 <button
                   key={preset.label}
-                  onClick={() => setSliderValue(sv)}
+                  onClick={() => setBmax(preset.Bmax)}
                   type="button"
                   aria-pressed={isActive}
                   className={`font-mono text-xs px-2.5 py-1.5 rounded-md border transition-all cursor-pointer ${
