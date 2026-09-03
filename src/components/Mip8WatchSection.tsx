@@ -28,7 +28,7 @@ const STATUS_COPY: Record<
 > = {
   active: {
     summary: "page warming is live",
-    detail: "Observed the MIP-8 schedule: one cold page load warms the seven adjacent slots.",
+    detail: "Observed the MIP-8 schedule: one cold page load warms all 127 sibling slots; this probe then reads seven of them warm.",
   },
   inactive: {
     summary: "the probe did not observe page warming",

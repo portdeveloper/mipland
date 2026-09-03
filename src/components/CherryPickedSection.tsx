@@ -31,7 +31,7 @@ export default function CherryPickedSection() {
   const mip8 = mip8Gas(batchSize);
   const improvement = ratio(batchSize);
   const savings = Math.round(((current - mip8) / current) * 100);
-  const batchSummary = `${batchSize} tokens use ${current.toLocaleString()} gas in the standard layout and ${mip8.toLocaleString()} gas in the page-aware layout, saving ${savings}% gas.`;
+  const batchSummary = `${batchSize} tokens use ${current.toLocaleString()} storage-access gas in the standard layout and ${mip8.toLocaleString()} storage-access gas in the page-aware layout, saving ${savings}% of the storage-access component.`;
 
   return (
     <section ref={ref} className="py-24 px-6 bg-solution-bg relative">
@@ -80,7 +80,7 @@ export default function CherryPickedSection() {
             <div
               className="grid grid-cols-4 gap-2"
               role="img"
-              aria-label={`Standard mapping layout scatters ${batchSize} token reads across separate pages. All ${batchSize} reads are cold for ${current.toLocaleString()} gas.`}
+              aria-label={`Standard mapping layout scatters ${batchSize} token reads across separate pages. All ${batchSize} reads are cold for ${current.toLocaleString()} storage-access gas.`}
             >
               {Array.from({ length: 4 }, (_, pageIdx) => (
                 <div key={pageIdx} className="bg-problem-bg rounded-md p-2">
@@ -104,7 +104,7 @@ export default function CherryPickedSection() {
               ))}
             </div>
             <p className="font-mono text-xs text-problem-accent mt-3">
-              {batchSize} {t("cherryPicked.tokens")} = {batchSize} cold reads = {current.toLocaleString()} gas
+              {batchSize} {t("cherryPicked.tokens")} = {batchSize} cold reads = {current.toLocaleString()} {t("cherryPicked.accessGas")}
             </p>
           </div>
 
@@ -118,7 +118,8 @@ export default function CherryPickedSection() {
                 {t("cherryPicked.pageAwareComment")}
               </p>
               <p>
-                <span className="text-solution-accent">uint256</span>[128] balances;
+                <span className="text-solution-accent">uint256</span>[128] balances;{" "}
+                <span className="text-text-tertiary">{"// base slot 0"}</span>
               </p>
               <p className="text-text-tertiary text-xs mt-1">
                 {t("cherryPicked.pageAwareMapComment")}
@@ -134,7 +135,7 @@ export default function CherryPickedSection() {
             <div
               className="bg-solution-bg rounded-md p-2"
               role="img"
-              aria-label={`Page-aware layout keeps ${batchSize} token reads on one page. The first read is cold and ${batchSize - 1} reads are warm for ${mip8.toLocaleString()} gas.`}
+              aria-label={`Page-aware layout keeps ${batchSize} token reads on one page. The first read is cold and ${batchSize - 1} reads are warm for ${mip8.toLocaleString()} storage-access gas.`}
             >
               <p className="font-mono text-xs text-text-tertiary mb-1">
                 page 0
@@ -158,7 +159,7 @@ export default function CherryPickedSection() {
               </div>
             </div>
             <p className="font-mono text-xs text-solution-accent mt-3">
-              {batchSize} {t("cherryPicked.tokens")} = 1 cold + {batchSize - 1} warm = {mip8.toLocaleString()} gas
+              {batchSize} {t("cherryPicked.tokens")} = 1 cold + {batchSize - 1} warm = {mip8.toLocaleString()} {t("cherryPicked.accessGas")}
             </p>
           </div>
         </div>
@@ -225,7 +226,7 @@ export default function CherryPickedSection() {
             >
               {current.toLocaleString()}
             </motion.p>
-            <p className="font-mono text-xs text-text-tertiary mt-1">gas</p>
+            <p className="font-mono text-xs text-text-tertiary mt-1">{t("cherryPicked.accessGas")}</p>
             <p className="font-mono text-xs text-text-tertiary mt-2">
               {batchSize} x 8,100 ({t("cherryPicked.allCold")})
             </p>
@@ -244,7 +245,7 @@ export default function CherryPickedSection() {
             >
               {mip8.toLocaleString()}
             </motion.p>
-            <p className="font-mono text-xs text-text-tertiary mt-1">gas</p>
+            <p className="font-mono text-xs text-text-tertiary mt-1">{t("cherryPicked.accessGas")}</p>
             <p className="font-mono text-xs text-text-tertiary mt-2">
               8,100 + {batchSize - 1} x 100
             </p>
@@ -276,7 +277,7 @@ export default function CherryPickedSection() {
         <div
           className="bg-surface-elevated rounded-lg border border-border p-4"
           role="img"
-          aria-label={`Gas comparison bar. ${batchSummary}`}
+          aria-label={`Storage-access gas comparison bar. ${batchSummary}`}
         >
           <div className="flex items-center justify-between mb-2">
             <p className="font-mono text-xs text-text-tertiary">
