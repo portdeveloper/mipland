@@ -62,7 +62,6 @@ export default function BundlerComparisonSection() {
       // Without MIP-4: all ops execute (no early detection), then entire bundle reverts.
       // The bundler has no way to know which op caused the failure.
       if (nextStep > USER_OPS.length) {
-        setIsPlaying(false);
         return;
       }
 
@@ -101,10 +100,6 @@ export default function BundlerComparisonSection() {
       // With MIP-4: dippedIntoReserve() identifies the violating op.
       // That op is reverted, but the rest of the bundle continues.
       if (nextStep >= USER_OPS.length) {
-        setIsPlaying(false);
-        if (opStatuses.some((s) => s === "flagged")) {
-          setMessage(t("mip4.bundler.withMessage"));
-        }
         return;
       }
       const op = USER_OPS[nextStep];
@@ -117,7 +112,8 @@ export default function BundlerComparisonSection() {
         });
 
         setTimeout(() => {
-          if (op.causesViolation) {
+          const isFlagged = op.causesViolation;
+          if (isFlagged) {
             // dippedIntoReserve() detects the violation — this op is reverted
             setOpStatuses((prev) => {
               const next = [...prev];
@@ -131,11 +127,18 @@ export default function BundlerComparisonSection() {
               return next;
             });
           }
+
+          if (nextStep === USER_OPS.length - 1) {
+            setIsPlaying(false);
+            if (isFlagged || opStatuses.some((s) => s === "flagged")) {
+              setMessage(t("mip4.bundler.withMessage"));
+            }
+          }
         }, 600);
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [isPlaying, step, mode, t]);
+  }, [isPlaying, step, mode, t, opStatuses]);
 
   const finished =
     step >= USER_OPS.length ||

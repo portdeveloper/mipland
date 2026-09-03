@@ -26,8 +26,6 @@ const DEFINED_LO = new Set([
 export default function Image() {
   const cellSize = 18;
   const gap = 3;
-  const gridW = COLS * cellSize + (COLS - 1) * gap;
-  const gridH = ROWS * cellSize + (ROWS - 1) * gap;
 
   return new ImageResponse(
     (
