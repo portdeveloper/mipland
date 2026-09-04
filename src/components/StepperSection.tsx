@@ -5,15 +5,15 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useInView } from "./useInView";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
+  classifyStorageAccesses,
+  MIP8_COLD_ACCESS_COST,
+  MIP8_WARM_ACCESS_COST,
   storagePageIndex,
   storagePageKey,
   storageSlotKey,
 } from "@/lib/mip8-storage";
 
 type MobileTab = "code" | "pages" | "log";
-
-const COLD_COST = 8100;
-const WARM_COST = 100;
 
 interface StorageOp {
   type: "SLOAD" | "SSTORE";
@@ -232,19 +232,25 @@ export default function StepperSection() {
       account: string;
       slot: number;
       locationLabel?: string;
-      coldPreMip8: boolean;
       coldMip8: boolean;
       page: number;
     }[] = [];
 
-    for (let i = 0; i <= currentStep && i < opSteps.length; i++) {
-      const op = opSteps[i].line.op!;
+    const visibleSteps = opSteps.slice(0, currentStep + 1);
+    const classifiedAccesses = classifyStorageAccesses(
+      visibleSteps.map(({ line }) => ({
+        account: line.op!.account ?? example.account,
+        slot: line.op!.slot,
+      })),
+    );
+
+    for (let i = 0; i < visibleSteps.length; i++) {
+      const op = visibleSteps[i].line.op!;
       const account = op.account ?? example.account;
       const page = storagePageIndex(op.slot);
       const slotKey = storageSlotKey(account, op.slot);
       const pageKey = storagePageKey(account, op.slot);
-      const isFirstTouchSlot = !touched.has(slotKey);
-      const isFirstTouchPage = !pages.has(pageKey);
+      const access = classifiedAccesses[i];
 
       if (!pages.has(pageKey)) {
         pages.set(pageKey, {
@@ -255,29 +261,21 @@ export default function StepperSection() {
         });
       }
 
-      if (isFirstTouchSlot) {
-        touched.add(slotKey);
-        // Before MIP-8, every new slot is cold.
-        cGas += COLD_COST;
-        // MIP-8: cold only if page is new
-        mGas += isFirstTouchPage ? COLD_COST : WARM_COST;
-      }
+      touched.add(slotKey);
+      cGas += access.preMip8Gas;
+      mGas += access.mip8Gas;
 
       pages.get(pageKey)!.slots.add(op.slot);
 
-      // Only log first-touch ops (re-accesses to the same slot are warm in both models)
-      if (isFirstTouchSlot) {
-        log.push({
-          label: op.label,
-          type: op.type,
-          account,
-          slot: op.slot,
-          locationLabel: op.locationLabel,
-          coldPreMip8: true,
-          coldMip8: isFirstTouchPage,
-          page,
-        });
-      }
+      log.push({
+        label: op.label,
+        type: op.type,
+        account,
+        slot: op.slot,
+        locationLabel: op.locationLabel,
+        coldMip8: access.coldMip8,
+        page,
+      });
     }
 
     return {
@@ -302,7 +300,7 @@ export default function StepperSection() {
   const stepStatus =
     currentStep < 0
       ? `${example.name} is ready. ${totalOps} storage operations are available.`
-      : `${example.name}, step ${currentStep + 1} of ${totalOps}. Pre-MIP-8 gas is ${preMip8Gas.toLocaleString()}; current MIP-8 gas is ${mip8Gas.toLocaleString()}.`;
+      : `${example.name}, step ${currentStep + 1} of ${totalOps}. Pre-MIP-8 storage-access gas is ${preMip8Gas.toLocaleString()}; current MIP-8 storage-access gas is ${mip8Gas.toLocaleString()}.`;
 
   const handleNext = useCallback(() => {
     if (currentStep < totalOps - 1) {
@@ -394,6 +392,9 @@ export default function StepperSection() {
         <p className="text-lg text-text-secondary font-light max-w-3xl leading-relaxed mb-10">
           {t("mip8.stepper.desc")}
         </p>
+        <p className="-mt-7 mb-10 max-w-3xl text-sm font-light leading-relaxed text-text-tertiary">
+          {t("mip8.stepper.accessGasNote")}
+        </p>
 
         {/* Example picker */}
         <div
@@ -453,7 +454,7 @@ export default function StepperSection() {
                 {example.name}
               </p>
               <p className="font-mono text-xs text-text-tertiary">
-                {opLog.length} {t("mip8.stepper.uniqueSlots")}
+                {touchedSlots.size} {t("mip8.stepper.uniqueSlots")}
               </p>
             </div>
             <div className="p-4 overflow-x-auto max-h-[480px] overflow-y-auto">
@@ -524,7 +525,7 @@ export default function StepperSection() {
               const { account, page: pageNum, pageLabel } = pageInfo;
               const pageState = pageMap.get(pageKey);
               const pageSlots = pageState?.slots;
-              const isWarmed = pageSlots !== undefined && pageSlots.size > 1;
+              const isWarmed = pageSlots !== undefined;
               const pageBase = pageNum * 128;
 
               // Show first 64 slots (4 rows) for compact view
@@ -624,9 +625,9 @@ export default function StepperSection() {
                     ({entry.label})
                   </span>{" "}
                   {entry.coldMip8 ? (
-                    <span className="text-problem-accent">cold {COLD_COST}</span>
+                    <span className="text-problem-accent">cold {MIP8_COLD_ACCESS_COST}</span>
                   ) : (
-                    <span className="text-solution-accent">warm {WARM_COST}</span>
+                    <span className="text-solution-accent">warm {MIP8_WARM_ACCESS_COST}</span>
                   )}
                 </motion.div>
               ))}
@@ -734,10 +735,10 @@ export default function StepperSection() {
             <div className="grid grid-cols-2 gap-4 mt-3">
               <div>
                 <p className="font-mono text-xs text-text-tertiary">
-                  {t("mip8.gasCalc.preMip8")}: {uniquePages.length} page{uniquePages.length > 1 ? "s" : ""}, {t("mip8.stepper.allSlotsCold")}
+                  {t("mip8.gasCalc.preMip8")}: {touchedSlots.size} {t("mip8.stepper.uniqueSlotsCold")}, {t("mip8.stepper.restWarm")}
                 </p>
                 <p className="font-mono text-sm text-problem-accent font-semibold">
-                  {preMip8Gas.toLocaleString()} gas
+                  {preMip8Gas.toLocaleString()} {t("mip8.gasCalc.gas")}
                 </p>
               </div>
               <div>
@@ -745,7 +746,7 @@ export default function StepperSection() {
                   MIP-8 (current): {pageMap.size} page{pageMap.size > 1 ? "s" : ""} {t("mip8.stepper.cold")}, {t("mip8.stepper.restWarm")}
                 </p>
                 <p className="font-mono text-sm text-solution-accent font-semibold">
-                  {mip8Gas.toLocaleString()} gas
+                  {mip8Gas.toLocaleString()} {t("mip8.gasCalc.gas")}
                 </p>
               </div>
             </div>

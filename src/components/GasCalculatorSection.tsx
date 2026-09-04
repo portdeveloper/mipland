@@ -84,8 +84,8 @@ export default function GasCalculatorSection() {
       : scenario.mip8Label ?? "variable";
   const savingsSummary =
     savings !== null
-      ? `${scenario.name}: the pre-MIP-8 model uses ${preMip8Display} gas and current MIP-8 uses ${mip8Display} gas. ${
-          savings > 0 ? `MIP-8 is ${savings}% cheaper.` : "There is no gas change under MIP-8."
+      ? `${scenario.name}: the pre-MIP-8 model uses ${preMip8Display} storage-access gas and current MIP-8 uses ${mip8Display} storage-access gas. ${
+          savings > 0 ? `MIP-8's storage-access component is ${savings}% cheaper.` : "There is no storage-access gas change under MIP-8."
         }`
       : `${scenario.name}: this scenario does not have a fixed gas comparison.`;
 
@@ -184,7 +184,7 @@ export default function GasCalculatorSection() {
         <div
           className="bg-surface-elevated rounded-lg border border-border p-4"
           role="img"
-          aria-label={`Gas savings comparison. ${savingsSummary}`}
+          aria-label={`Storage-access gas savings comparison. ${savingsSummary}`}
         >
           <div className="flex items-center justify-between mb-2">
             <p className="font-mono text-xs text-text-tertiary">{t("mip8.gasCalc.gasSavings")}</p>

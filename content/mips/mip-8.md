@@ -19,8 +19,10 @@ state model and gas schedule with the hardware page that nodes actually load.
 - The first `SLOAD` from a page costs 8,100 gas: 8,000 gas to load the page plus
   a 100-gas base charge. Later reads from that page cost 100 gas.
 - `SSTORE` charges page-level read and write I/O plus per-slot state-growth
-  costs. The final constants are 2,800 gas for the first page write and 17,000
-  gas for each net-new occupied slot.
+  costs. The final constants are 2,800 gas for the first changing write to a
+  page and 17,000 gas whenever a page's current state growth during the
+  transaction exceeds that page's previous high-water mark. Capacity freed
+  earlier in the same page can be reused without another growth charge.
 - Each page is sealed by an induced BLAKE3-based subtree over occupied slot
   pairs and committed as a leaf in the storage Merkle Patricia Trie.
 

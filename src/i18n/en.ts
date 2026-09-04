@@ -23,7 +23,7 @@ const en = {
       subtitle: "Aligning EVM storage with hardware reality",
       description:
         "See how 4 KB page-aligned reads cut random I/O and reshape gas costs. Explore the slot-to-page mapping, compare gas schedules, and step through real contract scenarios.",
-      miniNote: "Slot access triggers a full 4 KB page read",
+      miniNote: "A slot access can trigger page-sized backend I/O",
     },
     mip3: {
       title: "Linear Memory",
@@ -55,7 +55,7 @@ const en = {
       title1: "What if your storage model",
       titleHighlight: "matched",
       title2: "your hardware?",
-      desc1: "The storage engine touches 4,096 bytes for a 32-byte read.",
+      desc1: "Serving a 32-byte storage read may require page-sized backend I/O.",
       desc2: "MIP-8 makes the EVM account for that page-sized reality.",
       sloadSlot: "SLOAD slot",
       waiting: "waiting...",
@@ -70,7 +70,7 @@ const en = {
       structComment: "// Solidity struct",
       slot: "slot",
       reset: "reset",
-      totalGas: "Total gas",
+      totalGas: "Storage-access gas",
       coldReads: "Cold reads",
       pagesLoaded: "Pages loaded",
       fourFieldsNote: "In this illustration: 4 fields = 4 pages = 4 cold reads",
@@ -86,7 +86,7 @@ const en = {
       allWarmNote:
         "All 128 slots are warm for this transaction - in this example, subsequent reads use the 100-gas warm cost",
       clickNote: "Click a slot, watch the whole page warm up",
-      totalGas: "Total gas",
+      totalGas: "Storage-access gas",
       coldReads: "Cold reads",
       warmReads: "Warm reads",
       currentEvm: "Pre-MIP-8",
@@ -125,17 +125,17 @@ const en = {
       desc1:
         "At the opcode level, execution semantics stay the same: SLOAD still returns 32 bytes and SSTORE still writes 32 bytes. What changes is the storage commitment/proof layer and the gas model, which become page-aware. The effective key space narrows from 2\u00b2\u2075\u2076 hashed slots to 2\u00b2\u2074\u2079 page indices.",
       desc2:
-        "Contracts that read consecutive storage slots often get cheaper because Solidity stores struct members, fixed arrays, and runs of dynamic-array elements contiguously once their base location is known. Mappings still use hashed locations, so mapping-heavy access patterns tend to change less. The main contracts at risk are those that hardcode opcode-gas assumptions for consecutive storage accesses.",
+        "Contracts that read consecutive storage slots often get cheaper because Solidity stores struct members, fixed arrays, and runs of dynamic-array elements contiguously once their base location is known. Mappings still use hashed locations, so mapping-heavy access patterns tend to change less. Contracts that hardcode storage-opcode gas assumptions are at risk, regardless of access pattern.",
       blake3Note:
         "Each 4,096-byte page is committed with an induced BLAKE3-based subtree over occupied 64-byte slot pairs. Empty branches are bypassed, and a 128-bit occupancy bitmap seals the exact positions. The bitmap plus sibling hashes is at most 208 bytes, excluding the target value and the outer MPT proof.",
     },
     gasCalc: {
       title: "Compare the cost",
       desc: "Select a scenario to compare the pre-MIP-8 slot-based model with Monad's current page-aware model.",
-      note: "The examples use MIP-8's final gas constants: 8,100 gas for the first read from a page and 100 gas for each subsequent read from that page.",
+      note: "These read-only examples compare the storage-access component: 8,100 gas for the first read from a page and 100 gas for each subsequent read. They are not total transaction-gas estimates.",
       preMip8: "Pre-MIP-8",
-      gas: "gas",
-      gasSavings: "Gas savings",
+      gas: "storage-access gas",
+      gasSavings: "Storage-access gas savings",
       cheaper: "cheaper",
       noChange: "No change",
       specOpen: "No fixed comparison",
@@ -146,10 +146,10 @@ const en = {
         "Loading 4 contiguous struct fields that fit in one page",
       scenario2Name: "Read 8 array entries",
       scenario2Desc:
-        "Iterating over 8 consecutive array slots (e.g. an order book)",
+        "Iterating over 8 consecutive array slots that fit within one page (e.g. an order book)",
       scenario3Name: "Read 8 mapping entries",
       scenario3Desc: "Looking up 8 unrelated mapping keys",
-      scenario4Name: "Read ERC-20 transfer data",
+      scenario4Name: "Read ERC-20 transferFrom data",
       scenario4Desc:
         "sender balance, receiver balance, allowance - 3 hashed lookups that usually hit different pages",
     },
@@ -162,6 +162,7 @@ const en = {
     stepper: {
       title: "Watch storage accesses in real time",
       desc: "Step through real contract code line by line. Each SLOAD/SSTORE lights up the corresponding storage slot and shows whether it's a cold or warm access under MIP-8.",
+      accessGasNote: "Totals include only the 8,100/100 storage-access component. For SSTORE, they exclude the 2,800 first-write charge and any 17,000 state-growth charge.",
       uniqueSlots: "unique slots accessed",
       clickNext: 'Click "Next" to start stepping',
       accessLog: "Access log",
@@ -173,10 +174,10 @@ const en = {
       start: "Start",
       reset: "Reset",
       keys: "\u2190 \u2192 keys",
-      totalGasFor: "Total cold-access gas for",
+      totalGasFor: "Storage-access gas for",
       cheaperWithMip8: "% cheaper with MIP-8",
       noChangeWithMip8: "No change with MIP-8",
-      allSlotsCold: "all slots cold",
+      uniqueSlotsCold: "unique slots cold",
       cold: "cold",
       restWarm: "rest warm",
       uniswapDesc:
@@ -215,7 +216,7 @@ const en = {
       status: {
         active: {
           summary: "page warming is live",
-          detail: "Observed the MIP-8 schedule: one cold page load warms the seven adjacent slots.",
+          detail: "Observed the MIP-8 schedule: one cold page load warms all 127 sibling slots; this probe then reads seven of them warm.",
         },
         inactive: {
           summary: "the probe did not observe page warming",
@@ -294,16 +295,16 @@ const en = {
     },
   },
   cherryPicked: {
-    title: "Design for pages, get 10X+",
-    desc: "MIP-8 doesn't just help existing contracts. It opens a new design space where page-aware storage yields order-of-magnitude improvements.",
-    subDesc: "Consider an ERC-1155 multi-token contract. The standard implementation hashes each token balance to a random storage location. A page-aware design stores balances contiguously, so batch operations read one page instead of N scattered slots.",
+    title: "Design for pages, cut access gas 10X+",
+    desc: "MIP-8 opens a new design space where page-aware storage can reduce the storage-access component by an order of magnitude.",
+    subDesc: "Consider an ERC-1155 multi-token contract. The standard implementation hashes each token balance to a random storage location. In this example, an aligned page-aware design stores balances contiguously, so batch operations read one page instead of N scattered slots.",
     standardLayout: "Standard ERC-1155",
     standardComment: "// balances scattered by keccak256",
     standardNote: "Each token ID hashes to a different page",
     pageAwareLayout: "Page-aware design",
     pageAwareComment: "// balances packed contiguously",
-    pageAwareMapComment: "// token IDs 0-127 map to one page",
-    pageAwareNote: "All token balances in one page",
+    pageAwareMapComment: "// as the first state field, slots 0-127 form one page",
+    pageAwareNote: "Aligned balances fit in one page",
     batchSize: "Batch size",
     batchDesc: "Number of token balances read in one operation",
     tokens: "tokens",
@@ -312,9 +313,10 @@ const en = {
     pageAwareLabel: "Page-aware + MIP-8",
     improvement: "Improvement",
     cheaper: "cheaper",
-    gasSaved: "gas saved",
+    gasSaved: "storage-access gas saved",
     gasComparison: "Cold-access gas comparison",
-    explanation: "This example shows a page-aware ERC-1155 that stores token balances in a contiguous array instead of a double mapping. With MIP-8, batch reads from the same page scale at 100 gas per additional slot instead of 8,100.",
+    accessGas: "storage-access gas",
+    explanation: "This access-gas example places the balances array at aligned base slot 0 instead of using a double mapping. With MIP-8, reads that remain in the same page cost 100 gas per additional slot instead of 8,100. Other transaction costs are excluded.",
     allCold: "all cold",
   },
   mip3: {
