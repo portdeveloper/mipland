@@ -267,7 +267,7 @@ export default function IndexerPlayground() {
   const [latencyMs, setLatencyMs] = useState(0);
   const [revealIndex, setRevealIndex] = useState(-1);
   const [error, setError] = useState<string | null>(null);
-  const { copied, copy } = useCopyToClipboard();
+  const { copied, copyFailed, copy } = useCopyToClipboard();
   const [codeTab, setCodeTab] = useState<"hypersync" | "hyperindex">("hypersync");
   const [frameworkId, setFrameworkId] = useState("envio");
   const [showCode, setShowCode] = useState(false);
@@ -742,6 +742,15 @@ export default function IndexerPlayground() {
             >
               {copied === "code" ? "Copied!" : "Copy"}
             </button>
+            {copyFailed === "code" && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="font-mono text-[10px] text-problem-accent"
+              >
+                Copy failed. Try again.
+              </span>
+            )}
           </div>
 
           {/* Code block */}
@@ -777,6 +786,15 @@ export default function IndexerPlayground() {
                 ? "Copied! Paste into your AI assistant"
                 : "Copy for AI — HyperSync + HyperIndex + setup"}
             </button>
+            {copyFailed === "ai" && (
+              <p
+                role="status"
+                aria-live="polite"
+                className="mt-2 font-mono text-[10px] text-problem-accent"
+              >
+                Copy failed. Try again.
+              </p>
+            )}
           </div>
         </div>
       </div>

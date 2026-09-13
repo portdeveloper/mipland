@@ -477,7 +477,7 @@ export default function SwapPlayground() {
   const [quote, setQuote] = useState<QuoteResult | null>(null);
   const [latencyMs, setLatencyMs] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const { copied, copy } = useCopyToClipboard();
+  const { copied, copyFailed, copy } = useCopyToClipboard();
   const [codeTab, setCodeTab] = useState<"quick" | "component">("quick");
   const [aggregatorId, setAggregatorId] = useState("kuru");
   const [showCode, setShowCode] = useState(false);
@@ -901,6 +901,15 @@ export default function SwapPlayground() {
             >
               {copied === "code" ? "Copied!" : "Copy"}
             </button>
+            {copyFailed === "code" && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="font-mono text-[10px] text-problem-accent"
+              >
+                Copy failed. Try again.
+              </span>
+            )}
           </div>
 
           <div className="flex-1 overflow-auto p-5 max-h-80 lg:max-h-none">
@@ -936,6 +945,15 @@ export default function SwapPlayground() {
                 ? "Copied! Paste into your AI assistant"
                 : "Copy for AI — Kuru Flow + full swap setup"}
             </button>
+            {copyFailed === "ai" && (
+              <p
+                role="status"
+                aria-live="polite"
+                className="mt-2 font-mono text-[10px] text-problem-accent"
+              >
+                Copy failed. Try again.
+              </p>
+            )}
           </div>
         </div>
       </div>

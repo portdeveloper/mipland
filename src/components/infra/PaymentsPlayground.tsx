@@ -218,7 +218,7 @@ export default function PaymentsPlayground() {
   const [mode, setMode] = useState<Mode>("push");
   const [flowStep, setFlowStep] = useState<FlowStep>("idle");
   const [revealIndex, setRevealIndex] = useState(-1);
-  const { copied, copy } = useCopyToClipboard();
+  const { copied, copyFailed, copy } = useCopyToClipboard();
   const [codeTab, setCodeTab] = useState<"server" | "client">("server");
   const [showCode, setShowCode] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -363,6 +363,15 @@ export default function PaymentsPlayground() {
           >
             {copied === "install" ? "Copied!" : "Copy"}
           </button>
+          {copyFailed === "install" && (
+            <span
+              role="status"
+              aria-live="polite"
+              className="font-mono text-[10px] text-problem-accent"
+            >
+              Copy failed. Try again.
+            </span>
+          )}
         </div>
       </div>
 
@@ -715,6 +724,15 @@ export default function PaymentsPlayground() {
             >
               {copied === "usdc" ? "Copied!" : "Copy"}
             </button>
+            {copyFailed === "usdc" && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="font-mono text-[10px] text-problem-accent"
+              >
+                Copy failed. Try again.
+              </span>
+            )}
           </div>
         </div>
 
@@ -766,6 +784,15 @@ export default function PaymentsPlayground() {
             >
               {copied === "code" ? "Copied!" : "Copy"}
             </button>
+            {copyFailed === "code" && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="font-mono text-[10px] text-problem-accent"
+              >
+                Copy failed. Try again.
+              </span>
+            )}
           </div>
 
           <div className="flex-1 overflow-auto p-5 max-h-80 lg:max-h-none">
@@ -807,6 +834,15 @@ export default function PaymentsPlayground() {
                 ? "Copied! Paste into your AI assistant"
                 : "Copy for AI \u2014 MPP server + client setup"}
             </button>
+            {copyFailed === "ai" && (
+              <p
+                role="status"
+                aria-live="polite"
+                className="mt-2 font-mono text-[10px] text-problem-accent"
+              >
+                Copy failed. Try again.
+              </p>
+            )}
           </div>
         </div>
       </div>

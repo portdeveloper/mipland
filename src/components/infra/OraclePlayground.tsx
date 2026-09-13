@@ -194,7 +194,7 @@ export default function OraclePlayground() {
   const [selectedToken, setSelectedToken] = useState(0);
   const [providerId, setProviderId] = useState("redstone");
   const [prices, setPrices] = useState<PricePoint[]>([]);
-  const { copied, copy } = useCopyToClipboard();
+  const { copied, copyFailed, copy } = useCopyToClipboard();
   const [codeTab, setCodeTab] = useState<"js" | "sol">("js");
   const [showCode, setShowCode] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -415,6 +415,15 @@ export default function OraclePlayground() {
             >
               {copied === "address" ? "Copied!" : "Copy"}
             </button>
+            {copyFailed === "address" && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="font-mono text-[10px] text-problem-accent"
+              >
+                Copy failed. Try again.
+              </span>
+            )}
           </div>
         </div>
 
@@ -467,6 +476,15 @@ export default function OraclePlayground() {
             >
               {copied === "code" ? "Copied!" : "Copy"}
             </button>
+            {copyFailed === "code" && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="font-mono text-[10px] text-problem-accent"
+              >
+                Copy failed. Try again.
+              </span>
+            )}
           </div>
 
           {/* Code block */}
@@ -510,6 +528,15 @@ export default function OraclePlayground() {
                 ? "Copied! Paste into your AI assistant"
                 : "Copy for AI — RedStone + all addresses + setup"}
             </button>
+            {copyFailed === "ai" && (
+              <p
+                role="status"
+                aria-live="polite"
+                className="mt-2 font-mono text-[10px] text-problem-accent"
+              >
+                Copy failed. Try again.
+              </p>
+            )}
           </div>
         </div>
       </div>
