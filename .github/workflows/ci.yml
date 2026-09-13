@@ -1,5 +1,5 @@
-# Build every PR and every push to master, so pool contributions get checked
-# automatically instead of a maintainer running the build by hand.
+# Test and build every PR and every push to master, so pool contributions get
+# checked automatically instead of a maintainer running the suite by hand.
 # No lint gate yet: the tree has ~20 pre-existing eslint errors, and a gate
 # that fails on day one teaches everyone to ignore it. Add `pnpm lint` here
 # once those are fixed (tracked in the issues).
@@ -25,4 +25,5 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm test
       - run: pnpm build
