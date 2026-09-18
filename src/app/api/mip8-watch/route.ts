@@ -59,7 +59,7 @@ async function probeNetwork(network: (typeof NETWORKS)[number]): Promise<Network
       throw new Error(`RPC responded with HTTP ${response.status}`);
     }
 
-    const measurement = parseProbeBatch(await response.json());
+    const measurement = parseProbeBatch(await response.json(), network.chainId);
     return {
       id: network.id,
       name: network.name,
