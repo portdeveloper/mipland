@@ -59,7 +59,10 @@ function parseRpcQuantity(value: unknown, label: string): number {
   return Number(parsed);
 }
 
-export function parseProbeBatch(payload: unknown): ProbeMeasurement {
+export function parseProbeBatch(
+  payload: unknown,
+  expectedChainId: number
+): ProbeMeasurement {
   if (!Array.isArray(payload)) {
     throw new Error("RPC returned a non-batch response");
   }
@@ -83,6 +86,16 @@ export function parseProbeBatch(payload: unknown): ProbeMeasurement {
     }
     return response.result;
   };
+
+  // Confirm which chain answered before any of its numbers are accepted. The batch asks the
+  // endpoint for its own identity rather than trusting the configured chain ID, so an RPC URL
+  // pointing at the wrong network fails here instead of publishing mainnet gas as testnet gas.
+  const chainId = parseRpcQuantity(resultFor(4, "chain ID"), "chain ID");
+  if (chainId !== expectedChainId) {
+    throw new Error(
+      `RPC reports chain ID ${chainId} but ${expectedChainId} was expected`
+    );
+  }
 
   const blockNumber = parseRpcQuantity(resultFor(1, "block number"), "block number");
   const contiguousGas = parseRpcQuantity(
@@ -117,5 +130,6 @@ export function makeProbeBatch() {
       method: "eth_call",
       params: [{ data: MIP8_PROBE_BYTECODE.scattered }, "latest"],
     },
+    { jsonrpc: "2.0", id: 4, method: "eth_chainId", params: [] },
   ];
 }
