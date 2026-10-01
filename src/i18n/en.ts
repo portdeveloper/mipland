@@ -107,6 +107,9 @@ const en = {
       contiguous: "page 0 (contiguous)",
       fourFields: "4 fields, same struct",
       cheaperWithMip8: "% cheaper with MIP-8",
+      summaryNone: "No fields loaded yet. Load fields to compare the pre-MIP-8 model with the current MIP-8 schedule.",
+      summaryOne: "{count} field loaded: {fields}. Pre-MIP-8 gas is {preMip8Gas}; current MIP-8 gas is {mip8Gas}.",
+      summaryMany: "{count} fields loaded: {fields}. Pre-MIP-8 gas is {preMip8Gas}; current MIP-8 gas is {mip8Gas}.",
     },
     takeaways: {
       title: "What this means for you",
@@ -152,6 +155,10 @@ const en = {
       scenario4Name: "Read ERC-20 transferFrom data",
       scenario4Desc:
         "sender balance, receiver balance, allowance - 3 hashed lookups that usually hit different pages",
+      chartSummaryPrefix: "Storage-access gas savings comparison.",
+      summaryWithSavings: "{scenario}: the pre-MIP-8 model uses {preMip8Gas} storage-access gas and current MIP-8 uses {mip8Gas} storage-access gas. MIP-8's storage-access component is {savings}% cheaper.",
+      summaryNoSavings: "{scenario}: the pre-MIP-8 model uses {preMip8Gas} storage-access gas and current MIP-8 uses {mip8Gas} storage-access gas. There is no storage-access gas change under MIP-8.",
+      summaryNoFixedComparison: "{scenario}: this scenario does not have a fixed gas comparison.",
     },
     pageMapping: {
       title: "Slot \u2192 Page mapping",
