@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "slug": "mip-3",
+      "path": "MIPs/MIP-3.md",
+      "reviewedCommit": "d2fe40811999387de9ac371692198bb8f72c10fb",
+      "reviewedBlobSha": "7c7e97160d48144d8ecf940708294c8310e1d479"
+    },
+    {
+      "slug": "mip-4",
+      "path": "MIPs/MIP-4.md",
+      "reviewedCommit": "d2fe40811999387de9ac371692198bb8f72c10fb",
+      "reviewedBlobSha": "ec296779ccd3774cc5a6ef61d411d19d794cb347"
+    },
+    {
+      "slug": "mip-7",
+      "path": "MIPs/MIP-7.md",
+      "reviewedCommit": "d2fe40811999387de9ac371692198bb8f72c10fb",
+      "reviewedBlobSha": "4504a0dc1637eb4b4b8cbab155cbf509a5f0c259"
+    },
+    {
+      "slug": "mip-8",
+      "path": "MIPs/MIP-8.md",
+      "reviewedCommit": "d2fe40811999387de9ac371692198bb8f72c10fb",
+      "reviewedBlobSha": "32832485ce69a62b0fdac9c36d559816b0b118d8"
+    },
+    {
+      "slug": "mip-12",
+      "path": "MIPs/MIP-12.md",
+      "reviewedCommit": "d2fe40811999387de9ac371692198bb8f72c10fb",
+      "reviewedBlobSha": "3b63df10520b8f21e588fe0061e2b0231ef43065"
+    }
+  ]
+}

@@ -26,6 +26,9 @@ npm run dev
 
 ## Contributing
 
+Upstream source changes are checked daily and on demand with
+`pnpm check:mip-upstream`. See [the review and baseline guide](docs/mip-upstream-review.md).
+
 See [CONTRIBUTING.md](CONTRIBUTING.md). Every PR requires an approved Issue first.
 
 ## License
