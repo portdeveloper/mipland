@@ -8,6 +8,8 @@ import Hint from "./Hint";
 
 const COMMITTEE_N = 5;
 const BATCH = 5;
+const ALL_BATCH: boolean[] = new Array(BATCH).fill(true);
+const ALL_COMMITTEE: boolean[] = new Array(COMMITTEE_N).fill(true);
 
 export default function ConstructionSection() {
   const { ref, isVisible } = useInView(0.1);
@@ -208,6 +210,13 @@ function CommitteeAnimation() {
   const playingRef = useRef(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const nextDotId = useRef(0);
+  // Reduced motion shows the final frame. The preference is only known after
+  // hydration, so it is applied here at render time instead of being written
+  // into state from an effect.
+  const ctShown = reduced ? ALL_BATCH : ctVisible;
+  const serversShown = reduced ? ALL_COMMITTEE : serverOn;
+  const ptShown = reduced ? ALL_BATCH : ptVisible;
+  const dotsShown = reduced ? [] : dots;
 
   const cx = 320;
   const cy = 140;
@@ -345,14 +354,9 @@ function CommitteeAnimation() {
     const el = svgRef.current;
     if (!el) return;
     if (reduced) {
-      // The initializers above ran during hydration, when the media query
-      // isn't known yet (reduced=false) — force the final frame here.
+      // The final frame is rendered from `reduced` above; just stop playback.
       clearTimers();
       playingRef.current = false;
-      setCtVisible(new Array(BATCH).fill(true));
-      setServerOn(new Array(COMMITTEE_N).fill(true));
-      setPtVisible(new Array(BATCH).fill(true));
-      setDots([]);
       return;
     }
     const io = new IntersectionObserver(
@@ -397,7 +401,7 @@ function CommitteeAnimation() {
         {cts.map((c, i) => (
           <g
             key={i}
-            opacity={ctVisible[i] ? 1 : 0}
+            opacity={ctShown[i] ? 1 : 0}
             style={{ transition: "opacity 0.4s" }}
           >
             <rect
@@ -465,7 +469,7 @@ function CommitteeAnimation() {
               cx={s.sx}
               cy={s.sy}
               r={9}
-              fill={serverOn[i] ? colors.solutionAccent : colors.solutionAccentLight}
+              fill={serversShown[i] ? colors.solutionAccent : colors.solutionAccentLight}
               stroke={colors.solutionAccent}
               strokeWidth={1.2}
               style={{ transition: "fill 0.3s" }}
@@ -476,7 +480,7 @@ function CommitteeAnimation() {
               textAnchor="middle"
               fontFamily="var(--font-plex-mono), ui-monospace, monospace"
               fontSize={8}
-              fill={serverOn[i] ? "white" : colors.solutionAccent}
+              fill={serversShown[i] ? "white" : colors.solutionAccent}
               fontWeight={600}
             >
               σ{i + 1}
@@ -487,7 +491,7 @@ function CommitteeAnimation() {
         {pts.map((p, i) => (
           <g
             key={i}
-            opacity={ptVisible[i] ? 1 : 0}
+            opacity={ptShown[i] ? 1 : 0}
             style={{ transition: "opacity 0.4s" }}
           >
             <rect
@@ -522,7 +526,7 @@ function CommitteeAnimation() {
           </g>
         ))}
 
-        {dots.map((d) => (
+        {dotsShown.map((d) => (
           <FlyingDotEl key={d.id} dot={d} />
         ))}
       </svg>
@@ -582,6 +586,9 @@ function FftComparison() {
     reduced ? btxActiveOrder.length : 0,
   );
 
+  const naiveShown = reduced ? 64 : naiveCount;
+  const btxShown = reduced ? btxActiveOrder.length : btxCount;
+
   useEffect(() => {
     if (reduced) {
       naiveRefs.current.forEach((el) => {
@@ -597,8 +604,7 @@ function FftComparison() {
           el.style.opacity = "0.95";
         }
       });
-      setNaiveCount(64);
-      setBtxCount(btxActiveOrder.length);
+      // The counts are rendered from `reduced` below.
       return;
     }
 
@@ -757,11 +763,11 @@ function FftComparison() {
       >
         <span style={{ color: colors.problemAccentStrong }}>
           Without FFT:{" "}
-          <span className="font-semibold tabular-nums">{naiveCount}</span> / 64
+          <span className="font-semibold tabular-nums">{naiveShown}</span> / 64
         </span>
         <span className="text-solution-accent">
           With FFT:{" "}
-          <span className="font-semibold tabular-nums">{btxCount}</span> / ~
+          <span className="font-semibold tabular-nums">{btxShown}</span> / ~
           {btxActiveOrder.length}
         </span>
       </div>

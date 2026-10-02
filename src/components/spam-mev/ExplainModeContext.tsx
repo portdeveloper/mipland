@@ -3,10 +3,10 @@
 import {
   createContext,
   useContext,
-  useState,
-  useEffect,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { storedPreference } from "@/lib/stored-preference";
 
 export type ExplainMode = "simple" | "technical";
 
@@ -22,26 +22,21 @@ const Context = createContext<ExplainModeContextType>({
   toggle: () => {},
 });
 
-function readStored(): ExplainMode {
-  if (typeof window === "undefined") return "technical";
-  const v = localStorage.getItem(STORAGE_KEY);
-  return v === "simple" ? "simple" : "technical";
+const stored = storedPreference(STORAGE_KEY);
+
+export function readExplainMode(): ExplainMode {
+  return stored.read() === "simple" ? "simple" : "technical";
+}
+
+export function serverExplainMode(): ExplainMode {
+  return "technical";
 }
 
 export function ExplainModeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<ExplainMode>("technical");
+  // Server and hydration render "technical"; a saved mode applies right after.
+  const mode = useSyncExternalStore(stored.subscribe, readExplainMode, serverExplainMode);
 
-  // Hydrate from localStorage after mount
-  useEffect(() => {
-    setMode(readStored());
-  }, []);
-
-  const toggle = () =>
-    setMode((m) => {
-      const next = m === "simple" ? "technical" : "simple";
-      localStorage.setItem(STORAGE_KEY, next);
-      return next;
-    });
+  const toggle = () => stored.write(mode === "simple" ? "technical" : "simple");
 
   return (
     <Context.Provider value={{ mode, toggle }}>{children}</Context.Provider>

@@ -61,10 +61,8 @@ export default function BundlerComparisonSection() {
     if (mode === "without") {
       // Without MIP-4: all ops execute (no early detection), then entire bundle reverts.
       // The bundler has no way to know which op caused the failure.
-      if (nextStep > USER_OPS.length) {
-        setIsPlaying(false);
-        return;
-      }
+      // Playback already stopped in the revert timer below.
+      if (nextStep > USER_OPS.length) return;
 
       // After all ops processed, trigger the full bundle revert
       if (nextStep === USER_OPS.length) {
@@ -100,16 +98,19 @@ export default function BundlerComparisonSection() {
     } else {
       // With MIP-4: dippedIntoReserve() identifies the violating op.
       // That op is reverted, but the rest of the bundle continues.
-      if (nextStep >= USER_OPS.length) {
-        setIsPlaying(false);
-        if (opStatuses.some((s) => s === "flagged")) {
-          setMessage(t("mip4.bundler.withMessage"));
-        }
-        return;
-      }
+      // Playback already stopped when the last op started below.
+      if (nextStep >= USER_OPS.length) return;
       const op = USER_OPS[nextStep];
       const timer = setTimeout(() => {
         setStep(nextStep);
+        if (nextStep === USER_OPS.length - 1) {
+          // Same moment and same statuses as checking it once the last op
+          // is reached: earlier ops are settled, the last one is still running.
+          setIsPlaying(false);
+          if (opStatuses.some((s) => s === "flagged")) {
+            setMessage(t("mip4.bundler.withMessage"));
+          }
+        }
         setOpStatuses((prev) => {
           const next = [...prev];
           next[nextStep] = "executing";
