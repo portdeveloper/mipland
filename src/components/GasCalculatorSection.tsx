@@ -82,12 +82,14 @@ export default function GasCalculatorSection() {
     mip8Gas !== null
       ? mip8Gas.toLocaleString()
       : scenario.mip8Label ?? "variable";
+  const interpolate = (template: string, values: Record<string, string | number>) =>
+    template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ""));
   const savingsSummary =
-    savings !== null
-      ? `${scenario.name}: the pre-MIP-8 model uses ${preMip8Display} storage-access gas and current MIP-8 uses ${mip8Display} storage-access gas. ${
-          savings > 0 ? `MIP-8's storage-access component is ${savings}% cheaper.` : "There is no storage-access gas change under MIP-8."
-        }`
-      : `${scenario.name}: this scenario does not have a fixed gas comparison.`;
+    savings === null
+      ? interpolate(t("mip8.gasCalc.summaryNoFixedComparison"), { scenario: scenario.name })
+      : interpolate(t(savings > 0 ? "mip8.gasCalc.summaryWithSavings" : "mip8.gasCalc.summaryNoSavings"), {
+          scenario: scenario.name, preMip8Gas: preMip8Display, mip8Gas: mip8Display, savings: Math.abs(savings),
+        });
 
   return (
     <section ref={ref} className="py-24 px-6 bg-surface relative">
@@ -184,7 +186,7 @@ export default function GasCalculatorSection() {
         <div
           className="bg-surface-elevated rounded-lg border border-border p-4"
           role="img"
-          aria-label={`Storage-access gas savings comparison. ${savingsSummary}`}
+          aria-label={`${t("mip8.gasCalc.chartSummaryPrefix")} ${savingsSummary}`}
         >
           <div className="flex items-center justify-between mb-2">
             <p className="font-mono text-xs text-text-tertiary">{t("mip8.gasCalc.gasSavings")}</p>

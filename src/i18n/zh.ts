@@ -107,6 +107,9 @@ const zh = {
       contiguous: "页 0（连续）",
       fourFields: "4 个字段，同一 struct",
       cheaperWithMip8: "% 更省（MIP-8）",
+      summaryNone: "尚未加载字段。加载字段以比较 MIP-8 之前的模型与当前 MIP-8 计费方案。",
+      summaryOne: "已加载 {count} 个字段：{fields}。MIP-8 之前的 gas 为 {preMip8Gas}；当前 MIP-8 的 gas 为 {mip8Gas}。",
+      summaryMany: "已加载 {count} 个字段：{fields}。MIP-8 之前的 gas 为 {preMip8Gas}；当前 MIP-8 的 gas 为 {mip8Gas}。",
     },
     takeaways: {
       title: "开发者须知",
@@ -150,6 +153,10 @@ const zh = {
       scenario4Name: "读 ERC-20 transferFrom 数据",
       scenario4Desc:
         "发送方余额、接收方余额、授权额度 — 3 次哈希查找，通常在不同页",
+      chartSummaryPrefix: "存储访问 gas 节省对比。",
+      summaryWithSavings: "{scenario}：MIP-8 之前的模型使用 {preMip8Gas} 存储访问 gas，当前 MIP-8 使用 {mip8Gas} 存储访问 gas。MIP-8 的存储访问部分节省 {savings}%。",
+      summaryNoSavings: "{scenario}：MIP-8 之前的模型使用 {preMip8Gas} 存储访问 gas，当前 MIP-8 使用 {mip8Gas} 存储访问 gas。MIP-8 下存储访问 gas 没有变化。",
+      summaryNoFixedComparison: "{scenario}：此场景没有固定的 gas 对比。",
     },
     pageMapping: {
       title: "Slot → 页映射",

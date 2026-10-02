@@ -46,10 +46,15 @@ export default function ComparisonSection() {
     ? Math.round(((preMip8Gas - mip8Gas) / preMip8Gas) * 100)
     : 0;
   const loadedFieldNames = loadedSlots.map((i) => FIELD_NAMES[i]).join(", ");
+  const interpolate = (template: string, values: Record<string, string | number>) =>
+    template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ""));
   const comparisonSummary =
     loadedSlots.length === 0
-      ? "No fields loaded yet. Load fields to compare the pre-MIP-8 model with the current MIP-8 schedule."
-      : `${loadedSlots.length} field${loadedSlots.length === 1 ? "" : "s"} loaded: ${loadedFieldNames}. Pre-MIP-8 gas is ${preMip8Gas.toLocaleString()}; current MIP-8 gas is ${mip8Gas.toLocaleString()}.`;
+      ? t("mip8.comparison.summaryNone")
+      : interpolate(
+          t(loadedSlots.length === 1 ? "mip8.comparison.summaryOne" : "mip8.comparison.summaryMany"),
+          { count: loadedSlots.length, fields: loadedFieldNames, preMip8Gas: preMip8Gas.toLocaleString(), mip8Gas: mip8Gas.toLocaleString() }
+        );
 
   return (
     <section ref={ref} className="py-24 px-6 bg-surface-alt relative">
