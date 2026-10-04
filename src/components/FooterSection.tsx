@@ -3,7 +3,12 @@
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-const FOOTER_DATA: Record<string, { specUrl: string; specLabel: string; noteKey: string }> = {
+const FOOTER_DATA: Record<string, {
+  specUrl: string;
+  specLabel: string;
+  noteKey: string;
+  activationUrl?: string;
+}> = {
   "/mip-8": {
     specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPs/MIP-8.md",
     specLabel: "MIP-8 on GitHub",
@@ -25,9 +30,12 @@ const FOOTER_DATA: Record<string, { specUrl: string; specLabel: string; noteKey:
     noteKey: "footer.mip7Note",
   },
   "/mip-12": {
-    specUrl: "https://github.com/monad-crypto/MIPs/blob/main/MIPs/MIP-12.md",
+    specUrl:
+      "https://github.com/monad-crypto/MIPs/blob/2a7e18894f1e55fb043080cb8cef15c7f5647768/MIPs/MIP-12.md",
     specLabel: "MIP-12 on GitHub",
     noteKey: "footer.mip12Note",
+    activationUrl:
+      "https://docs.monad.xyz/developer-essentials/changelog/releases#v0-15-1",
   },
 };
 
@@ -52,6 +60,16 @@ export default function FooterSection() {
             >
               {data.specLabel} →
             </a>
+            {data.activationUrl && (
+              <a
+                href={data.activationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 block text-sm text-surface/80 hover:text-surface transition-colors underline underline-offset-4 decoration-surface/20 hover:decoration-surface/60"
+              >
+                {t("footer.mip12ActivationSource")} →
+              </a>
+            )}
           </div>
           <div>
             <p className="font-mono text-xs tracking-wider uppercase text-surface/50 mb-3">

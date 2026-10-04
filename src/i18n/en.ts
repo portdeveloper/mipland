@@ -44,10 +44,10 @@ const en = {
         "One reserved slot expands to ~220 selectors. Monad adds opcode-level features without risking collision with future Ethereum upgrades.",
     },
     mip12: {
-      title: "Decrease Vote Pace",
-      subtitle: "Faster consensus, scaled proportionally",
+      title: "Decrease Block Time",
+      subtitle: "Final · active on Monad mainnet",
       description:
-        "A draft proposal to vote on blocks 25% faster, dropping the pace from 400ms to 300ms, with per-block limits scaled down to match. See what each parameter change actually means.",
+        "MIP-12 is Final and its 400ms to 300ms target vote pace is active on mainnet. See the exact per-block changes and what they mean for capacity and rewards.",
     },
   },
   mip8: {
@@ -727,21 +727,21 @@ const en = {
   },
   mip12: {
     hero: {
-      title: "Faster consensus.",
+      title: "Shorter target cadence.",
       before: "400",
       after: "300",
       unit: "ms",
       caption: "vote pace",
       delta: "−25%",
-      desc: "MIP-12 proposes a 25% shorter vote pace, dropping from 400ms to 300ms. Related per-block parameters scale down to match, so blocks arrive sooner while each one carries a little less.",
+      desc: "MIP-12 is Final. Its target vote pace changed from 400ms to 300ms and activated on Monad mainnet at round 89,758,000 on July 23, 2026 (about 14:30 UTC). Target cadence does not guarantee observed block latency or finality.",
     },
     params: {
       title: "What actually changes",
       subtitle:
-        "Vote pace leads the change (above). Four more parameters scale down with it. Here's what each one means in plain terms.",
+        "The target vote pace and four per-block parameters changed. The cards show the exact before-and-after values.",
       votePaceName: "Vote pace",
       votePaceMeaning:
-        "How often validators vote on a block. Lower means faster confirmations and finality.",
+        "The target interval for consensus votes. It is not a measurement or guarantee of observed block latency or finality.",
       txName: "Transactions per block",
       txMeaning:
         "The most transactions that can be packed into a single block.",
@@ -756,10 +756,14 @@ const en = {
     },
     why: {
       title: "Why turn down every dial?",
-      body: "A block every 300ms instead of every 400ms means about 33% more blocks each second. Since each block now holds 25% fewer transactions, less gas, and fewer bytes, the network's per-second capacity stays roughly the same. You're not getting a bigger pipe, just a faster one. The block reward shrinks for the same reason: smaller, more frequent blocks.",
+      body: "At the nominal target cadence, the 25% lower per-block transaction, gas, and byte limits keep those capacity limits per second unchanged: 12,500 transactions, 500 million gas, and 5 million bytes. The reward falls from 25 to 18 MON per block (28%); at the target cadence, that changes issuance from 62.5 to 60 MON per second, rather than keeping it identical.",
+      beforeLabel: "400 ms · 3 blocks",
+      afterLabel: "300 ms · 4 blocks",
+      chartNote:
+        "same 1.2s target window · per-block transaction, gas, and byte limits fall 25%",
       scopeTitle: "What it touches",
       scopeBody:
-        "This is a consensus-layer change only. The execution layer is unaffected and existing contracts behave exactly as before. Activating it requires a hard fork on the consensus client.",
+        "This consensus-layer change does not alter execution-layer behavior. The 300ms target cadence does not guarantee any specific observed latency or finality.",
     },
   },
   clearSigning: {
@@ -884,7 +888,8 @@ const en = {
     mip7Note:
       "MIP-7 aligns with EIP-8163, which reserves 0xAE on Ethereum L1 for non-L1 extension use. All ~220 selectors are currently unassigned; future MIPs will claim specific slots.",
     mip12Note:
-      "MIP-12 is a draft proposal to reduce the consensus vote pace from 400ms to 300ms, with proportional cuts to per-block limits and reward. It is a consensus-layer change and is not live on mainnet.",
+      "MIP-12 is Final. Its target vote pace changed from 400ms to 300ms and activated on Monad mainnet at round 89,758,000 (July 23, 2026, about 14:30 UTC). Verified against the pinned specification and official release notes on October 4, 2026. Target cadence does not guarantee observed latency or finality.",
+    mip12ActivationSource: "Official activation evidence (release notes)",
   },
   specDisclaimer: {
     prefix: "The information on this page should not be quoted. Please refer to ",

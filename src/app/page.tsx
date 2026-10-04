@@ -48,7 +48,7 @@ const structuredData = {
           ["MIP-3: Linear Memory", "/mip-3"],
           ["MIP-4: Reserve Balance Introspection", "/mip-4"],
           ["MIP-7: Extension Opcodes", "/mip-7"],
-          ["MIP-12: Decrease Vote Pace", "/mip-12"],
+          ["MIP-12: Decrease Block Time", "/mip-12"],
         ].map(([name, path], index) => ({
           "@type": "ListItem",
           position: index + 1,

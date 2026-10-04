@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { GET as indexMarkdownRoute } from "@/app/index.md/route";
 import { GET as llmsTxtRoute } from "@/app/llms.txt/route";
 import { GET as mip3MarkdownRoute } from "@/app/mip-3.md/route";
+import { GET as mip12MarkdownRoute } from "@/app/mip-12.md/route";
 import {
   buildHomeMarkdown,
   buildLlmsTxt,
@@ -40,6 +41,25 @@ describe(".md route handlers", () => {
       "text/markdown; charset=utf-8",
     );
     expect(await res.text()).toBe(await readMipSource("mip-3"));
+  });
+
+  it("mip-12.md serves the corrected status, parameter facts, and source links", async () => {
+    const res = await mip12MarkdownRoute();
+    const body = await res.text();
+
+    expect(res.headers.get("content-type")).toBe(
+      "text/markdown; charset=utf-8",
+    );
+    expect(body).toContain("**Proposal status:** Final");
+    expect(body).toContain("round 89,758,000");
+    expect(body).toContain("5,000 | 3,750");
+    expect(body).toContain("200,000,000 | 150,000,000");
+    expect(body).toContain("2,000,000 bytes | 1,500,000 bytes");
+    expect(body).toContain("25 MON | 18 MON | 28% lower");
+    expect(body).toContain("62.5 to 60 MON per second");
+    expect(body).toContain("2a7e18894f1e55fb043080cb8cef15c7f5647768");
+    expect(body).toContain("releases#v0-15-1");
+    expect(body).not.toContain("Draft (not live on mainnet)");
   });
 });
 

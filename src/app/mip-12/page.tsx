@@ -6,14 +6,14 @@ import DiscussionCtaSection from "@/components/DiscussionCtaSection";
 import FooterSection from "@/components/FooterSection";
 
 export const metadata: Metadata = {
-  title: "MIP-12: Decrease Vote Pace",
+  title: "MIP-12: Decrease Block Time",
   description:
-    "A plain-language look at MIP-12: shortening block vote pace from 400ms to 300ms, and what each parameter change actually means.",
+    "MIP-12 is Final and its 400ms to 300ms target vote pace activated on Monad mainnet. Explore the exact parameter changes and their effects on capacity and rewards.",
   alternates: { canonical: "/mip-12" },
   openGraph: {
-    title: "MIP-12: Decrease Vote Pace",
+    title: "MIP-12: Decrease Block Time",
     description:
-      "A plain-language look at MIP-12: shortening block vote pace from 400ms to 300ms, and what each parameter change actually means.",
+      "MIP-12 is Final and its 400ms to 300ms target vote pace activated on Monad mainnet. Explore the exact parameter changes and their effects on capacity and rewards.",
     url: "/mip-12",
   },
 };
