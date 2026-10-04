@@ -16,9 +16,12 @@ notes, and a path to activation.
 - **MIP-8 — Page-ified Storage.** Aligns EVM storage layout with the underlying
   hardware page boundary, reducing I/O amplification on commits. Final and
   active on Monad mainnet since the MONAD_TEN upgrade on September 2, 2026.
-- **MIP-12 — Decrease Vote Pace.** Shortens the consensus vote pace from 400ms
-  to 300ms, with the per-block limits and the block reward scaled down
-  proportionally. A draft consensus-layer change, not yet live on mainnet.
+- **MIP-12 — Decrease Block Time.** Final; its 400ms to 300ms target vote pace
+  activated on Monad mainnet at round 89,758,000 (July 23, 2026). Per-block
+  transaction, gas, and byte limits fell 25%; the block reward fell from 25 to
+  18 MON (28%). At the nominal cadence, capacity limits per second stay the
+  same while rewards change from 62.5 to 60 MON per second. Target cadence does
+  not guarantee observed latency or finality; see `mip-12.md` for dated sources.
 
 > TODO(author): paste the canonical one-paragraph summary for each MIP here.
 > Anything below this line in this file is treated as authoritative context by

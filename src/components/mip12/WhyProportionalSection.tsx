@@ -61,20 +61,20 @@ export default function WhyProportionalSection() {
         >
           <div className="grid grid-cols-2 gap-6 sm:gap-10">
             <BlockCadence
-              label="400 ms · 3 blocks"
+              label={t("mip12.why.beforeLabel")}
               count={3}
               color="#9b9084"
               heightPct={100}
             />
             <BlockCadence
-              label="300 ms · 4 blocks"
+              label={t("mip12.why.afterLabel")}
               count={4}
               color="#2a7d6a"
               heightPct={75}
             />
           </div>
           <p className="font-mono text-[10px] text-text-tertiary mt-5 text-center">
-            same 1.2s window · more blocks, each 25% smaller
+            {t("mip12.why.chartNote")}
           </p>
         </motion.div>
 
