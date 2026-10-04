@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import SpecDisclaimer from "@/components/SpecDisclaimer";
+import { HERO_STEPS, nextHeroTick, type HeroTick } from "./heroTimeline";
 
 // Quadratic: words²/512 + 3*words
 function ethMemoryCost(bytes: number): number {
@@ -18,38 +19,22 @@ function mip3MemoryCost(bytes: number): number {
 }
 
 const TARGET_BYTES = 1_048_576; // 1 MB
-const STEPS = 40;
-const STEP_DELAY = 80;
 
 export default function Mip3HeroSection() {
   const { t } = useLanguage();
-  const [step, setStep] = useState(0);
-  const [running, setRunning] = useState(false);
+  const [tick, setTick] = useState<HeroTick>({ step: 0, cycle: 0 });
+  const { step } = tick;
 
+  // One timer per frame, so a cleanup can never cancel the restart.
   useEffect(() => {
-    const timer = setTimeout(() => setRunning(true), 1000);
+    const { delay, ...next } = nextHeroTick(tick);
+    const timer = setTimeout(() => setTick(next), delay);
     return () => clearTimeout(timer);
-  }, []);
-
-  const innerTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => {
-    if (!running) return;
-    if (step >= STEPS) {
-      // Reset after pause
-      const timer = setTimeout(() => {
-        setStep(0);
-        innerTimerRef.current = setTimeout(() => setRunning(true), 500);
-      }, 3000);
-      setRunning(false);
-      return () => { clearTimeout(timer); clearTimeout(innerTimerRef.current); };
-    }
-    const timer = setTimeout(() => setStep((s) => s + 1), STEP_DELAY);
-    return () => clearTimeout(timer);
-  }, [step, running]);
+  }, [tick]);
 
   // Exponential scale so early steps show small sizes, later steps show big
   const currentBytes = Math.round(
-    32 * Math.pow(TARGET_BYTES / 32, step / STEPS)
+    32 * Math.pow(TARGET_BYTES / 32, step / HERO_STEPS)
   );
   const ethGas = ethMemoryCost(currentBytes);
   const mip3Gas = mip3MemoryCost(currentBytes);
@@ -151,7 +136,7 @@ export default function Mip3HeroSection() {
           {/* Ratio */}
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
             <p className="font-mono text-xs text-text-tertiary">
-              {step >= STEPS
+              {step >= HERO_STEPS
                 ? t("mip3.hero.memoryOf")
                 : `${t("mip3.hero.expanding")} ${formatBytes(currentBytes)}...`}
             </p>

@@ -100,15 +100,15 @@ export default function MemoryPoolSection() {
   }, [handleNext, handlePrev, isPlaying]);
 
   // Auto-advance when playing using a timer
+  // Playback stops in the same tick that reaches the last step.
   useEffect(() => {
-    if (!isPlaying) return;
-    if (stepIdx >= demoSteps.length - 1) {
-      setIsPlaying(false);
-      return;
-    }
-    const timer = setTimeout(() => setStepIdx((s) => s + 1), 1200);
+    if (!isPlaying || finished) return;
+    const timer = setTimeout(() => {
+      setStepIdx(stepIdx + 1);
+      if (stepIdx + 1 >= demoSteps.length - 1) setIsPlaying(false);
+    }, 1200);
     return () => clearTimeout(timer);
-  }, [isPlaying, stepIdx]);
+  }, [isPlaying, stepIdx, finished, demoSteps.length]);
 
   return (
     <section ref={ref} className="py-24 px-6 bg-surface-elevated relative">

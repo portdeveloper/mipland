@@ -53,10 +53,14 @@ export default function SpamHeroSection() {
   const [cycle, setCycle] = useState(0);
   const [mounted, setMounted] = useState(false);
 
-  // Only start random generation after hydration
+  // Random cells only on the client: the first block replaces the static grid
+  // one task after hydration, so the server markup is what hydrates.
   useEffect(() => {
-    setMounted(true);
-    setCells(generateBlock());
+    const timer = setTimeout(() => {
+      setMounted(true);
+      setCells(generateBlock());
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const startCycle = useCallback(() => {

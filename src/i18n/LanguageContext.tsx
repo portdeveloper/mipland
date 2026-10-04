@@ -3,11 +3,12 @@
 import {
   createContext,
   useContext,
-  useState,
   useEffect,
   useCallback,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { storedPreference } from "@/lib/stored-preference";
 import en from "./en";
 import zh from "./zh";
 
@@ -41,39 +42,43 @@ function getNestedValue(obj: Record<string, unknown>, path: string): string {
   return typeof current === "string" ? current : path;
 }
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("en");
-  const [showBanner, setShowBanner] = useState(false);
-  const [mounted, setMounted] = useState(false);
+const storedLocale = storedPreference("locale");
 
-  useEffect(() => {
-    const saved = localStorage.getItem("locale");
-    if (saved === "en" || saved === "zh") {
-      // User has a saved preference - use it directly
-      setLocaleState(saved);
-    } else {
-      // No saved preference - check if browser is Chinese
-      const lang = navigator.language || "";
-      if (lang.startsWith("zh")) {
-        // Show banner asking if they want Chinese, but stay on English
-        setShowBanner(true);
-      }
-    }
-    setMounted(true);
-  }, []);
+/**
+ * What the visitor's language setup asks for: a saved choice, an offer to
+ * switch for a Chinese browser with no saved choice, or nothing.
+ */
+export type LocalePreference = Locale | "offer-zh" | "none";
+
+export function readLocalePreference(): LocalePreference {
+  const saved = storedLocale.read();
+  if (saved === "en" || saved === "zh") return saved;
+  // No saved preference: offer Chinese to a Chinese browser, but stay on English.
+  return (navigator.language || "").startsWith("zh") ? "offer-zh" : "none";
+}
+
+export function serverLocalePreference(): LocalePreference {
+  return "none";
+}
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  // Server and hydration render English with no banner; a saved choice or the
+  // Chinese-browser offer applies right after hydration.
+  const preference = useSyncExternalStore(
+    storedLocale.subscribe,
+    readLocalePreference,
+    serverLocalePreference
+  );
+  const locale: Locale = preference === "zh" ? "zh" : "en";
+  const showBanner = preference === "offer-zh";
 
   const setLocale = useCallback((l: Locale) => {
-    setLocaleState(l);
-    localStorage.setItem("locale", l);
+    storedLocale.write(l);
     document.documentElement.lang = l;
-    setShowBanner(false);
   }, []);
 
-  const dismissBanner = useCallback(() => {
-    setShowBanner(false);
-    // Save English preference so banner doesn't show again
-    localStorage.setItem("locale", "en");
-  }, []);
+  // Save English preference so banner doesn't show again
+  const dismissBanner = useCallback(() => storedLocale.write("en"), []);
 
   const t = useCallback(
     (key: string): string => {
@@ -88,26 +93,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
-
-  if (!mounted) {
-    return (
-      <LanguageContext.Provider
-        value={{
-          locale: "en",
-          setLocale,
-          t: (key: string) =>
-            getNestedValue(
-              translations.en as unknown as Record<string, unknown>,
-              key
-            ),
-          showBanner: false,
-          dismissBanner,
-        }}
-      >
-        {children}
-      </LanguageContext.Provider>
-    );
-  }
 
   return (
     <LanguageContext.Provider value={{ locale, setLocale, t, showBanner, dismissBanner }}>

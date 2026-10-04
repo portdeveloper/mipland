@@ -146,7 +146,8 @@ export default function AnalyzerPage() {
   const [result, setResult] = useState<CompilationResult | null>(null);
   const [selectedContract, setSelectedContract] = useState(0);
   const [selectedSlots, setSelectedSlots] = useState<Set<number>>(new Set());
-  const [autoAnalyzed, setAutoAnalyzed] = useState(false);
+  // Not state: it only guards the one-time auto-analyze and never renders.
+  const autoAnalyzed = useRef(false);
 
   // Trace state
   const [selectedFunction, setSelectedFunction] = useState<string>("");
@@ -256,16 +257,16 @@ export default function AnalyzerPage() {
       analyzeProgress.finish();
       setLoading(false);
     },
-    [analyzeProgress]
+    [analyzeProgress, setTab]
   );
 
   // Auto-analyze when navigated with ?q= param
   useEffect(() => {
-    if (queryInput && !autoAnalyzed) {
-      setAutoAnalyzed(true);
+    if (queryInput && !autoAnalyzed.current) {
+      autoAnalyzed.current = true;
       handleAnalyze();
     }
-  }, [queryInput, autoAnalyzed, handleAnalyze]);
+  }, [queryInput, handleAnalyze]);
 
   const handleSelectContract = useCallback(
     (idx: number) => {

@@ -201,6 +201,15 @@ export default function OraclePlayground() {
   const [error, setError] = useState<string | null>(null);
   const latestPriceRef = useRef<number | null>(null);
 
+  // A new token starts from an empty chart; the effect below fetches it.
+  const selectToken = (i: number) => {
+    if (i === selectedToken) return;
+    setSelectedToken(i);
+    setLoading(true);
+    setError(null);
+    setPrices([]);
+  };
+
   const token = TOKENS[selectedToken];
 
   // Fetch real prices from RedStone API
@@ -231,10 +240,6 @@ export default function OraclePlayground() {
       }
     };
 
-    // Reset state for new token
-    setLoading(true);
-    setError(null);
-    setPrices([]);
     latestPriceRef.current = null;
 
     fetchPrice();
@@ -294,7 +299,7 @@ export default function OraclePlayground() {
               {TOKENS.map((t, i) => (
                 <button
                   key={t.symbol}
-                  onClick={() => setSelectedToken(i)}
+                  onClick={() => selectToken(i)}
                   className={`font-mono text-sm px-3 py-2 rounded-lg border transition-all ${
                     selectedToken === i
                       ? "bg-text-primary text-surface border-text-primary"

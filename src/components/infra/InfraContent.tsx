@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import OraclePlayground from "./OraclePlayground";
 import IndexerPlayground from "./IndexerPlayground";
 import SwapPlayground from "./SwapPlayground";
@@ -25,25 +25,40 @@ const CATEGORIES: Category[] = [
   { id: "auth", label: "Add Auth", icon: "⊡", ready: false },
 ];
 
-export default function InfraContent() {
-  const [active, setActive] = useState("oracles");
-  const [visited, setVisited] = useState(() => new Set(["oracles"]));
+/** The ready category named by the URL hash, if any. */
+export function readHashCategory(): string | null {
+  const hash = window.location.hash.slice(1);
+  return CATEGORIES.some((c) => c.id === hash && c.ready) ? hash : null;
+}
 
-  // Restore active tab from URL hash on mount
-  useEffect(() => {
-    const hash = window.location.hash.slice(1);
-    const valid = CATEGORIES.find((c) => c.id === hash && c.ready);
-    if (valid) {
-      setActive(hash);
-      setVisited((prev) => new Set(prev).add(hash));
-    }
-  }, []);
+export function serverHashCategory(): string | null {
+  return null;
+}
+
+// The hash is only restored on load, so there is nothing to subscribe to.
+const subscribeHash = () => () => {};
+
+export default function InfraContent() {
+  // Server and hydration render the default tab; a valid hash applies right
+  // after hydration. A tab the user picks takes over from there.
+  const hashCategory = useSyncExternalStore(
+    subscribeHash,
+    readHashCategory,
+    serverHashCategory
+  );
+  const [picked, setPicked] = useState<string | null>(null);
+  const [visited, setVisited] = useState(() => new Set(["oracles"]));
+  const active = picked ?? hashCategory ?? "oracles";
+  // The open tab always counts as visited, including one restored from the hash.
+  const opened = new Set(visited).add(active);
 
   const selectCategory = (id: string) => {
-    setActive(id);
+    setPicked(id);
+    // Keep the tab being left mounted too, so a tab restored from the hash
+    // keeps its state like any other visited one.
     setVisited((prev) => {
-      if (prev.has(id)) return prev;
-      return new Set(prev).add(id);
+      if (prev.has(id) && prev.has(active)) return prev;
+      return new Set(prev).add(active).add(id);
     });
     window.history.replaceState(null, "", `#${id}`);
   };
@@ -104,28 +119,28 @@ export default function InfraContent() {
 
       {/* Active playground — lazy mount, keep alive */}
       <div className="w-full max-w-5xl mb-28">
-        {visited.has("oracles") && (
+        {opened.has("oracles") && (
           <div className={active !== "oracles" ? "hidden" : "playground-enter"}>
             <ErrorBoundary>
               <OraclePlayground />
             </ErrorBoundary>
           </div>
         )}
-        {visited.has("indexers") && (
+        {opened.has("indexers") && (
           <div className={active !== "indexers" ? "hidden" : "playground-enter"}>
             <ErrorBoundary>
               <IndexerPlayground />
             </ErrorBoundary>
           </div>
         )}
-        {visited.has("swaps") && (
+        {opened.has("swaps") && (
           <div className={active !== "swaps" ? "hidden" : "playground-enter"}>
             <ErrorBoundary>
               <SwapPlayground />
             </ErrorBoundary>
           </div>
         )}
-        {visited.has("payments") && (
+        {opened.has("payments") && (
           <div className={active !== "payments" ? "hidden" : "playground-enter"}>
             <ErrorBoundary>
               <PaymentsPlayground />

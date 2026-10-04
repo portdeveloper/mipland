@@ -109,7 +109,7 @@ export default function CollisionSection() {
             </div>
             {(step.monad.status === "claimed" || step.monad.status === "conflict") && (
               <div className="font-mono text-xs bg-surface rounded-lg p-3 border border-border">
-                <span className="text-text-tertiary">// executes </span>
+                <span className="text-text-tertiary">{"// executes "}</span>
                 <span className="text-solution-accent">Monad FAST_HASH</span>
               </div>
             )}
@@ -157,12 +157,12 @@ export default function CollisionSection() {
             </div>
             {step.ethereum.status === "claimed" || step.ethereum.status === "conflict" ? (
               <div className="font-mono text-xs bg-surface rounded-lg p-3 border border-border">
-                <span className="text-text-tertiary">// executes </span>
+                <span className="text-text-tertiary">{"// executes "}</span>
                 <span className="text-problem-accent">Ethereum SWAP17</span>
               </div>
             ) : (
               <div className="font-mono text-xs bg-surface rounded-lg p-3 border border-border text-text-tertiary">
-                // 0xAB → INVALID
+                {"// 0xAB → INVALID"}
               </div>
             )}
           </div>

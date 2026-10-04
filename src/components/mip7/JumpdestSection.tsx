@@ -232,18 +232,18 @@ export default function JumpdestSection() {
   }, []);
 
   // Auto-advance
+  // Playback stops in the same tick that scans the last byte.
   useEffect(() => {
-    if (!isPlaying) return;
-    if (scanStep >= totalBytes - 1) {
-      setIsPlaying(false);
-      return;
-    }
+    if (!isPlaying || done) return;
     const timer = setTimeout(
-      () => setScanStep((s) => s + 1),
+      () => {
+        setScanStep(scanStep + 1);
+        if (scanStep + 1 >= totalBytes - 1) setIsPlaying(false);
+      },
       scanStep === -1 ? 300 : 700
     );
     return () => clearTimeout(timer);
-  }, [isPlaying, scanStep, totalBytes]);
+  }, [isPlaying, scanStep, totalBytes, done]);
 
   const started = scanStep >= 0;
 
