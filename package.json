@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:mip-upstream": "node scripts/check-mip-upstream.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.186",
