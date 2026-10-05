@@ -9,6 +9,7 @@ import { checkBotId } from "botid/server";
 import { z } from "zod";
 
 import { getChatConfig } from "@/lib/ai/config";
+import { buildInstructions } from "@/lib/ai/instructions";
 import { getKnowledgeBundle } from "@/lib/ai/knowledge";
 import { checkRateLimit, getClientIp } from "@/lib/ai/ratelimit";
 import {
@@ -77,18 +78,9 @@ export async function POST(req: Request) {
     getKnowledgeBundle(),
   ]);
 
-  const allowedTopicsLine =
-    config.allowedTopics.length > 0
-      ? `Allowed topics: ${config.allowedTopics.join("; ")}.`
-      : "";
-
-  const instructions = [
-    config.systemPrompt,
-    allowedTopicsLine,
-    `Refusal text (use verbatim when declining): "${config.refusalText}"`,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  // The evidence rule and today's date are appended after the configured
+  // prompt here, so an admin prompt from Edge Config cannot drop them.
+  const instructions = buildInstructions(config, new Date());
 
   const modelMessages = await convertToModelMessages(parsed.messages);
 
