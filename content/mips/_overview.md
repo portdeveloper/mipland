@@ -7,12 +7,19 @@ notes, and a path to activation.
 
 ## Currently live on mipland.org
 
-- **MIP-3 — Linear Memory.** Replaces the EVM's quadratic memory-expansion cost
-  with a linear model, so large memory regions become predictable to price.
-- **MIP-4 — Reserve Balance Introspection.** Lets the protocol detect reserve
-  balance violations mid-execution rather than only at the end of a transaction.
-- **MIP-7 — Extension Opcodes.** Reserves a namespace in the opcode space so
-  new opcodes can be added safely without colliding with future EIPs.
+- **MIP-3 — Linear Memory.** Final; linear memory expansion cost model with an
+  8 MB call-frame memory limit, activated on Monad mainnet with the MONAD_NINE
+  upgrade on March 19, 2026. Exceeding remaining memory halts exceptionally,
+  consuming all gas in the call frame.
+- **MIP-4 — Reserve Balance Introspection.** Final; introspection precompile at
+  address `0x1001` (`dippedIntoReserve`) that detects reserve balance
+  violations mid-execution. CALL-only, 100 gas, with strict calldata ordering
+  and all-gas-consuming reverts; activated on Monad mainnet with the MONAD_NINE
+  upgrade on March 19, 2026.
+- **MIP-7 — Extension Opcodes.** Draft; reserves opcode `EXTENSION` (`0xAE`)
+  for two-byte opcode expansion (`0xAE XX`) while preserving `JUMPDEST`
+  analysis. Restricts selectors (no `0x5B` or `0x60`-`0x7F`) and trailing
+  `EXTENSION` bytes; activation is unverified.
 - **MIP-8 — Page-ified Storage.** Aligns EVM storage layout with the underlying
   hardware page boundary, reducing I/O amplification on commits. Final and
   active on Monad mainnet since the MONAD_TEN upgrade on September 2, 2026.
@@ -22,7 +29,3 @@ notes, and a path to activation.
   18 MON (28%). At the nominal cadence, capacity limits per second stay the
   same while rewards change from 62.5 to 60 MON per second. Target cadence does
   not guarantee observed latency or finality; see `mip-12.md` for dated sources.
-
-> TODO(author): paste the canonical one-paragraph summary for each MIP here.
-> Anything below this line in this file is treated as authoritative context by
-> the chat widget — keep it accurate and short.

@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { GET as indexMarkdownRoute } from "@/app/index.md/route";
 import { GET as llmsTxtRoute } from "@/app/llms.txt/route";
 import { GET as mip3MarkdownRoute } from "@/app/mip-3.md/route";
+import { GET as mip4MarkdownRoute } from "@/app/mip-4.md/route";
+import { GET as mip7MarkdownRoute } from "@/app/mip-7.md/route";
 import { GET as mip12MarkdownRoute } from "@/app/mip-12.md/route";
 import {
   buildHomeMarkdown,
@@ -35,12 +37,54 @@ describe("route mapping", () => {
 });
 
 describe(".md route handlers", () => {
-  it("mip-3.md returns its source as text/markdown", async () => {
+  it("mip-3.md serves the reviewed status, linear cost facts, and source links", async () => {
     const res = await mip3MarkdownRoute();
+    const body = await res.text();
+
     expect(res.headers.get("content-type")).toBe(
       "text/markdown; charset=utf-8",
     );
-    expect(await res.text()).toBe(await readMipSource("mip-3"));
+    expect(body).toBe(await readMipSource("mip-3"));
+    expect(body).toContain("**Proposal status:** Final");
+    expect(body).toContain("8 MB");
+    expect(body).toContain("halts exceptionally, consuming all gas remaining in that call frame");
+    expect(body).toContain("b49e9034087924cf208266e6be9cb910457fcf9c");
+    expect(body).not.toContain("TODO(author)");
+  });
+
+  it("mip-4.md serves the reviewed status, CALL-only precompile facts, and source links", async () => {
+    const res = await mip4MarkdownRoute();
+    const body = await res.text();
+
+    expect(res.headers.get("content-type")).toBe(
+      "text/markdown; charset=utf-8",
+    );
+    expect(body).toBe(await readMipSource("mip-4"));
+    expect(body).toContain("**Proposal status:** Final");
+    expect(body).toContain("address `0x1001`");
+    expect(body).toContain("invoked strictly via `CALL`");
+    expect(body).toContain("0x3a61584e");
+    expect(body).toContain("consumes all gas provided to the call frame");
+    expect(body).toContain("b49e9034087924cf208266e6be9cb910457fcf9c");
+    expect(body).not.toContain("TODO(author)");
+  });
+
+  it("mip-7.md serves the reviewed status, EXTENSION opcode facts, and source links", async () => {
+    const res = await mip7MarkdownRoute();
+    const body = await res.text();
+
+    expect(res.headers.get("content-type")).toBe(
+      "text/markdown; charset=utf-8",
+    );
+    expect(body).toBe(await readMipSource("mip-7"));
+    expect(body).toContain("**Proposal status:** Draft");
+    expect(body).toContain("`EXTENSION` (`0xAE`)");
+    expect(body).toContain("0x5B");
+    expect(body).toContain("0x60`-`0x7F");
+    expect(body).toContain("exceptional halt, consuming all remaining gas");
+    expect(body).toContain("INVALID");
+    expect(body).toContain("b49e9034087924cf208266e6be9cb910457fcf9c");
+    expect(body).not.toContain("TODO(author)");
   });
 
   it("mip-12.md serves the corrected status, parameter facts, and source links", async () => {
