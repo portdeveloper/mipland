@@ -8,7 +8,7 @@
 
 ## Summary
 
-MIP-3 replaces the EVM's quadratic memory expansion pricing with a linear cost model and enforces an explicit 8 MB memory cap per transaction. Across nested call contexts, remaining allocation is tracked against a shared pool; exceeding the limit causes an exceptional halt that consumes all gas in the call frame.
+MIP-3 replaces the EVM's quadratic memory expansion pricing with a linear cost model and enforces a shared 8 MB active-memory pool across nested frames per transaction. Rather than each frame receiving an independent 8 MB allowance, remaining allocation is tracked against this shared pool (e.g., a parent holding 3 MB leaves at most 5 MB for its child); exceeding remaining memory causes an exceptional halt that consumes all gas in the call frame.
 
 ## Motivation
 
@@ -27,9 +27,9 @@ memory_cost = memory_size_words // 2
 
 Expanding memory to the full 8 MB ceiling costs 131,072 gas (262,144 words divided by 2). For a typical 2 KB allocation (64 words), the cost is 32 gas instead of roughly 200 gas under the quadratic model.
 
-### 8 MB call-frame limit and pool accounting
+### Shared 8 MB active-memory pool across nested frames
 
-Total active memory across the transaction is capped at 8 MB (8,388,608 bytes). Allocation is bounded across nested call contexts:
+Total active memory across the transaction is bounded by a shared 8 MB pool (8,388,608 bytes) across nested frames, rather than each frame having an independent 8 MB allowance. For example, a parent holding 3 MB leaves at most 5 MB for its child call. Allocation is bounded across nested call contexts:
 
 1. Let `k` be memory used by the current call frame, and `j` be memory used by ancestor call frames.
 2. The remaining memory available to a child call is:

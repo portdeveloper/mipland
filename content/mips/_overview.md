@@ -7,9 +7,11 @@ notes, and a path to activation.
 
 ## Currently live on mipland.org
 
-- **MIP-3 — Linear Memory.** Final; linear memory expansion cost model with an
-  8 MB call-frame memory limit, activated on Monad mainnet with the MONAD_NINE
-  upgrade on March 19, 2026. Exceeding remaining memory halts exceptionally,
+- **MIP-3 — Linear Memory.** Final; linear memory expansion cost model with a
+  shared 8 MB active-memory pool across nested frames, activated on Monad
+  mainnet with the MONAD_NINE upgrade on March 19, 2026. A parent holding 3 MB
+  leaves at most 5 MB for its child rather than each frame having an
+  independent allowance. Exceeding remaining memory halts exceptionally,
   consuming all gas in the call frame.
 - **MIP-4 — Reserve Balance Introspection.** Final; introspection precompile at
   address `0x1001` (`dippedIntoReserve`) that detects reserve balance
