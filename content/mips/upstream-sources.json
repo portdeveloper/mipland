@@ -4,32 +4,32 @@
     {
       "slug": "mip-3",
       "path": "MIPs/MIP-3.md",
-      "reviewedCommit": "d2fe40811999387de9ac371692198bb8f72c10fb",
-      "reviewedBlobSha": "7c7e97160d48144d8ecf940708294c8310e1d479"
+      "reviewedCommit": "b49e9034087924cf208266e6be9cb910457fcf9c",
+      "reviewedBlobSha": "3a02016f6406b0a6f40a1cf7c1f46a514c776da1"
     },
     {
       "slug": "mip-4",
       "path": "MIPs/MIP-4.md",
-      "reviewedCommit": "d2fe40811999387de9ac371692198bb8f72c10fb",
-      "reviewedBlobSha": "ec296779ccd3774cc5a6ef61d411d19d794cb347"
+      "reviewedCommit": "b49e9034087924cf208266e6be9cb910457fcf9c",
+      "reviewedBlobSha": "2df739c36a7dc837bdc00b3dd3dde26d3a130c0f"
     },
     {
       "slug": "mip-7",
       "path": "MIPs/MIP-7.md",
-      "reviewedCommit": "d2fe40811999387de9ac371692198bb8f72c10fb",
-      "reviewedBlobSha": "4504a0dc1637eb4b4b8cbab155cbf509a5f0c259"
+      "reviewedCommit": "b49e9034087924cf208266e6be9cb910457fcf9c",
+      "reviewedBlobSha": "e1d7fdf9aae406e3a8c5374c0cc44b362117e721"
     },
     {
       "slug": "mip-8",
       "path": "MIPs/MIP-8.md",
-      "reviewedCommit": "d2fe40811999387de9ac371692198bb8f72c10fb",
-      "reviewedBlobSha": "32832485ce69a62b0fdac9c36d559816b0b118d8"
+      "reviewedCommit": "b49e9034087924cf208266e6be9cb910457fcf9c",
+      "reviewedBlobSha": "629bb7801f246643634e0c9c267816135134190d"
     },
     {
       "slug": "mip-12",
       "path": "MIPs/MIP-12.md",
-      "reviewedCommit": "d2fe40811999387de9ac371692198bb8f72c10fb",
-      "reviewedBlobSha": "3b63df10520b8f21e588fe0061e2b0231ef43065"
+      "reviewedCommit": "2a7e18894f1e55fb043080cb8cef15c7f5647768",
+      "reviewedBlobSha": "114c7e0a3c48b2e964a3d89e48e57bc9060127f8"
     }
   ]
 }

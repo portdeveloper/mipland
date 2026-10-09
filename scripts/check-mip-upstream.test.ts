@@ -79,10 +79,14 @@ describe("upstream source changes", () => {
     const final = readFileSync(new URL("./fixtures/mip-12-final.md", import.meta.url));
     const blobSha = (body: Buffer) => createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
     expect(draft.toString().replace("status: Draft", "status: Final")).toBe(final.toString());
-    const source = manifest.sources.find((entry) => entry.slug === "mip-12")!;
-    expect(blobSha(draft)).toBe(source.reviewedBlobSha);
+    const draftManifest = structuredClone(manifest);
+    const draftSource = draftManifest.sources.find((entry) => entry.slug === "mip-12")!;
+    draftSource.reviewedCommit = "d2fe40811999387de9ac371692198bb8f72c10fb";
+    draftSource.reviewedBlobSha = blobSha(draft);
     expect(blobSha(final)).toBe("114c7e0a3c48b2e964a3d89e48e57bc9060127f8");
-    const report = await check(sourceFetch((entry) => contents(entry, entry.slug === "mip-12" ? blobSha(final) : entry.reviewedBlobSha)));
+    const report = await checkUpstream(draftManifest, [...MARKDOWN_MIP_SLUGS], {
+      fetchImpl: sourceFetch((entry) => contents(entry, entry.slug === "mip-12" ? blobSha(final) : entry.reviewedBlobSha)),
+    });
     expect(report.exitCode).toBe(1);
     expect(report.results.find((entry: Source) => entry.slug === "mip-12")).toMatchObject({ status: "review", currentBlobSha: blobSha(final) });
     expect(formatReport(report)).toContain("MIP-12 | Review needed");
