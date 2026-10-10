@@ -13,6 +13,7 @@ const INDEXABLE_ROUTES = [
   "/mip-7",
   "/mip-8",
   "/mip-12",
+  "/mip-15",
   "/monad-101",
   "/spam-mev",
 ] as const;

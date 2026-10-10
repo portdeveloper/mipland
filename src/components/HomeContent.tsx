@@ -303,6 +303,30 @@ function MiniVotePace() {
   );
 }
 
+/* ─── Mini-visualization: MIP-15 adopted vs left out ─────────────────── */
+function MiniEipSplit() {
+  return (
+    <div className="flex items-end justify-center gap-6 h-16">
+      <div className="flex flex-col items-center">
+        <motion.span
+          animate={{ opacity: [0.55, 1, 0.55] }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+          className="font-mono text-4xl font-semibold tabular-nums leading-none text-solution-accent"
+        >
+          6
+        </motion.span>
+        <span className="font-mono text-[9px] text-text-tertiary mt-1">in</span>
+      </div>
+      <div className="flex flex-col items-center">
+        <span className="font-mono text-2xl font-light tabular-nums leading-none text-problem-accent/60">
+          12
+        </span>
+        <span className="font-mono text-[9px] text-text-tertiary mt-1">out</span>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Card component ─────────────────────────────────────────────────── */
 
 interface MipCardProps {
@@ -609,8 +633,8 @@ export default function HomeContent() {
           </Link>
         </motion.div>
 
-        {/* Proposals: MIP-3 + MIP-4 + MIP-7 + MIP-12 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Proposals: MIP-3 + MIP-4 + MIP-7 + MIP-12 + MIP-15 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <MipCard
             id="MIP-3"
             href="/mip-3"
@@ -654,6 +678,17 @@ export default function HomeContent() {
             beta
             visualization={<MiniVotePace />}
             index={3}
+          />
+          <MipCard
+            id="MIP-15"
+            href="/mip-15"
+            title={t("home.mip15.title")}
+            subtitle={t("home.mip15.subtitle")}
+            description={t("home.mip15.description")}
+            exploreLabel={t("home.explore")}
+            beta
+            visualization={<MiniEipSplit />}
+            index={4}
           />
         </div>
       </div>

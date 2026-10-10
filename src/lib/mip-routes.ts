@@ -12,6 +12,7 @@ export const MARKDOWN_MIP_SLUGS = [
   "mip-7",
   "mip-8",
   "mip-12",
+  "mip-15",
 ] as const;
 
 export type MipSlug = (typeof MARKDOWN_MIP_SLUGS)[number];
@@ -53,7 +54,7 @@ export interface NegotiatedRoute {
   link: string;
 }
 
-// HTML routes that negotiate on Accept: the homepage plus the five explainers.
+// HTML routes that negotiate on Accept: the homepage plus every MIP explainer.
 export const NEGOTIATED_ROUTES: Record<string, NegotiatedRoute> = {
   "/": { markdown: HOME_MARKDOWN_ROUTE, link: describedByLink() },
   ...Object.fromEntries(

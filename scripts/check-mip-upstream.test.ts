@@ -67,8 +67,8 @@ describe("upstream source changes", () => {
     const report = await check(fetchImpl);
     expect(report.exitCode).toBe(0);
     expect(report.currentCommit).toBe(HEAD);
-    expect(report.results.map((result: { status: string }) => result.status)).toEqual(Array(5).fill("unchanged"));
-    expect(fetchImpl).toHaveBeenCalledTimes(6);
+    expect(report.results.map((result: { status: string }) => result.status)).toEqual(Array(manifest.sources.length).fill("unchanged"));
+    expect(fetchImpl).toHaveBeenCalledTimes(manifest.sources.length + 1);
     expect(manifest).toEqual(original);
   });
 
@@ -95,7 +95,11 @@ describe("upstream source changes", () => {
       return contents(source);
     }));
     expect(report.exitCode).toBe(2);
-    expect(report.results.map((result: { status: string }) => result.status)).toEqual(["review", "error", "unchanged", "unchanged", "unchanged"]);
+    expect(report.results.map((result: { status: string }) => result.status)).toEqual([
+      "review",
+      "error",
+      ...Array(manifest.sources.length - 2).fill("unchanged"),
+    ]);
     const summary = formatReport(report);
     expect(summary).toContain("MIP-3 | Review needed");
     expect(summary).toContain("MIP-4 | ERROR:");
@@ -177,7 +181,7 @@ describe("upstream failures", () => {
     await vi.advanceTimersByTimeAsync(20);
     const report = await pending;
     expect(report.exitCode).toBe(2);
-    expect(signals).toHaveLength(stage === "headers" ? 1 : 5);
+    expect(signals).toHaveLength(stage === "headers" ? 1 : manifest.sources.length);
     expect(signals.every((signal) => signal.aborted)).toBe(true);
     expect(formatReport(report)).toContain("timed out after 20 ms");
   });

@@ -49,6 +49,12 @@ const en = {
       description:
         "MIP-12 is Final and its 400ms to 300ms target vote pace is active on mainnet. See the exact per-block changes and what they mean for capacity and rewards.",
     },
+    mip15: {
+      title: "Glamsterdam EIPs",
+      subtitle: "In review · not active on any network",
+      description:
+        "Monad plans to take six EIPs from Ethereum's Glamsterdam upgrade, including transfer logs, SLOTNUM and deeper stack access. See what each one changes and which EIPs Monad leaves out.",
+    },
   },
   mip8: {
     hero: {
@@ -725,6 +731,122 @@ const en = {
         "This consensus-layer change does not alter execution-layer behavior. The 300ms target cadence does not guarantee any specific observed latency or finality.",
     },
   },
+  mip15: {
+    hero: {
+      title: "Six Glamsterdam EIPs for Monad",
+      adopted: "adopted",
+      skipped: "left out",
+      skippedNote: "plus networking and informational EIPs",
+      desc: "MIP-15 is in Review and is not active on any network. It takes six EIPs from Ethereum's Glamsterdam upgrade, lowers the gas rate on one of them, and explains why Monad leaves the others out.",
+    },
+    adopted: {
+      title: "The six EIPs",
+      subtitle: "Who each one affects, and what is different on Monad.",
+      onMonad: "On Monad",
+      e7708Name: "Native transfers emit a log",
+      e7708Who: "Indexers, wallets",
+      e7708What:
+        "Moving a nonzero amount of MON to another account emits a log shaped like an ERC-20 Transfer event. That covers plain sends and value moved by CALL, CREATE, CREATE2 and SELFDESTRUCT.",
+      e7708Monad:
+        "Indexers can follow MON with the same log filter they use for tokens. Today that needs call traces.",
+      e7843Name: "SLOTNUM opcode",
+      e7843Who: "Contract developers",
+      e7843What: "Opcode 0x4b pushes the block's slot number. It costs 2 gas.",
+      e7843Monad:
+        "The slot number is the consensus round. The client started passing the round into the execution context in v0.15.2.",
+      e7981Name: "Access lists cost more",
+      e7981Who: "Wallets, gas estimators",
+      e7981What:
+        "Every access list entry pays an extra charge for its bytes, on top of the existing per-entry cost.",
+      e7981Monad:
+        "40 gas per byte instead of Ethereum's 64. That is 800 gas per address and 1,280 per storage key.",
+      e7997Name: "Deterministic CREATE2 factory",
+      e7997Who: "Local devnets",
+      e7997What:
+        "The CREATE2 factory at 0x4e59…956C must exist, so contracts can deploy to the same address on every chain.",
+      e7997Monad:
+        "Already deployed on mainnet and testnet. Only local development networks change.",
+      e8024Name: "DUPN, SWAPN, EXCHANGE",
+      e8024Who: "Compilers",
+      e8024What:
+        "DUP1 to DUP16 reach the top 16 stack items. DUPN reaches item 235 and SWAPN item 236. EXCHANGE swaps any two of the top 30. Each costs 3 gas.",
+      e8024Monad:
+        "Compilers can use them to avoid “stack too deep” errors. Deployed contracts only benefit after recompiling with a compiler that emits them.",
+      e8246Name: "SELFDESTRUCT stops burning",
+      e8246Who: "Contract developers",
+      e8246What:
+        "A contract created and destroyed in the same transaction used to burn its balance if it named itself as the beneficiary. Now the balance stays.",
+      e8246Monad:
+        "Code, storage and nonce are still cleared. What remains is an account that holds only a balance.",
+    },
+    logs: {
+      title: "Which transfers emit a log",
+      subtitle:
+        "Pick a transaction. EIP-7708 adds one log for each nonzero transfer of MON to a different account.",
+      before: "Before MIP-15",
+      after: "With MIP-15",
+      noLogs: "No logs",
+      logsCount: "logs",
+      logCount: "log",
+      from: "from",
+      to: "to",
+      amount: "amount",
+      emitter: "Emitted by",
+      topic: "topic0",
+      topicNote: "Transfer(address,address,uint256), same as ERC-20",
+      sendName: "Send 1 MON",
+      sendDesc: "A wallet sends 1 MON to another wallet.",
+      routerName: "Router forwards MON",
+      routerDesc:
+        "A user sends 1 MON to a router contract, which CALLs a recipient with the same 1 MON.",
+      zeroName: "Zero-value call",
+      zeroDesc: "A user calls a contract without sending any MON.",
+      createName: "Deploy with value",
+      createDesc:
+        "A user sends 0.5 MON to a factory, which deploys a child contract with CREATE2 and passes the 0.5 MON along.",
+      selfName: "Send to yourself",
+      selfDesc: "A wallet sends 1 MON to its own address.",
+      selfNote: "No log. The rule only covers transfers to a different account.",
+      zeroNote: "No log. Only nonzero amounts are logged.",
+    },
+    accessList: {
+      title: "What the access list surcharge costs",
+      subtitle:
+        "EIP-7981 charges for the bytes in an access list: 20 per address, 32 per storage key. Monad's rate is 40 gas per byte. Ethereum's is 64.",
+      addresses: "Addresses",
+      keys: "Storage keys",
+      pages: "4 KB pages those keys fall on",
+      monad: "Monad surcharge",
+      ethereum: "Ethereum surcharge",
+      gas: "gas",
+      mip8Title: "One key per page is enough",
+      mip8Body:
+        "Under MIP-8, listing one storage key warms its whole 4 KB page (128 slots). Listing only one key per page gives the same warm slots for less surcharge.",
+      everyKey: "Every key listed",
+      onePerPage: "One key per page",
+      note: "Shows only the new surcharge. The existing per-entry access list cost still applies.",
+    },
+    skipped: {
+      title: "What Monad leaves out",
+      subtitle:
+        "Glamsterdam has more EIPs than these six. The MIP gives a reason for each one Monad skips.",
+      balName: "Block-level access lists",
+      balBody:
+        "A block-level access list is built by executing the block. Monad proposers don't execute the block they propose, because execution runs after consensus. The proposer has no way to fill in the list.",
+      balLink: "How asynchronous execution works",
+      consensusName: "Consensus layer changes",
+      consensusBody:
+        "These change Ethereum's beacon chain and proposer-builder separation. Monad runs its own consensus, MonadBFT.",
+      gasName: "Ethereum's new gas model",
+      gasBody:
+        "These split gas into separate resources and reprice state access. Monad already prices storage its own way (MIP-8) and may pick its own metering later. Skipping EIP-7976 keeps Monad's calldata floor at 40 gas per byte, which is where the EIP-7981 rate comes from.",
+      sizeName: "Bigger contracts",
+      sizeBody: "Monad already allows 128 KB contracts (MIP-2).",
+      netName: "Networking and informational EIPs",
+      netBody:
+        "Monad doesn't use Ethereum's devp2p networking. Informational EIPs change no protocol behavior.",
+    },
+  },
   clearSigning: {
     hero: {
       title: "Clear Signing on Monad",
@@ -849,6 +971,8 @@ const en = {
     mip12Note:
       "MIP-12 is Final. Its target vote pace changed from 400ms to 300ms and activated on Monad mainnet at round 89,758,000 (July 23, 2026, about 14:30 UTC). Verified against the pinned specification and official release notes on October 4, 2026. Target cadence does not guarantee observed latency or finality.",
     mip12ActivationSource: "Official activation evidence (release notes)",
+    mip15Note:
+      "MIP-15 is in Review and is not active on any network. Verified against the specification and the official release notes on October 10, 2026.",
   },
   specDisclaimer: {
     prefix: "The information on this page should not be quoted. Please refer to ",

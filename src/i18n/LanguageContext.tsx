@@ -82,10 +82,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const t = useCallback(
     (key: string): string => {
-      return getNestedValue(
+      const value = getNestedValue(
         translations[locale] as unknown as Record<string, unknown>,
         key
       );
+      // Untranslated keys fall back to English instead of showing the raw path.
+      if (value !== key || locale === "en") return value;
+      return getNestedValue(en as unknown as Record<string, unknown>, key);
     },
     [locale]
   );

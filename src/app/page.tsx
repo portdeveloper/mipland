@@ -5,7 +5,7 @@ import { absoluteUrl } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Monad Improvement Proposals (MIPs), Explained | MIP Land",
   description:
-    "Explore interactive, plain-language explainers for Monad Improvement Proposals, including MIP-3, MIP-4, MIP-7, MIP-8, and MIP-12.",
+    "Explore interactive, plain-language explainers for Monad Improvement Proposals, including MIP-3, MIP-4, MIP-7, MIP-8, MIP-12, and MIP-15.",
   alternates: { canonical: "/" },
   openGraph: {
     title: "Monad Improvement Proposals (MIPs), Explained | MIP Land",
@@ -49,6 +49,7 @@ const structuredData = {
           ["MIP-4: Reserve Balance Introspection", "/mip-4"],
           ["MIP-7: Extension Opcodes", "/mip-7"],
           ["MIP-12: Decrease Block Time", "/mip-12"],
+          ["MIP-15: Glamsterdam EIP Activation", "/mip-15"],
         ].map(([name, path], index) => ({
           "@type": "ListItem",
           position: index + 1,

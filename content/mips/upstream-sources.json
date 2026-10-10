@@ -16,8 +16,8 @@
     {
       "slug": "mip-7",
       "path": "MIPs/MIP-7.md",
-      "reviewedCommit": "d2fe40811999387de9ac371692198bb8f72c10fb",
-      "reviewedBlobSha": "4504a0dc1637eb4b4b8cbab155cbf509a5f0c259"
+      "reviewedCommit": "282d18125d6590447d9229550887581385649e48",
+      "reviewedBlobSha": "86dd515cbdf2b2b3cec4a9dd55edc65db140b7f4"
     },
     {
       "slug": "mip-8",
@@ -30,6 +30,12 @@
       "path": "MIPs/MIP-12.md",
       "reviewedCommit": "d2fe40811999387de9ac371692198bb8f72c10fb",
       "reviewedBlobSha": "3b63df10520b8f21e588fe0061e2b0231ef43065"
+    },
+    {
+      "slug": "mip-15",
+      "path": "MIPs/MIP-15.md",
+      "reviewedCommit": "282d18125d6590447d9229550887581385649e48",
+      "reviewedBlobSha": "817bef9f5a56565b6fb8c0090ef7a16f44026262"
     }
   ]
 }

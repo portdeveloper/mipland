@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import { GET as indexMarkdownRoute } from "@/app/index.md/route";
 import { GET as llmsTxtRoute } from "@/app/llms.txt/route";
 import { GET as mip3MarkdownRoute } from "@/app/mip-3.md/route";
+import { GET as mip7MarkdownRoute } from "@/app/mip-7.md/route";
 import { GET as mip12MarkdownRoute } from "@/app/mip-12.md/route";
+import { GET as mip15MarkdownRoute } from "@/app/mip-15.md/route";
 import {
   buildHomeMarkdown,
   buildLlmsTxt,
@@ -60,6 +62,28 @@ describe(".md route handlers", () => {
     expect(body).toContain("2a7e18894f1e55fb043080cb8cef15c7f5647768");
     expect(body).toContain("releases#v0-15-1");
     expect(body).not.toContain("Draft (not live on mainnet)");
+  });
+
+  it("mip-7.md reports Review status and the trailing 0xAE rule", async () => {
+    const body = await (await mip7MarkdownRoute()).text();
+
+    expect(body).toContain("**Proposal status:** Review");
+    expect(body).not.toContain("**Proposal status:** Draft");
+    expect(body).toContain("at the very end of the code has no selector");
+    expect(body).toContain("282d18125d6590447d9229550887581385649e48");
+  });
+
+  it("mip-15.md serves status, adopted EIPs, and the Monad access list rate", async () => {
+    const body = await (await mip15MarkdownRoute()).text();
+
+    expect(body).toContain("**Proposal status:** Review");
+    expect(body).toContain("Not activated on any network");
+    for (const eip of ["7708", "7843", "7981", "7997", "8024", "8246"]) {
+      expect(body).toContain(`| EIP-${eip} |`);
+    }
+    expect(body).toContain("800 gas per address and 1,280 gas per storage key");
+    expect(body).toContain("EIP-7928, Block-Level Access Lists");
+    expect(body).toContain("282d18125d6590447d9229550887581385649e48");
   });
 });
 

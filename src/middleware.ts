@@ -13,6 +13,7 @@ export const config = {
     "/mip-7",
     "/mip-8",
     "/mip-12",
+    "/mip-15",
   ],
 };
 

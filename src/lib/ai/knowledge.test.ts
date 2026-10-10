@@ -21,3 +21,14 @@ describe("MIP-12 knowledge bundle", () => {
     expect(bundle).not.toContain("A draft consensus-layer change, not yet live on mainnet");
   });
 });
+
+describe("MIP-15 knowledge bundle", () => {
+  it("includes MIP-15 with its Review status and no activation claim", async () => {
+    const bundle = await getKnowledgeBundle();
+
+    expect(bundle).toContain("<!-- file: mip-15.md -->");
+    expect(bundle).toContain("# MIP-15: Glamsterdam EIP Activation");
+    expect(bundle).toContain("MIP-15: Glamsterdam EIP Activation.** In Review");
+    expect(bundle).toContain("40 gas per byte instead of Ethereum's 64");
+  });
+});

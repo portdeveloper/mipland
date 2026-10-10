@@ -37,6 +37,12 @@ const FOOTER_DATA: Record<string, {
     activationUrl:
       "https://docs.monad.xyz/developer-essentials/changelog/releases#v0-15-1",
   },
+  "/mip-15": {
+    specUrl:
+      "https://github.com/monad-crypto/MIPs/blob/282d18125d6590447d9229550887581385649e48/MIPs/MIP-15.md",
+    specLabel: "MIP-15 on GitHub",
+    noteKey: "footer.mip15Note",
+  },
 };
 
 export default function FooterSection() {
