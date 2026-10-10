@@ -16,15 +16,4 @@ describe("MIP-8 translations", () => {
     expect(leafPaths(zh.mip8)).toEqual(leafPaths(en.mip8));
   });
 
-  it("has copy for every network and status the watcher can report", () => {
-    for (const dict of [en, zh]) {
-      expect(Object.keys(dict.mip8.watch.networks)).toEqual(["mainnet", "testnet"]);
-      expect(Object.keys(dict.mip8.watch.status)).toEqual([
-        "active",
-        "inactive",
-        "unknown",
-        "unavailable",
-      ]);
-    }
-  });
 });

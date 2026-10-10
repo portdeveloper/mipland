@@ -172,8 +172,8 @@ function AllOrNothingViz() {
     <div>
       <p className="text-text-secondary text-[14px] leading-[1.55] mb-4">
         Releasing the epoch key decrypts <em>every</em>{" "}
-        pending transaction in the window, not just the ones the builder
-        included. Transactions that didn&apos;t make it in still leak, so
+        pending transaction in the window, including the ones the builder
+        left out. Transactions that didn&apos;t make it in still leak, so
         they can&apos;t safely roll over. Setup runs every epoch.
       </p>
       <div className="flex gap-1.5 p-3 bg-surface rounded-lg flex-wrap">

@@ -2,6 +2,9 @@
 
 > MOST contributors: read https://most.devnads.com/agents.md before opening an issue or a PR here.
 
+> Before writing or editing any user-facing copy, read [`NOSLOP.md`](./NOSLOP.md).
+> Run `pnpm check:slop` after copy changes; CI fails on banned phrasing.
+
 Floating chat button on the site, with full control over knowledge and replies.
 Code is in place; infra wiring is documented in [`SETUP.md`](./SETUP.md).
 

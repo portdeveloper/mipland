@@ -62,7 +62,7 @@ export default function Image() {
             lineHeight: "1.4",
           }}
         >
-          Aligning EVM storage with hardware reality
+          Pricing EVM storage by the 4 KB page
         </div>
         {/* Mini storage grid */}
         <div

@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "check:mip-upstream": "node scripts/check-mip-upstream.mjs"
+    "check:mip-upstream": "node scripts/check-mip-upstream.mjs",
+    "check:slop": "node scripts/check-slop.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.186",

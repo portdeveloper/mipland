@@ -1,12 +1,12 @@
 # MIP Land
 
-Interactive explainers for Monad Improvement Proposals and blockchain research. Understand MIPs through visualizations, not just specs.
+Interactive explainers for Monad Improvement Proposals and blockchain research. Change the inputs and watch the protocol respond.
 
 **Live:** [mipland.com](https://mipland.com) · **Built by:** [@portdeveloper](https://portdeveloper.github.io)
 
 ## Pages
 
-- **MIP-8** - Page-ified Storage: aligning EVM storage with hardware reality
+- **MIP-8** - Page-ified Storage: pricing EVM storage by the 4 KB page
 - **MIP-3** - Linear Memory: replacing quadratic memory costs
 - **MIP-4** - Reserve Balance Introspection: detecting reserve violations mid-execution
 - **MIP-7** - Extension Opcodes: safe opcode expansion via 0xAE namespace

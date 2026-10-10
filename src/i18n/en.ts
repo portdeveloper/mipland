@@ -8,7 +8,7 @@ const en = {
   home: {
     title: "Monad Improvement Proposals, explained visually",
     subtitle: "Interactive, plain-language guides for Monad builders.",
-    subtitleBreak: "Understand MIPs through visualizations, not just specs.",
+    subtitleBreak: "Change the inputs and watch the protocol respond.",
     aboutTitle: "What is a Monad Improvement Proposal?",
     aboutBody:
       "Monad Improvement Proposals, or MIPs, describe protocol changes and standards for the Monad blockchain. MIP Land turns the technical specifications into interactive explanations for developers, validators, and curious community members.",
@@ -20,7 +20,7 @@ const en = {
     explore: "Explore",
     mip8: {
       title: "Page-ified Storage",
-      subtitle: "Aligning EVM storage with hardware reality",
+      subtitle: "Pricing EVM storage by the 4 KB page",
       description:
         "See how 4 KB page-aligned reads cut random I/O and reshape gas costs. Explore the slot-to-page mapping, compare gas schedules, and step through real contract scenarios.",
       miniNote: "A slot access can trigger page-sized backend I/O",
@@ -29,7 +29,7 @@ const en = {
       title: "Linear Memory",
       subtitle: "Replacing quadratic memory costs",
       description:
-        "A linear cost model with a shared 8 MB pool. Watch the cost curve flatten as allocations grow.",
+        "On Ethereum, memory gets more expensive per byte the more you use. MIP-3 charges the same for every word. All calls in a transaction share one 8 MB pool.",
     },
     mip4: {
       title: "Reserve Balance Introspection",
@@ -41,7 +41,7 @@ const en = {
       title: "Extension Opcodes",
       subtitle: "Safe opcode expansion via 0xAE namespace",
       description:
-        "One reserved slot expands to ~220 selectors. Monad adds opcode-level features without risking collision with future Ethereum upgrades.",
+        "A future Ethereum upgrade can take any free opcode slot Monad uses. MIP-7 puts Monad's opcodes behind 0xAE, a slot Ethereum has reserved. The byte after 0xAE picks one of ~220 functions.",
     },
     mip12: {
       title: "Decrease Block Time",
@@ -55,8 +55,8 @@ const en = {
       title1: "What if your storage model",
       titleHighlight: "matched",
       title2: "your hardware?",
-      desc1: "Serving a 32-byte storage read may require page-sized backend I/O.",
-      desc2: "MIP-8 makes the EVM account for that page-sized reality.",
+      desc1: "Monad's storage engine reads from disk in 4 KB pages. A 32-byte SLOAD still pulls in the 127 slots around it.",
+      desc2: "Before MIP-8, gas was charged per slot anyway. Now the first read on a page makes the other 127 slots cost the warm price.",
       sloadSlot: "SLOAD slot",
       waiting: "waiting...",
       pageFetch: "- backend may fetch an entire 4KB page",
@@ -201,47 +201,6 @@ const en = {
       tryLabel: "Try:",
       analyze: "Analyze",
     },
-    watch: {
-      title: "MIP-8 is live",
-      desc: "Monad mainnet activated MIP-8 with MONAD_TEN on September 2, 2026 at 14:30 UTC. This read-only check verifies the active gas schedule on mainnet and testnet without sending a transaction.",
-      checking: "Checking…",
-      checkNow: "Check now",
-      checkingNetwork: "Checking {network}…",
-      networks: {
-        mainnet: "Mainnet",
-        testnet: "Testnet",
-      },
-      caption: "MIP-8 protocol gas costs compared with the latest {network} probe",
-      pattern: "Pattern",
-      protocolGas: "Protocol gas",
-      observedGas: "Observed gas",
-      contiguousReads: "8 contiguous reads",
-      scatteredReads: "8 scattered reads",
-      noBlock: "No block returned",
-      checkedAtBlock: "Checked at block {block}",
-      updated: "MIP-8 Watch updated.",
-      lastChecked: "Last checked {time}",
-      refreshFailed: "Latest refresh failed; showing the last successful result.",
-      endpointDown: "The watcher could not reach the status endpoint. Try again in a moment.",
-      status: {
-        active: {
-          summary: "page warming is live",
-          detail: "Observed the MIP-8 schedule: one cold page load warms all 127 sibling slots; this probe then reads seven of them warm.",
-        },
-        inactive: {
-          summary: "the probe did not observe page warming",
-          detail: "This RPC did not return the activated MIP-8 schedule. Check the endpoint and block height.",
-        },
-        unknown: {
-          summary: "the schedule is unrecognized",
-          detail: "The measured costs do not match either known schedule.",
-        },
-        unavailable: {
-          summary: "the RPC is unavailable",
-          detail: "The latest probe failed. The other network may still be current.",
-        },
-      },
-    },
     collections: {
       title: "Reference data structures",
       desc: "Reusable Solidity primitives that make MIP-8 page boundaries explicit instead of relying on accidental storage alignment.",
@@ -335,7 +294,7 @@ const en = {
     hero: {
       title1: "What if memory cost",
       titleHighlight: "scaled linearly?",
-      desc: "EVM memory has a quadratic cost curve. MIP-3 makes it linear.",
+      desc: "EVM memory gets more expensive per byte. A 1 MB buffer costs around 2.2 million gas. With MIP-3 every word costs the same and 2.2 million can become 16,000.",
       allocating: "Allocating memory...",
       quadratic: "Quadratic (current)",
       linear: "Linear (MIP-3)",
@@ -345,7 +304,7 @@ const en = {
     },
     costCurve: {
       title: "The quadratic wall",
-      desc: "Ethereum charges words\u00b2/512 + 3*words for memory. MIP-3 charges words/2. Drag the slider to see how they diverge.",
+      desc: "Ethereum charges words\u00b2/512 + 3*words for memory. Past about 48 KB, the squared part is the bigger one. MIP-3 charges words/2 at every size. Drag the slider to compare.",
       memorySize: "Memory allocation size",
       quadraticEth: "Quadratic (ETH)",
       linearMip3: "Linear (MIP-3)",
@@ -418,7 +377,7 @@ const en = {
         "Decompressing, sorting, or transforming a large dataset in a single transaction.",
       scenario5: "Full 8 MB allocation",
       scenario5Desc:
-        "Maximum memory under MIP-3. Enables large proof verification buffers, rollup batch processing.",
+        "Maximum memory under MIP-3. Big enough for large proof verification buffers or rollup batch processing.",
       scenario5Note: "Exceeds 30M gas block limit",
     },
     takeaways: {
@@ -541,7 +500,7 @@ const en = {
       desc1:
         "The precompile lives at 0x1001 with a single method: dippedIntoReserve() (selector 0x3a61584e). It costs 100 gas, equivalent to a transient storage read.",
       desc2:
-        "The check is global: it evaluates all accounts touched in the transaction, not just the caller's. It returns true if any account's balance is currently below its reserve threshold; it clears back to false if that balance recovers above the threshold mid-transaction.",
+        "The check is global: it evaluates every account touched in the transaction, including accounts other than the caller. It returns true if any account's balance is currently below its reserve threshold; it clears back to false if that balance recovers above the threshold mid-transaction.",
       callRestrictions: "Call restrictions",
       callWorks: "CALL works",
       callReverts: "STATICCALL, DELEGATECALL, CALLCODE revert",
@@ -569,7 +528,7 @@ const en = {
     hero: {
       title1: "One reserved slot.",
       titleHighlight: "~220 possible functions.",
-      desc: "Adding opcodes to an EVM chain risks collision with future Ethereum upgrades. MIP-7 claims one reserved slot as a safe extension namespace.",
+      desc: "Ethereum keeps adding opcodes. If Monad puts its own opcode in a free slot, a later Ethereum upgrade can assign that slot to something else. MIP-7 puts Monad's opcodes behind 0xAE, which Ethereum will never assign.",
       opcodeSpace: "EVM opcode space (0x00\u20130xFF)",
       defined: "defined",
       free: "free",
@@ -586,9 +545,9 @@ const en = {
       step2Label: "Ethereum later assigns the same slot",
       step3Label: "Same bytecode, different behavior",
       step1Message:
-        "Monad adds opcode 0xAB as FAST_HASH, a Monad-specific optimized hash. Works great on Monad.",
+        "Monad adds opcode 0xAB as FAST_HASH, a Monad-specific optimized hash. Contracts on Monad start using it.",
       step2Message:
-        "Ethereum's next upgrade assigns 0xAB to SWAP17, a new opcode. The same slot, a completely different function.",
+        "Ethereum's next upgrade assigns 0xAB to SWAP17. The same byte now means FAST_HASH on Monad and SWAP17 on Ethereum.",
       step3Message:
         "A contract deployed on Monad uses 0xAB. If that bytecode ever runs on Ethereum, 0xAB means something entirely different. No error, just silent wrong behavior.",
       notAssigned: "not yet assigned",
@@ -600,7 +559,7 @@ const en = {
     },
     collisionProb: {
       title: "How likely is a collision?",
-      desc: "Adding custom opcodes today is a yearly bet against Ethereum claiming the same slot. The probability compounds the longer a chain stays exposed.",
+      desc: "Any Ethereum hard fork can assign a free opcode slot. The longer a chain uses custom opcodes in free slots, the more forks it has to get through without a collision.",
       derivation: "Where the rate comes from",
       step1: "Ethereum execution-layer hard forks since Homestead (excluding BPO, difficulty bomb, and consensus forks)",
       forkRate: "Historical fork rate",

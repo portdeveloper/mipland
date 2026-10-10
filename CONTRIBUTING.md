@@ -4,7 +4,7 @@ Thank you for your interest in contributing to MIP Land - interactive explainers
 
 ## How work lands
 
-All changes go through a pull request, and every pull request needs an approving review from @portdeveloper before it can merge. Direct pushes to `master` are turned off. A merge means the work was read and accepted, not just that it was opened.
+All changes go through a pull request, and every pull request needs an approving review from @portdeveloper before it can merge. Direct pushes to `master` are turned off. A merge means the work was read and accepted.
 
 ## About the Project
 

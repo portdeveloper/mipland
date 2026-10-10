@@ -73,8 +73,8 @@ export default function Image() {
               marginBottom: "48px",
             }}
           >
-            Interactive explainers for Monad Improvement Proposals. Understand
-            MIPs through visualizations, not just specs.
+            Interactive explainers for Monad Improvement Proposals. Change the
+            inputs and watch the protocol respond.
           </div>
 
           {/* URL */}

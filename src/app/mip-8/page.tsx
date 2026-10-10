@@ -11,7 +11,6 @@ import CompatibilitySection from "@/components/CompatibilitySection";
 import Mip8CollectionsSection from "@/components/Mip8CollectionsSection";
 import DiscussionCtaSection from "@/components/DiscussionCtaSection";
 import FooterSection from "@/components/FooterSection";
-import Mip8WatchSection from "@/components/Mip8WatchSection";
 
 export const metadata: Metadata = {
   title: "MIP-8: Page-ified Storage",
@@ -30,7 +29,6 @@ export default function Mip8Page() {
   return (
     <main>
       <HeroSection />
-      <Mip8WatchSection />
       <ComparisonSection />
       <GasCalculatorSection />
       <Mip8CollectionsSection />

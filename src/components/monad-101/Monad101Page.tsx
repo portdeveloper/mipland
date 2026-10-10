@@ -612,8 +612,8 @@ export default function Monad101Page() {
               <Cite n={[17, 8, 6]} />.
             </p>
             <p className="mt-3">
-              The practical app question is not just &quot;did it land?&quot; It is which
-              confidence level your product needs: submitted, proposed,
+              The practical app question is which confidence level your
+              product needs: submitted, proposed,
               finalized, or verified<Cite n={[4, 5, 9]} />.
             </p>
           </>

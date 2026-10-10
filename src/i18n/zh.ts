@@ -198,47 +198,6 @@ const zh = {
       tryLabel: "试试：",
       analyze: "分析",
     },
-    watch: {
-      title: "MIP-8 已上线",
-      desc: "Monad 主网已于 2026 年 9 月 2 日 14:30 UTC 通过 MONAD_TEN 激活 MIP-8。这个只读检查会在主网和测试网上验证当前生效的 gas 计费表，不会发送任何交易。",
-      checking: "检查中…",
-      checkNow: "立即检查",
-      checkingNetwork: "正在检查{network}…",
-      networks: {
-        mainnet: "主网",
-        testnet: "测试网",
-      },
-      caption: "MIP-8 协议 gas 成本与{network}最近一次探测结果的对比",
-      pattern: "访问模式",
-      protocolGas: "协议 gas",
-      observedGas: "实测 gas",
-      contiguousReads: "8 次连续读取",
-      scatteredReads: "8 次分散读取",
-      noBlock: "未返回区块",
-      checkedAtBlock: "检查于区块 {block}",
-      updated: "MIP-8 状态已更新。",
-      lastChecked: "上次检查：{time}",
-      refreshFailed: "最近一次刷新失败，当前显示的是上一次成功的结果。",
-      endpointDown: "监测器无法连接状态接口，请稍后再试。",
-      status: {
-        active: {
-          summary: "页预热已生效",
-          detail: "观测到 MIP-8 计费表：一次冷页加载会预热同页其余 127 个 slot；本次探测随后以热读方式读取其中 7 个。",
-        },
-        inactive: {
-          summary: "探测未观察到页预热",
-          detail: "该 RPC 没有返回已激活的 MIP-8 计费表。请检查节点地址和区块高度。",
-        },
-        unknown: {
-          summary: "无法识别计费表",
-          detail: "实测成本与两种已知计费表都不匹配。",
-        },
-        unavailable: {
-          summary: "RPC 不可用",
-          detail: "最近一次探测失败。另一个网络的结果可能仍是最新的。",
-        },
-      },
-    },
     collections: {
       title: "参考数据结构",
       desc: "可复用的 Solidity 基础组件，显式对齐 MIP-8 页边界，而不是依赖偶然的存储对齐。",
