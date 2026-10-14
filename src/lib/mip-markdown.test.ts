@@ -13,6 +13,7 @@ vi.mock("@/lib/mip-index", () => ({
 import { GET as indexMarkdownRoute } from "@/app/index.md/route";
 import { GET as llmsTxtRoute } from "@/app/llms.txt/route";
 import { GET as mip3MarkdownRoute } from "@/app/mip-3.md/route";
+import { GET as mip4MarkdownRoute } from "@/app/mip-4.md/route";
 import { GET as mip7MarkdownRoute } from "@/app/mip-7.md/route";
 import { GET as mip10MarkdownRoute } from "@/app/mip-10.md/route";
 import { GET as mip12MarkdownRoute } from "@/app/mip-12.md/route";
@@ -51,12 +52,44 @@ describe("route mapping", () => {
 });
 
 describe(".md route handlers", () => {
-  it("mip-3.md returns its source as text/markdown", async () => {
+  it("mip-3.md serves the reviewed status, linear cost facts, and source links", async () => {
     const res = await mip3MarkdownRoute();
+    const body = await res.text();
+
     expect(res.headers.get("content-type")).toBe(
       "text/markdown; charset=utf-8",
     );
-    expect(await res.text()).toBe(await readMipSource("mip-3"));
+    expect(body).toBe(await readMipSource("mip-3"));
+    expect(body).toContain("**Proposal status:** Final");
+    expect(body).toContain("8 MB per transaction, shared across call frames");
+    expect(body).toContain("memory_cost = memory_size_words // 2");
+    expect(body.replace(/\s+/g, " ")).toContain(
+      "halts exceptionally and consumes all gas left in that call frame",
+    );
+    expect(body).toContain("282d18125d6590447d9229550887581385649e48");
+    expect(body).not.toContain("TODO(author)");
+  });
+
+  it("mip-4.md serves the reviewed status, CALL-only precompile facts, and source links", async () => {
+    const res = await mip4MarkdownRoute();
+    const body = await res.text();
+
+    expect(res.headers.get("content-type")).toBe(
+      "text/markdown; charset=utf-8",
+    );
+    expect(body).toBe(await readMipSource("mip-4"));
+    expect(body).toContain("**Proposal status:** Final");
+    expect(body).toContain("`0x1001`");
+    expect(body).toContain("It must be called with `CALL`");
+    expect(body).toContain("0x3a61584e");
+    expect(body).toContain("method not supported");
+    expect(body).toContain("input is invalid");
+    expect(body).toContain("value is nonzero");
+    expect(body).toContain(
+      "Every revert consumes all gas given to the call frame",
+    );
+    expect(body).toContain("282d18125d6590447d9229550887581385649e48");
+    expect(body).not.toContain("TODO(author)");
   });
 
   it("mip-12.md serves the corrected status, parameter facts, and source links", async () => {
